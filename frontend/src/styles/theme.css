@@ -9,7 +9,9 @@
  *
  *   text-primary   #1f2937 on surface #ffffff → 14.68:1  ✅ AA / AAA
  *   text-secondary #4b5563 on surface #ffffff →  8.59:1  ✅ AA / AAA
- *   text-muted     #6b7280 on surface #ffffff →  5.53:1  ✅ AA
+ *   text-muted     #5b6270 on surface #ffffff →  6.13:1  ✅ AA / AAA
+ *   text-muted     #5b6270 on subtle  #f3f4f6 →  5.56:1  ✅ AA
+ *   （#6b7280 在 #f3f4f6 上只有 4.39:1，未達 AA——編輯器行號用的正是這個組合）
  *   text-primary   #1f2937 on bg      #f7f8fa → 13.63:1  ✅ AA / AAA
  *   accent-text    #1d4ed8 on surface #ffffff →  7.00:1  ✅ AA / AAA
  *   danger-text    #b91c1c on surface #ffffff →  6.29:1  ✅ AA / AAA
@@ -30,7 +32,7 @@
   /* 文字 */
   --color-text-primary: #1f2937;
   --color-text-secondary: #4b5563;
-  --color-text-muted: #6b7280;
+  --color-text-muted: #5b6270;
   --color-text-inverse: #ffffff;
 
   /* 強調（品牌／互動） */

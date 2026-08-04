@@ -59,8 +59,9 @@ export function QuestionContent() {
     return <p className="p-4 text-text-muted">尚未載入題目。</p>;
   }
 
+  // 可捲動區域 MUST 可鍵盤聚焦，否則只能用滑鼠捲動（axe: scrollable-region-focusable）
   return (
-    <div className="h-full overflow-auto p-4">
+    <div className="h-full overflow-auto p-4" tabIndex={0} aria-label="題目內容">
       <h2 className="text-base font-semibold text-text-primary">{question.title}</h2>
 
       <div className="mt-4">

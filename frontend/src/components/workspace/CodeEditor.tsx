@@ -103,6 +103,11 @@ export function CodeEditor({
           ]),
           editorTheme,
           EditorView.lineWrapping,
+          // 可存取名稱要掛在真正具備 textbox role 的 .cm-content 上，
+          // 掛在外層 wrapper 對輔助技術無效（axe: aria-input-field-name）。
+          EditorView.contentAttributes.of({
+            'aria-label': '程式碼編輯器',
+          }),
           EditorView.updateListener.of((update) => {
             if (!update.docChanged) return;
             const next = update.state.doc.toString();
@@ -153,12 +158,5 @@ export function CodeEditor({
     });
   }, [readOnly]);
 
-  return (
-    <div
-      ref={hostRef}
-      data-testid="code-editor"
-      className="h-full overflow-auto"
-      aria-label="程式碼編輯器"
-    />
-  );
+  return <div ref={hostRef} data-testid="code-editor" className="h-full overflow-auto" />;
 }

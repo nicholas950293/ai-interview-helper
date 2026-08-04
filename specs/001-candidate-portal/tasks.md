@@ -225,18 +225,18 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 **Purpose**: 跨 Story 的邊界情境、品質關卡與文件
 
-- [ ] T097 [P] 撰寫個資最小化斷言測試（FR-032：`GET /api/session` 回應與前端 store 快照皆僅含 `candidateName`、`positionTitle`，不含其他個資欄位）於 `backend/tests/contract/pii-minimization.test.ts`
-- [ ] T098 [P] 實作左右／上下比例拖曳與本機偏好保存於 `frontend/src/components/layout/ResizableSplit.tsx`；左右比例的拖曳範圍與偏好還原 MUST 夾制於 6:4–7:5（憲章原則 V），超出範圍的既存偏好值須夾回邊界，並附邊界單元測試
-- [ ] T099 [P] 實作全域鍵盤快捷鍵（Ctrl+S 立即保存、Esc、Ctrl+Enter）與可見說明面板於 `frontend/src/components/KeyboardHelp.tsx`
-- [ ] T100 [P] 實作離開前未保存變更提示（`beforeunload`）於 `frontend/src/app/AppLayout.tsx`
-- [ ] T101 [P] 實作多分頁同場次偵測（BroadcastChannel，避免草稿互相覆蓋）於 `frontend/src/services/tab-guard.ts`
-- [ ] T102 [P] 實作超長貼上內容處理（256 KB 上限提示，編輯器維持可用）於 `frontend/src/components/workspace/CodeEditor.tsx`
-- [ ] T103 [P] 實作題目載入失敗與連結失效的狀態畫面於 `frontend/src/app/ErrorStates.tsx`
-- [ ] T104 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99，預算 50ms）與進入場次到首次可輸入的耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`
-- [ ] T105 [P] 建立 axe-core 對比與 ARIA 全頁檢核於 `frontend/tests/e2e/a11y.spec.ts`
-- [ ] T106 [P] 撰寫圍欄的真實模型排程測試（`test:guardrails:live`）於 `backend/tests/guardrails/live.test.ts`
-- [ ] T107 [P] 撰寫 README（安裝、啟動、環境變數、品質關卡）於 `README.md`
-- [ ] T108 依 [quickstart.md](./quickstart.md) 完整走過 V1–V5 五個驗證情境並記錄結果
+- [X] T097 [P] 撰寫個資最小化斷言測試（FR-032：`GET /api/session` 回應與前端 store 快照皆僅含 `candidateName`、`positionTitle`，不含其他個資欄位）於 `backend/tests/contract/pii-minimization.test.ts`
+- [X] T098 [P] 實作左右／上下比例拖曳與本機偏好保存於 `frontend/src/components/layout/ResizableSplit.tsx`；左右比例的拖曳範圍與偏好還原 MUST 夾制於 6:4–7:5（憲章原則 V），超出範圍的既存偏好值須夾回邊界，並附邊界單元測試
+- [X] T099 [P] 實作全域鍵盤快捷鍵（Ctrl+S 立即保存、Esc、Ctrl+Enter）與可見說明面板於 `frontend/src/components/KeyboardHelp.tsx`
+- [X] T100 [P] 實作離開前未保存變更提示（`beforeunload`）於 `frontend/src/app/AppLayout.tsx`
+- [X] T101 [P] 實作多分頁同場次偵測（BroadcastChannel，避免草稿互相覆蓋）於 `frontend/src/services/tab-guard.ts`
+- [X] T102 [P] 實作超長貼上內容處理（256 KB 上限提示，編輯器維持可用）於 `frontend/src/components/workspace/CodeEditor.tsx`
+- [X] T103 [P] 實作題目載入失敗與連結失效的狀態畫面於 `frontend/src/app/ErrorStates.tsx`
+- [X] T104 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99，預算 50ms）與進入場次到首次可輸入的耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`
+- [X] T105 [P] 建立 axe-core 對比與 ARIA 全頁檢核於 `frontend/tests/e2e/a11y.spec.ts`
+- [X] T106 [P] 撰寫圍欄的真實模型排程測試（`test:guardrails:live`）於 `backend/tests/guardrails/live.test.ts`
+- [X] T107 [P] 撰寫 README（安裝、啟動、環境變數、品質關卡）於 `README.md`
+- [X] T108 依 [quickstart.md](./quickstart.md) 完整走過 V1–V5 五個驗證情境並記錄結果
 
 ---
 
