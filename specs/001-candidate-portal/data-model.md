@@ -67,14 +67,12 @@ invite_token ──1:1── interview_session
 | `deadline_at` | timestamptz? | `started_at + duration_sec`，計時權威 |
 | `status` | text | `not_started` \| `in_progress` \| `submitted` \| `expired_submitted` |
 | `submitted_at` | timestamptz? | |
-| `collaboration_mode` | text | `discuss` \| `implement`，**預設 `implement`** |
 
 **驗證規則**：
 
 - `candidate_name` 與 `position_title` 為前端唯一可見的個資欄位（FR-032）。
 - `status` 非 `in_progress` 時 MUST 拒絕所有草稿寫入、提問與套用。
 - `deadline_at` MUST 由伺服端計算，MUST NOT 接受用戶端傳入。
-- 預設模式為 `implement`：本平台的評估標的是透過 AI 實作（research R-015）。
 
 **狀態轉移**：
 
@@ -155,7 +153,6 @@ not_started ──兌換連結──> in_progress ──手動提交──> subm
 | `created_at` | timestamptz | |
 | `seq` | bigint (identity) | 單調遞增的顯示順序 |
 | `attached_code` | text? | 「傳送至 AI 檢查」時附帶的程式碼快照 |
-| `collaboration_mode` | text? | 該則回覆採用的模式 |
 | `provider` | text? | 產生該回覆的供應商（`google_genai` \| `anthropic`） |
 | `model` | text? | 實際使用的模型名稱 |
 | `source` | text? | `typed` \| `quick_prompt` \| `question_hint` \| `code_review` |
@@ -190,8 +187,9 @@ not_started ──兌換連結──> in_progress ──手動提交──> subm
 
 - `content` MUST 與 AI 輸出的該區塊逐字相同（SC-004）——不做 trim 以外的任何處理。
 - 只有 `role = 'assistant'` 的訊息會有區塊。
-- 討論模式下 AI 通常不產出區塊，但若產出仍 MUST 記錄——模式是提示層的意圖表達，
-  不是輸出過濾（research R-015）。
+- 解析只看輸出內容，不看提問意圖。AI 依提問意圖決定要不要附程式碼（FR-012），
+  但無論它基於什麼理由決定要附，只要輸出裡有區塊就 MUST 解析並留存——
+  解析層若因為「這看起來像概念問題」而丟棄區塊，那就是變相的輸出過濾。
 
 ---
 
@@ -268,7 +266,6 @@ SessionState {
   currentQuestionId: string               // 三面板共用的當前題目
   answers:        Record<questionId, { language, content, saveState, revision }>
   chat:           ChatMessage[]           // 每則 assistant 訊息含 codeBlocks[]
-  collaborationMode: 'discuss' | 'implement'
   streaming:      { active: boolean, messageId?: string }
   applying:       { blockKey?: string }   // 套用中的區塊，防止重複點擊
   connectivity:   'online' | 'offline'

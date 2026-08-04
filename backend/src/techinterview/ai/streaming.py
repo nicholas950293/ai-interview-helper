@@ -15,7 +15,7 @@ from techinterview.ai import providers
 from techinterview.ai.code_blocks import extract_code_blocks
 from techinterview.ai.prompts import PromptContext, build_system_prompt
 from techinterview.core.errors import AppError, ErrorCode
-from techinterview.core.schemas import CollaborationMode, SessionStatus
+from techinterview.core.schemas import SessionStatus
 from techinterview.db import queries
 from techinterview.domain.session_state import is_terminal
 
@@ -71,7 +71,7 @@ async def stream_response(pending: PendingStream) -> AsyncIterator[str]:
         from techinterview.core.config import get_settings
 
         if get_settings().ai_fake_enabled:
-            source = providers.fake_stream(pending.prompt, pending.context.mode.value)
+            source = providers.fake_stream(pending.prompt)
         else:
             source = _model_stream(pending)
 
@@ -157,11 +157,8 @@ async def stream_response(pending: PendingStream) -> AsyncIterator[str]:
         )
 
 
-def context_from_session(
-    row, question, answer, mode: CollaborationMode, attached_code: str | None
-) -> PromptContext:
+def context_from_session(row, question, answer, attached_code: str | None) -> PromptContext:
     return PromptContext(
-        mode=mode,
         question_title=question.title,
         question_description=question.description,
         complexity_requirement=question.complexity_requirement,

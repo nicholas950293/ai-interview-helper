@@ -52,7 +52,6 @@ export const useCurrentQuestionId = () => useSessionStore((s) => s.currentQuesti
 export const useQuestions = () => useSessionStore((s) => s.questions);
 export const useSession = () => useSessionStore((s) => s.session);
 export const useChat = () => useSessionStore((s) => s.chat);
-export const useCollaborationMode = () => useSessionStore((s) => s.collaborationMode);
 export const useStreaming = () => useSessionStore((s) => s.streaming);
 export const useConnectivity = () => useSessionStore((s) => s.connectivity);
 export const useHasUnsavedChanges = () => useSessionStore(selectHasUnsavedChanges);

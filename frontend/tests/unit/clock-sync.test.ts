@@ -30,7 +30,6 @@ describe('週期校時', () => {
         positionTitle: '模擬面試',
         deadlineAt: deadline,
         status: 'in_progress',
-        collaborationMode: 'implement',
       },
     });
     vi.mocked(api.fetchTime).mockResolvedValue({
@@ -128,7 +127,6 @@ describe('歸零回呼', () => {
         positionTitle: '模擬面試',
         deadlineAt: new Date(Date.now() + 3000).toISOString(),
         status: 'in_progress',
-        collaborationMode: 'implement',
       },
     });
 

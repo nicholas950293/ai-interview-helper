@@ -205,13 +205,13 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 ### Implementation for User Story 2
 
 - [X] T061 [US2] 實作 LangChain 供應商工廠於 `backend/src/techinterview/ai/providers.py`，以 `init_chat_model` 建立供應商無關的 model，**MUST NOT import 任何供應商 SDK**；以 `with_fallbacks` 表達退回（憲章原則 V）
-- [X] T062 [US2] 撰寫系統提示於 `backend/src/techinterview/ai/prompts.py`：討論模式與實作模式各一段，**兩者皆不限制輸出完整性**（research R-015）
+- [X] T062 [US2] 撰寫系統提示於 `backend/src/techinterview/ai/prompts.py`：**依提問的意圖回應**（要實作就給完整實作，問概念就回答概念），**MUST NOT 限制輸出完整性**。原本的討論／實作雙模式已於 2026-08-05 移除（research R-015 已更新）
 - [X] T063 [US2] 實作 `astream` → SSE 串流於 `backend/src/techinterview/ai/streaming.py`（場次進入終態時立即以 `error` 中止）
 - [X] T064 [US2] 實作程式碼區塊解析與留存於 `backend/src/techinterview/ai/code_blocks.py`，於串流結束後對**完整回覆**解析並寫入 `chat_code_block`（research R-013）
 - [X] T065 [US2] 實作 `POST /api/chat` 與 `GET /api/chat/stream/{stream_id}` 於 `backend/src/techinterview/api/chat.py`（`blocks` 事件於 `done` 之前送出；`provider`、`model` 一併留存）
 - [X] T066 [US2] 實作 `POST /api/answers/{question_id}/apply` 於 `backend/src/techinterview/api/answers.py`——逐字寫入指定區塊、遞增 `revision`、回傳寫入後的 `content`
 - [X] T067 [US2] 實作 `code_change` 歸屬於 `backend/src/techinterview/domain/attribution.py`：套用時記 `ai`、debounce 保存時記 `candidate`，**且與最近一次 `ai` 變更內容相同時不重複記錄**（research R-014）；並將 candidate 記錄接上 T040 的保存流程
-- [X] T068 [P] [US2] 實作 `PATCH /api/session/collaboration-mode` 於 `backend/src/techinterview/api/session.py`
+- [X] ~~T068 [P] [US2] 實作 `PATCH /api/session/collaboration-mode`~~ —— 隨協作模式一併移除（2026-08-05）
 - [X] T069 [P] [US2] 實作 SSE 用戶端於 `frontend/src/services/chat-stream.ts`（token 批次套用、處理 `blocks` 事件）
 - [X] T070 [P] [US2] 實作對話 Feed（candidate／assistant／system 三種呈現）於 `frontend/src/components/copilot/ChatFeed.tsx`
 - [X] T071 [P] [US2] 實作程式碼區塊元件與「套用至編輯器」按鈕於 `frontend/src/components/copilot/CodeBlock.tsx`——內容 MUST 完整顯示不摺疊隱藏；可存取名稱 MUST 能區分同一則回覆的不同區塊

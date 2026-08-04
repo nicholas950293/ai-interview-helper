@@ -110,10 +110,12 @@ class TestFakeStream:
         settings = _patch_settings(monkeypatch, environment="production", ai_fake=True)
         assert not settings.ai_fake_enabled
 
-    async def test_implement_mode_yields_code_block(self):
-        text = "".join([chunk async for chunk in providers.fake_stream("x", "implement")])
-        assert "```" in text
+    async def test_yields_a_complete_code_block(self):
+        """假回應固定含完整實作——串流、區塊解析與套用的路徑都靠它驗證。
 
-    async def test_discuss_mode_yields_no_code_block(self):
-        text = "".join([chunk async for chunk in providers.fake_stream("x", "discuss")])
-        assert "```" not in text
+        「依提問意圖決定要不要附程式碼」是模型行為，腳本化回應驗證不了，
+        因此不在此斷言（見 providers.fake_stream 的說明）。
+        """
+        text = "".join([chunk async for chunk in providers.fake_stream("x")])
+        assert "```" in text
+        assert "function solve" in text

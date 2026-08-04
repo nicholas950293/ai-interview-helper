@@ -276,8 +276,8 @@ def seed(
     conn.execute("DELETE FROM interview_session WHERE id = ?", (session_id,))
     conn.execute(
         """INSERT INTO interview_session
-             (id, candidate_name, position_title, duration_sec, status, collaboration_mode)
-           VALUES (?, ?, ?, ?, 'not_started', 'implement')""",
+             (id, candidate_name, position_title, duration_sec, status)
+           VALUES (?, ?, ?, ?, 'not_started')""",
         (session_id, "Alex Chen", "資深全端工程師模擬面試", duration_sec),
     )
     conn.execute(

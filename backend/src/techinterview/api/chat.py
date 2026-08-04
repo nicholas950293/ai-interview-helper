@@ -19,7 +19,6 @@ from techinterview.core.schemas import (
     ChatRequest,
     ChatRole,
     ChatSystemRequest,
-    CollaborationMode,
 )
 from techinterview.db import queries
 
@@ -67,7 +66,6 @@ async def post_chat(request: Request) -> dict:
     answer = queries.find_answer(session_id, body.question_id)
     # attachCode 時取該題最後保存的草稿；前端 MUST 先 flush（ui-contracts A-03）
     attached = (answer.content if answer else "") if body.attach_code else None
-    mode = CollaborationMode(row["collaboration_mode"])
     history = _history(session_id, body.question_id)
 
     # 提問先落地——對話 MUST 完整留存（FR-015）
@@ -84,7 +82,6 @@ async def post_chat(request: Request) -> dict:
         question_id=body.question_id,
         role=ChatRole.ASSISTANT,
         content="",
-        collaboration_mode=mode,
     )
 
     stream_id = str(uuid.uuid4())
@@ -93,7 +90,7 @@ async def post_chat(request: Request) -> dict:
         PendingStream(
             session_id=session_id,
             message_id=assistant.id,
-            context=context_from_session(row, question, answer, mode, attached),
+            context=context_from_session(row, question, answer, attached),
             prompt=body.content,
             history=history,
         ),

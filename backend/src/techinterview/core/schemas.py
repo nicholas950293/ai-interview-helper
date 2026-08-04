@@ -34,13 +34,6 @@ class SessionStatus(StrEnum):
     EXPIRED_SUBMITTED = "expired_submitted"
 
 
-class CollaborationMode(StrEnum):
-    """討論模式與實作模式。兩者皆 MUST NOT 限制 AI 輸出的完整性（憲章原則 I）。"""
-
-    DISCUSS = "discuss"
-    IMPLEMENT = "implement"
-
-
 class ChatRole(StrEnum):
     CANDIDATE = "candidate"
     ASSISTANT = "assistant"
@@ -110,7 +103,6 @@ class PublicSession(CamelModel):
     position_title: str
     deadline_at: str | None
     status: SessionStatus
-    collaboration_mode: CollaborationMode
 
 
 class PublicAnswer(CamelModel):
@@ -178,10 +170,6 @@ class ChatRequest(CamelModel):
 class ChatSystemRequest(CamelModel):
     from_question_id: str = Field(min_length=1)
     to_question_id: str = Field(min_length=1)
-
-
-class CollaborationModeRequest(CamelModel):
-    mode: CollaborationMode
 
 
 class EnvironmentEventItem(CamelModel):

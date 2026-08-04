@@ -1,6 +1,5 @@
 import type {
   ChatSource,
-  CollaborationMode,
   Language,
   SessionPayload,
   Session,
@@ -78,15 +77,6 @@ export function redeemToken(token: string): Promise<{ session: Session; serverTi
 
 export function fetchSession(): Promise<SessionPayload> {
   return request('/session');
-}
-
-export function setCollaborationMode(
-  mode: CollaborationMode
-): Promise<{ mode: CollaborationMode }> {
-  return request('/session/collaboration-mode', {
-    method: 'PATCH',
-    body: JSON.stringify({ mode }),
-  });
 }
 
 // --- 作答 -------------------------------------------------------------------

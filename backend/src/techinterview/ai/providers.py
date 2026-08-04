@@ -96,21 +96,16 @@ function solve(items) {
 負數與 0 會被略過——如果 0 應該保留，跟我說我改。
 """
 
-_FAKE_DISCUSS = """先把問題拆開來看。
 
-你要的是「過濾後再轉換」，這在實作上有兩種走法：一次走訪同時做完，
-或先 filter 再 map。前者少一次配置，後者可讀性好一些；資料量不大時差異可以忽略。
+async def fake_stream(prompt: str) -> AsyncIterator[str]:
+    """腳本化回應，供端到端驗證串流與套用流程。
 
-真正會影響正確性的是邊界定義：0 算不算正數？輸入可能是 null 嗎？
-這兩題決定了判斷式要怎麼寫。你先決定，我再依此產出實作。
-"""
-
-
-async def fake_stream(prompt: str, mode: str) -> AsyncIterator[str]:
-    """腳本化回應，供端到端驗證串流與套用流程。"""
+    固定回傳含完整實作的那一份。系統提示要求 AI「依提問的意圖回應」——
+    概念問題就別附完整實作——但那是**模型的行為**，腳本化的回應驗證不了它，
+    硬寫個關鍵字判斷只會製造「測過了」的假象。該項以真實模型人工驗證。
+    """
     import asyncio
 
-    text = _FAKE_DISCUSS if mode == "discuss" else _FAKE_IMPLEMENT
-    for i in range(0, len(text), 24):
+    for i in range(0, len(_FAKE_IMPLEMENT), 24):
         await asyncio.sleep(0.005)
-        yield text[i : i + 24]
+        yield _FAKE_IMPLEMENT[i : i + 24]

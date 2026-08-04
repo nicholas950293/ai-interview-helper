@@ -77,58 +77,6 @@ test.describe('ai implementation', () => {
     expect(payload.codeBlocks[0].content).toContain('function solve');
   });
 
-  test('討論模式不產出可套用的程式碼區塊，實作模式則會（FR-012）', async ({ page }) => {
-    const { url } = seedSession();
-    await enterSession(page, url);
-
-    // 模式切換是樂觀更新、不等後端寫入完成；緊接著送出的訊息可能還用舊模式。
-    // 這是應用層的已知競態（前端遷移時應改為等待或以請求帶上模式），此處明確等待。
-    const modeSaved = page.waitForResponse(
-      (res) => res.url().includes('/api/session/collaboration-mode') && res.ok()
-    );
-    await page.getByRole('radio', { name: /討論模式/ }).click();
-    await modeSaved;
-
-    const discussStream = page.waitForResponse((res) => res.url().includes('/api/chat/stream/'));
-    await page.getByLabel('向 AI 提問').fill('這題要怎麼做？');
-    await page.getByRole('button', { name: '送出' }).click();
-    const discussBody = await (await discussStream).text();
-
-    const discussBlocks = JSON.parse(
-      discussBody
-        .split('\n')
-        .find((line, i, all) => all[i - 1]?.trim() === 'event: blocks' && line.startsWith('data:'))!
-        .replace('data:', '')
-        .trim()
-    );
-    expect(discussBlocks.codeBlocks).toHaveLength(0);
-
-    const implementSaved = page.waitForResponse(
-      (res) => res.url().includes('/api/session/collaboration-mode') && res.ok()
-    );
-    await page.getByRole('radio', { name: /實作模式/ }).click();
-    await implementSaved;
-
-    const implementStream = page.waitForResponse((res) => res.url().includes('/api/chat/stream/'));
-    await page.getByLabel('向 AI 提問').fill('那就幫我實作');
-    await page.getByRole('button', { name: '送出' }).click();
-    const implementBody = await (await implementStream).text();
-
-    expect(implementBody).toContain('function solve');
-  });
-
-  test('切換模式不清空既有對話', async ({ page }) => {
-    const { url } = seedSession();
-    await enterSession(page, url);
-
-    await page.getByLabel('向 AI 提問').fill('第一個問題');
-    await page.getByRole('button', { name: '送出' }).click();
-    await expect(page.getByText('第一個問題')).toBeVisible();
-
-    await page.getByRole('radio', { name: /討論模式/ }).click();
-    await expect(page.getByText('第一個問題')).toBeVisible();
-  });
-
   test('快捷提問 Chip 點擊即送出（FR-013）', async ({ page }) => {
     const { url } = seedSession();
     await enterSession(page, url);

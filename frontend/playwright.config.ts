@@ -10,6 +10,9 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests',
+  // Next 的路由是按需編譯，冷啟動時第一批平行測試會一起卡在編譯上。
+  // 先暖機再開跑，否則逾時會落在隨機幾個測試身上，看起來像 flaky。
+  globalSetup: './tests/global-setup.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

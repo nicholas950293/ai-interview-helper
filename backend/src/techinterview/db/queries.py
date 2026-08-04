@@ -16,7 +16,6 @@ from techinterview.core.schemas import (
     ChangeSource,
     ChatRole,
     ChatSource,
-    CollaborationMode,
     Example,
     Language,
     PublicAnswer,
@@ -71,7 +70,6 @@ def to_public_session(row: sqlite3.Row) -> PublicSession:
         position_title=row["position_title"],
         deadline_at=row["deadline_at"],
         status=SessionStatus(row["status"]),
-        collaboration_mode=CollaborationMode(row["collaboration_mode"]),
     )
 
 
@@ -98,17 +96,6 @@ def update_session_status(
     conn.execute(
         "UPDATE interview_session SET status = ?, submitted_at = ? WHERE id = ?",
         (status.value, submitted_at, session_id),
-    )
-    conn.commit()
-
-
-def update_collaboration_mode(
-    session_id: str, mode: CollaborationMode, conn: sqlite3.Connection | None = None
-) -> None:
-    conn = conn or get_db()
-    conn.execute(
-        "UPDATE interview_session SET collaboration_mode = ? WHERE id = ?",
-        (mode.value, session_id),
     )
     conn.commit()
 
@@ -297,7 +284,6 @@ def insert_chat_message(
     role: ChatRole,
     content: str,
     attached_code: str | None = None,
-    collaboration_mode: CollaborationMode | None = None,
     provider: str | None = None,
     model: str | None = None,
     source: ChatSource | None = None,
@@ -312,8 +298,8 @@ def insert_chat_message(
     conn.execute(
         """INSERT INTO chat_message
              (id, seq, session_id, question_id, role, content, created_at,
-              attached_code, collaboration_mode, provider, model, source)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+              attached_code, provider, model, source)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         (
             message_id,
             seq,
@@ -323,7 +309,6 @@ def insert_chat_message(
             content,
             created_at,
             attached_code,
-            collaboration_mode.value if collaboration_mode else None,
             provider,
             model,
             source.value if source else None,

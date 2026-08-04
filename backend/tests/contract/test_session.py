@@ -28,7 +28,6 @@ class TestRedeem:
         assert body["session"]["status"] == "in_progress"
         assert body["session"]["candidateName"] == "Alex Chen"
         assert body["session"]["deadlineAt"]
-        assert body["session"]["collaborationMode"] == "implement"
         assert body["serverTime"]
 
         # deadlineAt = startedAt + durationSec（伺服端計算，不接受用戶端傳入）
@@ -106,29 +105,6 @@ class TestGetSession:
         assert res.status_code == 401
 
 
-class TestCollaborationMode:
-    async def test_switch_mode_persists(self, session_client):
-        res = await session_client.patch(
-            "/api/session/collaboration-mode", json={"mode": "discuss"}
-        )
-        assert res.status_code == 200
-        assert res.json()["mode"] == "discuss"
-
-        session = (await session_client.get("/api/session")).json()["session"]
-        assert session["collaborationMode"] == "discuss"
-
-    async def test_default_is_implement(self, session_client):
-        """本平台的評估標的是透過 AI 實作，預設不該是討論。"""
-        session = (await session_client.get("/api/session")).json()["session"]
-        assert session["collaborationMode"] == "implement"
-
-    async def test_rejected_after_submission(self, session_client, fixture, test_db):
-        set_session_status(test_db, fixture.session_id, "submitted")
-        res = await session_client.patch(
-            "/api/session/collaboration-mode", json={"mode": "discuss"}
-        )
-        assert res.status_code == 409
-
 
 class TestPiiMinimization:
     """FR-032 的 MUST NOT 半段：前端不得持有姓名與職稱以外的個資。"""
@@ -139,7 +115,6 @@ class TestPiiMinimization:
         "positionTitle",
         "deadlineAt",
         "status",
-        "collaborationMode",
     }
 
     async def test_session_payload_has_only_allowed_fields(self, session_client):

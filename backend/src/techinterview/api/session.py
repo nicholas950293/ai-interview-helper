@@ -8,10 +8,9 @@ from techinterview.core.auth import (
     current_session_id,
     issue_session_cookie,
     redeem_token,
-    require_writable_session,
 )
 from techinterview.core.errors import AppError, ErrorCode
-from techinterview.core.schemas import CollaborationModeRequest, RedeemRequest
+from techinterview.core.schemas import RedeemRequest
 from techinterview.db import queries
 
 router = APIRouter(prefix="/api", tags=["session"])
@@ -53,14 +52,3 @@ def get_session(request: Request) -> dict:
         "chat": [m.model_dump(by_alias=True) for m in queries.list_chat_messages(session_id)],
         "serverTime": queries.now_iso(),
     }
-
-
-@router.patch("/session/collaboration-mode")
-def set_collaboration_mode(request: Request, body: CollaborationModeRequest) -> dict:
-    """切換協作模式（FR-012）。
-
-    模式僅改變送往模型的系統提示，MUST NOT 限制 AI 輸出的完整性（憲章原則 I）。
-    """
-    row = require_writable_session(request)
-    queries.update_collaboration_mode(row["id"], body.mode)
-    return {"mode": body.mode.value}

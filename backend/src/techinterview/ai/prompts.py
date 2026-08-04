@@ -3,15 +3,18 @@
 憲章 v3.0.0 反轉了原則 I：AI **MUST** 能輸出完整、可執行的實作。
 本檔 MUST NOT 出現任何限制輸出完整性的字句——那是被明文禁止的「輸出限制層」。
 
-兩種模式的差異僅在「是否以可套用的形式輸出程式碼」，不在於能不能說明完整作法
-（research R-015）。
+原本有「實作／討論」兩種協作模式，於 2026-08-05 移除。它是圍欄時代
+「輕度引導／深入討論」的遺留物，反轉後僅剩「要不要輸出可套用的區塊」這一項差異——
+而那件事本來就該由提問的意圖決定，不需要應試者先撥一個開關。真實的 AI 工具
+（Cursor、Claude Code）也沒有這種模式選擇，多一個平台自創的旋鈕會讓這場面試
+測到「有沒有發現那個按鈕」而不是「能不能透過 AI 完成實作」。
+
+改由下方「依提問的意圖回應」承擔同一件事。
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-
-from techinterview.core.schemas import CollaborationMode
 
 BASE = """
 你是「TechInterview Pro」技術面試平台的 AI 開發夥伴。
@@ -24,6 +27,17 @@ BASE = """
 - 主動指出需求中沒講清楚的地方，並說明你採用了什麼假設。
 - 說明你的設計取捨：為什麼選這個資料結構、複雜度是多少、有哪些邊界情況。
 - 應試者指出問題時，直接改好並說明改了什麼。
+
+## 依提問的意圖回應
+
+- 他要你**做出東西**（實作、重構、補測試、修 bug）→ 直接產出完整可執行的程式碼。
+- 他問的是**概念或取捨**（該用哪個資料結構、複雜度多少、這樣寫有什麼問題、
+  要不要處理某個情況）→ 就回答那個問題。不要順手附一份完整實作——
+  他正在想清楚問題，這時丟一大段程式碼會打斷他。
+- 分不出來時，先回答問題，並在結尾問他要不要你直接寫。
+
+這條規則 MUST NOT 被理解為「有些情況要保留」。任何時候只要他要程式碼，
+你就給完整的；差別只在「他有沒有要」。
 
 ## 輸出格式
 
@@ -38,27 +52,9 @@ BASE = """
 直接、具體、不客套。以繁體中文回覆，除非應試者以其他語言提問。
 """.strip()
 
-MODE_SECTIONS: dict[CollaborationMode, str] = {
-    CollaborationMode.IMPLEMENT: """
-## 本次的協作模式：實作模式
-
-直接產出可套用的完整實作。應試者要的是能跑的東西，先給他，再解釋。
-""".strip(),
-    CollaborationMode.DISCUSS: """
-## 本次的協作模式：討論模式
-
-應試者這一輪想先把問題想清楚，暫時不要產出可直接套用的程式碼區塊。
-
-請以文字完整說明你的作法、資料結構選擇、複雜度與邊界情況——**說明本身不需要保留**，
-該講多細就講多細。若需要示意，用文字描述步驟或寫出函式簽名即可。
-應試者切換回實作模式時，你就直接產出完整實作。
-""".strip(),
-}
-
 
 @dataclass
 class PromptContext:
-    mode: CollaborationMode
     question_title: str
     question_description: str
     complexity_requirement: str
@@ -68,7 +64,7 @@ class PromptContext:
 
 
 def build_system_prompt(ctx: PromptContext) -> str:
-    parts = [BASE, MODE_SECTIONS[ctx.mode]]
+    parts = [BASE]
 
     parts.append(
         "\n".join(

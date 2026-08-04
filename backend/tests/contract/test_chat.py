@@ -42,7 +42,7 @@ def scripted(monkeypatch):
     """以腳本化回應取代模型，讓串流內容可逐字斷言。"""
 
     def _install(text: str):
-        async def fake(_prompt: str, _mode: str):
+        async def fake(_prompt: str):
             for i in range(0, len(text), 16):
                 yield text[i : i + 16]
 
@@ -166,7 +166,7 @@ class TestChatStream:
     ):
         """Edge Case：時間歸零當下 AI 正在回覆。"""
 
-        async def fake(_prompt, _mode):
+        async def fake(_prompt):
             yield "第一段"
             set_session_status(test_db, fixture.session_id, "expired_submitted")
             yield "第二段"
@@ -228,12 +228,20 @@ class TestNoOutputLimiting:
         assert stored.content == full
         assert len(stored.code_blocks) == 1
 
-    async def test_discuss_mode_does_not_filter_output(self, session_client, fixture, scripted):
-        """討論模式是提示層的意圖，不是輸出過濾——真有區塊仍須留存。"""
-        await session_client.patch("/api/session/collaboration-mode", json={"mode": "discuss"})
+    async def test_blocks_extracted_regardless_of_prompt_intent(
+        self, session_client, fixture, scripted
+    ):
+        """區塊解析只看輸出內容，不看提問意圖。
+
+        協作模式移除後，「要不要附程式碼」由模型依提問意圖決定。無論它基於什麼
+        理由決定要附，只要輸出裡有區塊就 MUST 解析並留存——解析層 MUST NOT
+        因為「這看起來像概念問題」而丟棄區塊，那會是變相的輸出過濾。
+        """
         scripted("說明\n\n```js\nconst a = 1;\n```\n")
 
-        body = await _start_stream(session_client, fixture.question_ids[0])
+        body = await _start_stream(
+            session_client, fixture.question_ids[0], content="這題該用什麼資料結構？"
+        )
         events = parse_sse((await session_client.get(f"/api/chat/stream/{body['streamId']}")).text)
         blocks = next(d for e, d in events if e == "blocks")["codeBlocks"]
 

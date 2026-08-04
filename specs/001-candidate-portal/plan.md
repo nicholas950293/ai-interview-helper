@@ -200,7 +200,7 @@ backend/                         # Python 3.12 + FastAPI
 │   ├── api/                     # session、answers、tests、chat、time、submit、events
 │   ├── ai/
 │   │   ├── providers.py         # LangChain 供應商工廠（Gemini / Claude）
-│   │   ├── prompts.py           # 系統提示（討論模式 / 實作模式）
+│   │   ├── prompts.py           # 系統提示（依提問意圖回應）
 │   │   └── streaming.py         # astream → SSE
 │   ├── db/                      # Supabase client、查詢、seed
 │   ├── domain/                  # 場次狀態機、提交規則、程式碼變更歸屬

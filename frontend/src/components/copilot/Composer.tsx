@@ -1,6 +1,17 @@
 import { useState, type KeyboardEvent } from 'react';
-import { useIsReadOnly, useStreaming } from '../../store/selectors';
+import { useIsReadOnly, useSession, useStreaming } from '../../store/selectors';
 import { sendChat } from '../../store/actions';
+
+/**
+ * 唯讀時的提示文字。
+ *
+ * `isReadOnly` 是「非 in_progress」，`not_started` 也包含在內——
+ * 對一個還沒開始的場次說「已結束」剛好講反，會讓應試者以為錯過了時間。
+ */
+function readOnlyHint(status: string | undefined): string {
+  if (status === 'not_started') return '場次尚未開始，請由邀請連結進入。';
+  return '場次已結束，無法再提問。';
+}
 
 /**
  * 輸入區（FR-009）。
@@ -10,6 +21,7 @@ import { sendChat } from '../../store/actions';
 export function Composer() {
   const streaming = useStreaming();
   const readOnly = useIsReadOnly();
+  const session = useSession();
   const [value, setValue] = useState('');
 
   const busy = streaming.active;
@@ -41,7 +53,9 @@ export function Composer() {
         disabled={disabled}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={readOnly ? '場次已結束，無法再提問。' : '描述你卡住的地方…（Ctrl+Enter 送出）'}
+        placeholder={
+          readOnly ? readOnlyHint(session?.status) : '描述你卡住的地方…（Ctrl+Enter 送出）'
+        }
         className="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text-primary placeholder:text-text-muted disabled:opacity-60"
       />
 

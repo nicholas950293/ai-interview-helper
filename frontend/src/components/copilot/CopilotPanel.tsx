@@ -1,6 +1,5 @@
 import { CollaborationBanner } from './CollaborationBanner';
 import { StatusBar } from './StatusBar';
-import { ModeToggle } from './ModeToggle';
 import { ChatFeed } from './ChatFeed';
 import { QuickPromptChips } from './QuickPromptChips';
 import { Composer } from './Composer';
@@ -18,9 +17,8 @@ export function CopilotPanel() {
       <CollaborationBanner />
       <StatusBar />
 
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
+      <div className="flex shrink-0 items-center border-b border-border px-3 py-2">
         <span className="text-sm font-medium text-text-primary">AI 協作</span>
-        <ModeToggle />
       </div>
 
       <div className="min-h-0 flex-1">

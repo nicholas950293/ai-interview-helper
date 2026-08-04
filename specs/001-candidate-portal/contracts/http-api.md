@@ -48,7 +48,6 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
     "positionTitle",
     "deadlineAt",
     "status",
-    "collaborationMode"
   },
   "serverTime": "2026-08-04T09:00:00.000Z"
 }
@@ -214,19 +213,6 @@ SSE 串流 AI 回覆。
 **Request**：`{ "fromQuestionId": string, "toQuestionId": string }`
 
 **Response 201**：`{ "message": ChatMessage }`
-
----
-
-## PATCH /api/session/collaboration-mode
-
-切換協作模式（FR-012）。
-
-**Request**：`{ "mode": "discuss" | "implement" }` →
-**Response 200**：`{ "mode": "discuss" | "implement" }`
-
-- 模式僅改變送往模型的系統提示，MUST NOT 限制 AI 輸出的完整性（憲章原則 I）。
-- 切換 MUST NOT 清空既有對話。
-- 預設為 `implement`。
 
 ---
 

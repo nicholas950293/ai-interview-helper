@@ -90,8 +90,8 @@ def seed_fixture(
 
     conn.execute(
         """INSERT INTO interview_session
-             (id, candidate_name, position_title, duration_sec, status, collaboration_mode)
-           VALUES (?, ?, ?, ?, ?, 'implement')""",
+             (id, candidate_name, position_title, duration_sec, status)
+           VALUES (?, ?, ?, ?, ?)""",
         (session_id, "Alex Chen", "資深全端工程師模擬面試", duration_sec, status),
     )
     conn.execute(

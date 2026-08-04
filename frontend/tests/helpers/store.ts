@@ -31,7 +31,6 @@ export function makePayload(overrides: Partial<SessionPayload> = {}): SessionPay
       positionTitle: '資深全端工程師模擬面試',
       deadlineAt: new Date(Date.now() + 3600_000).toISOString(),
       status: 'in_progress',
-      collaborationMode: 'implement',
     },
     questions: [
       makeQuestion({ id: 'q1', title: 'API 限流器', order: 1, difficulty: 'medium', points: 40 }),
