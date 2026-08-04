@@ -1,6 +1,11 @@
 import { useSessionStore } from './session';
 import { flushPendingSave } from './persistence';
-import { ApiError, postChat, postChatSystemMessage } from '../services/api';
+import {
+  ApiError,
+  postChat,
+  postChatSystemMessage,
+  submitSession as apiSubmitSession,
+} from '../services/api';
 import { openChatStream, type StreamController } from '../services/chat-stream';
 import type { ChatSource } from '../types';
 
@@ -62,6 +67,72 @@ export const CODE_REVIEW_PROMPT =
 
 export function sendCodeForReview(): Promise<void> {
   return sendChat({ content: CODE_REVIEW_PROMPT, attachCode: true, source: 'code_review' });
+}
+
+// --- 提交 -------------------------------------------------------------------
+
+/** 提交失敗時的重試間隔；持續重試直到成功（FR-023：MUST NOT 丟棄內容）。 */
+const SUBMIT_RETRY_BASE_MS = 2000;
+const SUBMIT_RETRY_MAX_MS = 15_000;
+
+export interface SubmitOptions {
+  /** 由計時歸零觸發；會先中止進行中的串流並鎖定輸入。 */
+  forced?: boolean;
+  onError?: (message: string) => void;
+  onSuccess?: () => void;
+}
+
+let submitting = false;
+
+/**
+ * 提交全卷。
+ *
+ * 失敗時持續退避重試，作答內容一律保留於 store 與伺服端（FR-023）。
+ * 不傳送任何作答內容——伺服端取每題最後保存的草稿（FR-022）。
+ */
+export async function submitSession(options: SubmitOptions = {}): Promise<void> {
+  if (submitting) return;
+  submitting = true;
+
+  if (options.forced) {
+    // 時間歸零當下 AI 可能正在回覆：回覆須中止，且不影響強制提交（Edge Case）
+    abortActiveStream();
+  }
+
+  let attempt = 0;
+
+  const attemptSubmit = async (): Promise<void> => {
+    try {
+      const result = await apiSubmitSession();
+      useSessionStore.getState().setSessionStatus(result.status);
+      submitting = false;
+      options.onSuccess?.();
+    } catch (err) {
+      const message =
+        err instanceof ApiError ? err.message : '提交失敗，你的作答內容已保留，系統會持續重試。';
+
+      // 場次已是終態：提交其實已經完成，不需要再重試。
+      if (err instanceof ApiError && err.code === 'SESSION_SUBMITTED') {
+        useSessionStore.getState().setSessionStatus('submitted');
+        submitting = false;
+        options.onSuccess?.();
+        return;
+      }
+
+      options.onError?.(message);
+
+      attempt += 1;
+      const delay = Math.min(SUBMIT_RETRY_BASE_MS * 2 ** (attempt - 1), SUBMIT_RETRY_MAX_MS);
+      setTimeout(() => void attemptSubmit(), delay);
+    }
+  };
+
+  await attemptSubmit();
+}
+
+/** 測試用：重設提交中的旗標。 */
+export function resetSubmitState(): void {
+  submitting = false;
 }
 
 // --- AI 對話 ----------------------------------------------------------------

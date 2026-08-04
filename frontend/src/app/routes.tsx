@@ -9,7 +9,7 @@ import { QuestionContent } from '../components/question/QuestionContent';
 import { AskAiButton } from '../components/question/AskAiButton';
 import { AnswerWorkspace } from '../components/workspace/AnswerWorkspace';
 import { CopilotPanel } from '../components/copilot/CopilotPanel';
-import { useSession } from '../store/selectors';
+import { AppHeader } from '../components/header/AppHeader';
 
 /**
  * 路由 `/s/:token`。
@@ -108,19 +108,6 @@ function PortalScreen() {
       />
       <Toaster />
     </>
-  );
-}
-
-/** Header 的完整內容（計時器、全螢幕、提交）由 US4 / US5 接上。 */
-function AppHeader() {
-  const session = useSession();
-
-  return (
-    <div className="flex items-center gap-4 border-b border-border bg-surface px-(--layout-gap) py-3">
-      <span className="font-semibold text-text-primary">TechInterview Pro</span>
-      <span className="text-text-secondary">{session?.positionTitle}</span>
-      <span className="ml-auto text-text-secondary">{session?.candidateName}</span>
-    </div>
   );
 }
 

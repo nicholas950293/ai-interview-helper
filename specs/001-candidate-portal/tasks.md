@@ -174,23 +174,23 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 ### Tests for User Story 4 ⚠️ 先寫，先失敗
 
-- [ ] T074 [P] [US4] 撰寫計時顯示與 5 分警示的失敗測試（fake timers，含 aria-live 宣告一次）於 `frontend/tests/unit/timer.test.ts`
-- [ ] T075 [P] [US4] 撰寫時鐘校時與漂移修正的失敗測試於 `frontend/tests/unit/clock-sync.test.ts`
-- [ ] T076 [P] [US4] 撰寫提交契約測試（冪等、取最後保存草稿、終態拒寫、逾時由 `GET /api/time` 觸發）於 `backend/tests/contract/submission.test.ts`
-- [ ] T077 [P] [US4] 撰寫提交確認對話框（取消不提交）的元件測試於 `frontend/tests/component/submit-dialog.test.tsx`
-- [ ] T078 [P] [US4] 撰寫端到端計時與強制提交情境於 `frontend/tests/e2e/timer-submission.spec.ts`（對應 quickstart V4）
+- [X] T074 [P] [US4] 撰寫計時顯示與 5 分警示的失敗測試（fake timers，含 aria-live 宣告一次）於 `frontend/tests/unit/timer.test.ts`
+- [X] T075 [P] [US4] 撰寫時鐘校時與漂移修正的失敗測試於 `frontend/tests/unit/clock-sync.test.ts`
+- [X] T076 [P] [US4] 撰寫提交契約測試（冪等、取最後保存草稿、終態拒寫、逾時由 `GET /api/time` 觸發）於 `backend/tests/contract/submission.test.ts`
+- [X] T077 [P] [US4] 撰寫提交確認對話框（取消不提交）的元件測試於 `frontend/tests/component/submit-dialog.test.tsx`
+- [X] T078 [P] [US4] 撰寫端到端計時與強制提交情境於 `frontend/tests/e2e/timer-submission.spec.ts`（對應 quickstart V4）
 
 ### Implementation for User Story 4
 
-- [ ] T079 [US4] 實作 `deadlineAt` 計算與 `GET /api/time`（逾期時主動觸發強制提交）於 `backend/src/routes/time.ts`
-- [ ] T080 [US4] 實作 `POST /api/submit`（冪等、取每題最新 `savedAt` 草稿）於 `backend/src/routes/submit.ts`
-- [ ] T081 [P] [US4] 實作計時 hook（本地每秒遞減 + 每 30 秒校時）於 `frontend/src/lib/use-countdown.ts`
-- [ ] T082 [P] [US4] 實作倒數計時器元件（一般／警示／鎖定三態）於 `frontend/src/components/header/CountdownTimer.tsx`
-- [ ] T083 [P] [US4] 實作提交確認對話框（Radix Dialog）與提交成功提示（FR-021，同時具備視覺與可存取名稱）於 `frontend/src/components/header/SubmitDialog.tsx`
-- [ ] T084 [US4] 實作 `isReadOnly` 鎖定（所有輸入、按鈕、Composer 轉唯讀）於 `frontend/src/store/selectors.ts` 與相關元件
-- [ ] T085 [US4] 實作歸零強制提交流程（中止進行中的 SSE 串流、鎖定、提交）於 `frontend/src/store/session.ts`
-- [ ] T086 [US4] 實作提交失敗的持續重試與內容保留於 `frontend/src/services/api.ts`
-- [ ] T087 [P] [US4] 實作 Header 的品牌標識、職稱與應試者姓名於 `frontend/src/components/header/AppHeader.tsx`
+- [X] T079 [US4] 實作 `deadlineAt` 計算與 `GET /api/time`（逾期時主動觸發強制提交）於 `backend/src/routes/time.ts`
+- [X] T080 [US4] 實作 `POST /api/submit`（冪等、取每題最新 `savedAt` 草稿）於 `backend/src/routes/submit.ts`
+- [X] T081 [P] [US4] 實作計時 hook（本地每秒遞減 + 每 30 秒校時）於 `frontend/src/lib/use-countdown.ts`
+- [X] T082 [P] [US4] 實作倒數計時器元件（一般／警示／鎖定三態）於 `frontend/src/components/header/CountdownTimer.tsx`
+- [X] T083 [P] [US4] 實作提交確認對話框（Radix Dialog）與提交成功提示（FR-021，同時具備視覺與可存取名稱）於 `frontend/src/components/header/SubmitDialog.tsx`
+- [X] T084 [US4] 實作 `isReadOnly` 鎖定（所有輸入、按鈕、Composer 轉唯讀）於 `frontend/src/store/selectors.ts` 與相關元件
+- [X] T085 [US4] 實作歸零強制提交流程（中止進行中的 SSE 串流、鎖定、提交）於 `frontend/src/store/session.ts`
+- [X] T086 [US4] 實作提交失敗的持續重試與內容保留於 `frontend/src/services/api.ts`
+- [X] T087 [P] [US4] 實作 Header 的品牌標識、職稱與應試者姓名於 `frontend/src/components/header/AppHeader.tsx`
 
 **Checkpoint**: 場次生命週期完整 — 進入、作答、提交、逾時皆正確
 
