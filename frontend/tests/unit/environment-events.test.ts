@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi, type Mock } from 'vitest';
 import { waitFor } from '@testing-library/react';
 import {
   startEnvironmentMonitor,
@@ -8,6 +8,7 @@ import {
 import { useSessionStore } from '../../src/store/session';
 import { clearEnvironmentQueue, readEnvironmentQueue } from '../../src/store/persistence';
 import { loadTestSession } from '../helpers/store';
+import type { EnvironmentEventType } from '../../src/types';
 import type * as api from '../../src/services/api';
 
 vi.mock('../../src/services/api', async () => {
@@ -52,7 +53,7 @@ function setVisibility(state: 'visible' | 'hidden') {
  */
 describe('環境事件門檻', () => {
   let stop: (() => void) | undefined;
-  let onReturn: ReturnType<typeof vi.fn>;
+  let onReturn: Mock<(event: { type: EnvironmentEventType; durationMs: number }) => void>;
 
   beforeEach(async () => {
     // 只假造 Date：fake-indexeddb 依賴真實的 microtask 排程，
