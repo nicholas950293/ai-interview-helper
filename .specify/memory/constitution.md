@@ -1,18 +1,22 @@
 <!--
 Sync Impact Report
-- Version change: (template, unversioned) → 1.0.0
-- Bump rationale: MAJOR — initial ratification; all five principles and both
-  additional sections defined for the first time.
-- Modified principles: none (initial definition)
-- Added sections:
-  - Core Principles I–V
-  - 公正性與安全要求 (Fairness & Security Requirements)
-  - 開發流程與品質關卡 (Development Workflow & Quality Gates)
-  - Governance
-- Removed sections: none
-- Templates requiring review: .specify/templates/plan-template.md,
-  spec-template.md, tasks-template.md read this file at runtime; no edits made here.
+- Version change: 1.0.0 → 1.1.0
+- Bump rationale: MINOR — 實質擴充原則 V 的裝置範圍與比例夾制指引，並將開發流程由
+  PR 制改為單一主幹 (main) 直推制。Core Principles I–V 無移除、無不相容重新定義。
+- Modified principles:
+  - V. 淺色系一致性與可及性 — 新增拖曳比例夾制條款；新增桌機限定（最小寬度 1280px）
+    與「無響應式例外」的明文，解除原本與 spec Edge Case 的衝突。
+- Modified sections:
+  - 開發流程與品質關卡 — PR 制 → main 直推制；品質關卡改由 CI 於 main 強制執行；
+    原則聲明責任由 PR 描述改為提交訊息承載。
+  - Governance — 修訂程序與合規審查改以提交／CI 為載體。
+- Added sections: none | Removed sections: none
+- Downstream sync: specs/001-candidate-portal/spec.md（Edge Case、Assumptions）、
+  contracts/ui-contracts.md（版面契約）、tasks.md（T009、T097、T098）已同步更新。
 - Deferred TODOs: none
+
+Prior: (template, unversioned) → 1.0.0 — initial ratification; all five principles
+and both additional sections defined for the first time.
 -->
 
 # TechInterview Pro Candidate Portal Constitution
@@ -62,15 +66,18 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 
 - 編輯器按鍵到畫面更新的延遲 MUST < 50ms (p95，於目標裝置量測)。
 - 草稿儲存 MUST 採 Debounce 1000ms；MUST NOT 逐次按鍵送出請求。
-- 任何 PR 若觸及編輯器輸入路徑，MUST 附上延遲量測數據或說明為何不受影響。
-- 超出預算的變更 MUST 在 PR 中記錄理由並取得明確核可，MUST NOT 默默合併。
+- 任何變更若觸及編輯器輸入路徑，提交訊息 MUST 附上延遲量測數據或說明為何不受影響。
+- 超出預算的變更 MUST 在提交訊息中記錄理由並取得明確核可，MUST NOT 默默推送。
 
 **理由**：延遲會被應試者感知為「平台很卡」，在計時壓力下直接損害作答表現與品牌信任。
 
 ### V. 淺色系一致性與可及性 (Light-Theme Consistency & Accessibility)
 
 - UI MUST 維持柔和淺色系 (Clean Light Theme) 與三卡片浮動式版面；左側與右側
-  比例 MUST 維持在 6:4 至 7:5 之間。
+  比例 MUST 維持在 6:4 至 7:5 之間。允許使用者拖曳調整比例，但拖曳範圍與偏好還原
+  MUST 夾制於該區間內。
+- 目標裝置為桌機／筆電，最小支援視窗寬度 1280px。本期 MUST NOT 為行動裝置或窄視窗
+  另做響應式堆疊版面；上述比例約束在所有支援寬度下皆成立，無響應式例外。
 - 文字與背景對比 MUST 達 WCAG AA (一般文字 4.5:1、大型文字 3:1)。
 - 所有互動元件 MUST 可鍵盤操作；Ctrl+Enter 送出、Tab 縮排等快捷鍵 MUST 有可見說明。
 - 狀態變化（儲存中/已儲存、測試結果、AI 回覆中）MUST 同時以視覺與可存取名稱呈現，
@@ -93,23 +100,25 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 
 ## 開發流程與品質關卡 (Development Workflow & Quality Gates)
 
-- 所有變更 MUST 經 PR；PR MUST 聲明其涉及的原則並確認未違反。
-- 合併前 MUST 通過：測試套件、圍欄越獄測試、無障礙對比檢查。
+- 本專案採單一主幹 (`main`) 開發，變更 MAY 直接推送至 `main`，MUST NOT 因此跳過品質關卡。
+- 每次推送 MUST 通過：測試套件、圍欄越獄測試、無障礙對比檢查——由 CI 於 `main` 上強制執行。
+  關卡失敗時 MUST 立即修復或還原該次提交，MUST NOT 讓 `main` 停留在紅燈狀態。
+- 提交訊息 MUST 說明變更涉及的原則並確認未違反，取代原本由 PR 描述承載的聲明責任。
 - Roadmap 分期 MUST 被尊重：Phase 1 為前端體驗與模擬互動；真實沙盒執行 (Phase 3)
   與評分後台 (Phase 4) MUST NOT 提前混入 Phase 1 範圍，除非修訂本憲章。
-- 任何違反本憲章的實作 MUST 在 PR 中明列理由與較簡單方案為何不可行；無理由者退回。
+- 任何違反本憲章的實作 MUST 在提交訊息中明列理由與較簡單方案為何不可行；無理由者還原。
 
 ## Governance
 
 本憲章優先於其他開發慣例。當文件、範本或口頭約定與本憲章衝突時，以本憲章為準。
 
-- **修訂程序**：修訂 MUST 以 PR 提出，內容包含變更理由、影響範圍與遷移方式，
-  並取得產品負責人與技術負責人雙方核可。
+- **修訂程序**：修訂 MUST 以獨立提交進行，訊息包含變更理由、影響範圍與遷移方式，
+  並取得產品負責人核可。
 - **版本政策**：採語意化版本。MAJOR 為原則移除或不相容重新定義；MINOR 為新增原則或
   實質擴充指引；PATCH 為釐清、措辭與非語意修正。
-- **合規審查**：每次 PR 審查 MUST 檢視合規性；每個 Phase 結束時 MUST 進行一次完整
+- **合規審查**：CI 於每次推送 MUST 檢視合規性；每個 Phase 結束時 MUST 進行一次完整
   憲章對照審查，並將發現記錄於該 Phase 的回顧文件。
 - **執行指引**：日常開發指引見 `docs/PRD.md` 與各 feature 的 `specs/` 目錄；
   兩者 MUST NOT 與本憲章牴觸。
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04
+**Version**: 1.1.0 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04

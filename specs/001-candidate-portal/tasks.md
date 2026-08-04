@@ -39,7 +39,7 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 - [ ] T006 [P] 設定 Vitest 於 `frontend/vitest.config.ts` 與 `backend/vitest.config.ts`
 - [ ] T007 [P] 設定 Playwright 與 axe-core 於 `frontend/playwright.config.ts`
 - [ ] T008 [P] 建立 `backend/.env.example` 與型別安全的環境變數載入於 `backend/src/lib/env.ts`
-- [ ] T009 建立 CI 工作流於 `.github/workflows/ci.yml`，執行憲章四道關卡：測試套件、圍欄越獄測試、axe-core 檢核、編輯器延遲量測；並驗證前端建置產物不含 `GEMINI_API_KEY`
+- [ ] T009 建立 CI 工作流於 `.github/workflows/ci.yml`，於**每次推送 `main`** 執行憲章三道關卡（測試套件、圍欄越獄測試、axe-core 檢核）＋編輯器延遲量測（原則 IV 的條件式要求，此處無條件執行）；並驗證前端建置產物不含 `GEMINI_API_KEY`
 
 ---
 
@@ -133,6 +133,7 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 - [ ] T059 [P] [US2] 實作輸入區（多行、Ctrl+Enter 送出、附帶程式碼按鈕、語音輸入佔位圖示）於 `frontend/src/components/copilot/Composer.tsx`
 - [ ] T060 [P] [US2] 實作引導模式切換分段控制項於 `frontend/src/components/copilot/ModeToggle.tsx`
 - [ ] T061 [P] [US2] 實作 AI 使用規範長駐 Banner 於 `frontend/src/components/copilot/GuardrailBanner.tsx`
+- [ ] T073 [P] [US2] 實作隨當前題目變動的快捷提問 Chips 於 `frontend/src/components/copilot/QuickPromptChips.tsx`（US2 驗收情境 5 / FR-013 所需，故置於本階段；ID 沿用不重編）
 - [ ] T062 [US2] 組裝 AI 側欄並處理 `AI_UNAVAILABLE` 錯誤與重試（不影響作答內容）於 `frontend/src/components/copilot/CopilotPanel.tsx`
 
 **Checkpoint**: US1 與 US2 各自獨立運作 — 可作答、可對話、圍欄測試全綠
@@ -159,9 +160,8 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 - [ ] T068 [P] [US3] 實作 `POST /api/chat/system`（題目切換系統訊息）於 `backend/src/routes/chat.ts`
 - [ ] T069 [US3] 實作切換題目動作序列（flush → setCurrentQuestion → 系統訊息 → 面板同步）於 `frontend/src/store/session.ts`，依 [contracts/ui-contracts.md](./contracts/ui-contracts.md#a-01-切換題目)
 - [ ] T070 [P] [US3] 實作「詢問 AI 題目重點」按鈕於 `frontend/src/components/question/AskAiButton.tsx`
-- [ ] T071 [P] [US3] 實作「傳送至 AI 側邊欄」按鈕（先 flush 再送出，訊息標示已附帶程式碼）於 `frontend/src/components/workspace/SendToAiButton.tsx`
+- [ ] T071 [P] [US3] 實作「傳送至 AI 側邊欄」按鈕（先 flush 再送出，訊息標示已附帶程式碼）於 `frontend/src/components/workspace/SendToAiButton.tsx`；離線導致 flush 失敗時 MUST 阻擋送出並提示「目前離線，程式碼尚未同步」，MUST NOT 以較舊的伺服端草稿充當附帶 Context
 - [ ] T072 [P] [US3] 實作 In-Context 狀態列（訂閱 `currentQuestion`，不接受傳參）於 `frontend/src/components/copilot/StatusBar.tsx`
-- [ ] T073 [P] [US3] 實作隨當前題目變動的快捷提問 Chips 於 `frontend/src/components/copilot/QuickPromptChips.tsx`
 
 **Checkpoint**: 三面板完全聯動，Context 正確率可驗證
 
@@ -187,7 +187,7 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 - [ ] T080 [US4] 實作 `POST /api/submit`（冪等、取每題最新 `savedAt` 草稿）於 `backend/src/routes/submit.ts`
 - [ ] T081 [P] [US4] 實作計時 hook（本地每秒遞減 + 每 30 秒校時）於 `frontend/src/lib/use-countdown.ts`
 - [ ] T082 [P] [US4] 實作倒數計時器元件（一般／警示／鎖定三態）於 `frontend/src/components/header/CountdownTimer.tsx`
-- [ ] T083 [P] [US4] 實作提交確認對話框（Radix Dialog）於 `frontend/src/components/header/SubmitDialog.tsx`
+- [ ] T083 [P] [US4] 實作提交確認對話框（Radix Dialog）與提交成功提示（FR-021，同時具備視覺與可存取名稱）於 `frontend/src/components/header/SubmitDialog.tsx`
 - [ ] T084 [US4] 實作 `isReadOnly` 鎖定（所有輸入、按鈕、Composer 轉唯讀）於 `frontend/src/store/selectors.ts` 與相關元件
 - [ ] T085 [US4] 實作歸零強制提交流程（中止進行中的 SSE 串流、鎖定、提交）於 `frontend/src/store/session.ts`
 - [ ] T086 [US4] 實作提交失敗的持續重試與內容保留於 `frontend/src/services/api.ts`
@@ -206,7 +206,7 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 ### Tests for User Story 5 ⚠️ 先寫，先失敗
 
 - [ ] T088 [P] [US5] 撰寫 `fullscreenchange` 狀態同步的失敗測試（含 Esc 退出）於 `frontend/tests/unit/fullscreen.test.ts`
-- [ ] T089 [P] [US5] 撰寫環境事件門檻的失敗測試（< 1000ms 不記錄）於 `frontend/tests/unit/environment-events.test.ts`
+- [ ] T089 [P] [US5] 撰寫環境事件門檻的失敗測試（< 1000ms 不記錄；非全螢幕狀態下不記錄）於 `frontend/tests/unit/environment-events.test.ts`
 - [ ] T090 [P] [US5] 撰寫 `POST /api/events` 的契約測試（批次、伺服端二次過濾）於 `backend/tests/contract/events.test.ts`
 - [ ] T091 [P] [US5] 撰寫端到端環境監測情境於 `frontend/tests/e2e/environment-monitoring.spec.ts`（對應 quickstart V5）
 
@@ -214,7 +214,7 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 - [ ] T092 [P] [US5] 實作 `POST /api/events`（僅記錄客觀事實，無判定欄位）於 `backend/src/routes/events.ts`
 - [ ] T093 [P] [US5] 實作全螢幕 hook（監聽 `fullscreenchange` 同步按鈕與圖示）於 `frontend/src/lib/use-fullscreen.ts`
-- [ ] T094 [P] [US5] 實作 blur／visibilitychange 偵測與 1000ms 門檻於 `frontend/src/services/environment-monitor.ts`
+- [ ] T094 [P] [US5] 實作 blur／visibilitychange 偵測與 1000ms 門檻於 `frontend/src/services/environment-monitor.ts`；監聽 MUST 僅於全螢幕狀態啟用，退出全螢幕時解除（憲章「防作弊監測」與 FR-025）
 - [ ] T095 [US5] 實作全螢幕按鈕與返回提醒 Toast 於 `frontend/src/components/header/FullscreenToggle.tsx`
 - [ ] T096 [US5] 將環境事件併入離線佇列補送機制於 `frontend/src/store/persistence.ts`
 
@@ -226,14 +226,14 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 **Purpose**: 跨 Story 的邊界情境、品質關卡與文件
 
-- [ ] T097 [P] 實作 < 1024px 的單欄堆疊與 AI 側欄收合（不得產生整頁水平捲動）於 `frontend/src/app/AppLayout.tsx`
-- [ ] T098 [P] 實作左右／上下比例拖曳與本機偏好保存於 `frontend/src/components/layout/ResizableSplit.tsx`
+- [ ] T097 [P] 撰寫個資最小化斷言測試（FR-032：`GET /api/session` 回應與前端 store 快照皆僅含 `candidateName`、`positionTitle`，不含其他個資欄位）於 `backend/tests/contract/pii-minimization.test.ts`
+- [ ] T098 [P] 實作左右／上下比例拖曳與本機偏好保存於 `frontend/src/components/layout/ResizableSplit.tsx`；左右比例的拖曳範圍與偏好還原 MUST 夾制於 6:4–7:5（憲章原則 V），超出範圍的既存偏好值須夾回邊界，並附邊界單元測試
 - [ ] T099 [P] 實作全域鍵盤快捷鍵（Ctrl+S 立即保存、Esc、Ctrl+Enter）與可見說明面板於 `frontend/src/components/KeyboardHelp.tsx`
 - [ ] T100 [P] 實作離開前未保存變更提示（`beforeunload`）於 `frontend/src/app/AppLayout.tsx`
 - [ ] T101 [P] 實作多分頁同場次偵測（BroadcastChannel，避免草稿互相覆蓋）於 `frontend/src/services/tab-guard.ts`
 - [ ] T102 [P] 實作超長貼上內容處理（256 KB 上限提示，編輯器維持可用）於 `frontend/src/components/workspace/CodeEditor.tsx`
 - [ ] T103 [P] 實作題目載入失敗與連結失效的狀態畫面於 `frontend/src/app/ErrorStates.tsx`
-- [ ] T104 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99，預算 50ms）於 `frontend/tests/perf/editor-latency.spec.ts`
+- [ ] T104 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99，預算 50ms）與進入場次到首次可輸入的耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`
 - [ ] T105 [P] 建立 axe-core 對比與 ARIA 全頁檢核於 `frontend/tests/e2e/a11y.spec.ts`
 - [ ] T106 [P] 撰寫圍欄的真實模型排程測試（`test:guardrails:live`）於 `backend/tests/guardrails/live.test.ts`
 - [ ] T107 [P] 撰寫 README（安裝、啟動、環境變數、品質關卡）於 `README.md`
@@ -334,6 +334,8 @@ US3 的整合任務（T069、T071）需等 A 與 B 的前置就緒，其餘皆�
 
 - [P] = 不同檔案、無相依
 - 測試在本專案為強制項：憲章原則 I 與 III 明定，非選配
-- 每完成一個任務或一組邏輯變更即 commit
+- 採單一主幹開發，直接 commit 並推送 `main`（憲章 v1.1.0）；每完成一個任務或一組邏輯變更即 commit，提交訊息聲明涉及的原則
 - 任何 checkpoint 皆可停下來獨立驗證該 Story
-- 觸及編輯器輸入路徑的變更，PR MUST 附上 T104 的延遲量測數據（憲章原則 IV）
+- 觸及編輯器輸入路徑的變更，提交訊息 MUST 附上 T104 的延遲量測數據（憲章原則 IV）
+- 本期僅支援桌機螢幕（最小視窗寬度 1280px），不含行動裝置或窄視窗的響應式版面
+- 任務 ID 於規格修訂後保持穩定，故階段內編號未必連續（例：T073 已移至 Phase 4）

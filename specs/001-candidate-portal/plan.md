@@ -31,8 +31,8 @@ Roadmap Phase 2 再換 Monaco）；BFF 以 Node + Hono 實作，SQLite 持久化
 debounce 邊界）、Playwright（端到端與可及性）、`axe-core` 對比與 ARIA 檢核；
 圍欄越獄測試以錄製的模型回應（fixtures）加真實模型的排程測試雙軌執行
 
-**Target Platform**: 桌機瀏覽器（Chrome / Edge / Safari / Firefox 最新兩版）；
-BFF 部署於單一 Node 程序
+**Target Platform**: 桌機瀏覽器（Chrome / Edge / Safari / Firefox 最新兩版），最小支援
+視窗寬度 1280px，不含行動裝置與窄視窗的響應式版面；BFF 部署於單一 Node 程序
 
 **Project Type**: Web application（frontend + 輕量 backend）
 
@@ -59,8 +59,9 @@ AI 首個 token 於 2 秒內開始串流
 **公正性與安全要求**：邀請連結一次性 token 於 BFF 驗證；強制提交取最後一次成功保存的
 草稿；對話完整留存；前端僅持有姓名與職稱；金鑰僅存在於 BFF 環境變數。全數符合。
 
-**開發流程與品質關卡**：CI 執行測試套件、圍欄越獄測試、`axe-core` 對比檢核，對應憲章
-「合併前 MUST 通過」三項。Phase 3 沙盒與 Phase 4 後台不在本期範圍。
+**開發流程與品質關卡**：採單一主幹開發，變更直接推送 `main`；CI 於每次推送執行測試套件、
+圍欄越獄測試、`axe-core` 對比檢核，對應憲章 v1.1.0「每次推送 MUST 通過」三項。
+Phase 3 沙盒與 Phase 4 後台不在本期範圍。
 
 **結論**：無違反項目，Complexity Tracking 留空。
 
