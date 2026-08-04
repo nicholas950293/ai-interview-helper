@@ -18,6 +18,7 @@ class ErrorCode(StrEnum):
     REVISION_STALE = "REVISION_STALE"
     CONTENT_TOO_LARGE = "CONTENT_TOO_LARGE"
     AI_UNAVAILABLE = "AI_UNAVAILABLE"
+    AI_TIMEOUT = "AI_TIMEOUT"
     BLOCK_NOT_FOUND = "BLOCK_NOT_FOUND"
     UNAUTHORIZED = "UNAUTHORIZED"
     NOT_FOUND = "NOT_FOUND"
@@ -32,6 +33,7 @@ _STATUS: dict[ErrorCode, int] = {
     ErrorCode.REVISION_STALE: 409,
     ErrorCode.CONTENT_TOO_LARGE: 413,
     ErrorCode.AI_UNAVAILABLE: 503,
+    ErrorCode.AI_TIMEOUT: 504,
     ErrorCode.BLOCK_NOT_FOUND: 404,
     ErrorCode.UNAUTHORIZED: 401,
     ErrorCode.NOT_FOUND: 404,
@@ -46,6 +48,7 @@ _MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.REVISION_STALE: "偵測到較新的草稿版本，已為你保留最新內容。",
     ErrorCode.CONTENT_TOO_LARGE: "作答內容超過 256 KB 上限，請精簡後再儲存。",
     ErrorCode.AI_UNAVAILABLE: "AI 目前無法回應，你的作答內容不受影響，稍後可再試一次。",
+    ErrorCode.AI_TIMEOUT: "AI 回應逾時，已停止等待。你的作答內容不受影響，稍後可再試一次。",
     ErrorCode.BLOCK_NOT_FOUND: "找不到指定的程式碼區塊，請重新整理後再試。",
     ErrorCode.UNAUTHORIZED: "你的作答連線已失效，請重新開啟邀請連結。",
     ErrorCode.NOT_FOUND: "找不到指定的資料。",

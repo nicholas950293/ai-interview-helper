@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator
@@ -59,6 +60,31 @@ async def _model_stream(pending: PendingStream) -> AsyncIterator[str]:
             yield text
 
 
+async def _with_timeouts(
+    source: AsyncIterator[str], *, first_token_s: float, idle_s: float
+) -> AsyncIterator[str]:
+    """兩段式逾時：等第一個 token 給得寬，開始吐字後就要求持續流動。
+
+    以閒置而非總時長計算：完整實作跑 60 秒是正常的，token 只要還在流動就代表
+    模型仍在工作。真正該中止的是「什麼都沒有」——供應商退避重試、連線卡住、
+    模型停擺，這些都表現為長時間沒有任何 token。
+
+    第一個 token 另給預算的理由：thinking 模型會先推理再輸出，那段完全靜默。
+    實測 gemini-3.5-flash 要 44 秒才吐第一個字，用 idle 的門檻去卡它會砍掉正常回覆。
+    """
+    iterator = source.__aiter__()
+    timeout = first_token_s
+    while True:
+        try:
+            chunk = await asyncio.wait_for(iterator.__anext__(), timeout)
+        except StopAsyncIteration:
+            return
+        except TimeoutError as exc:
+            raise AppError(ErrorCode.AI_TIMEOUT) from exc
+        timeout = idle_s
+        yield chunk
+
+
 async def stream_response(pending: PendingStream) -> AsyncIterator[str]:
     """產生 SSE 事件序列：token* → blocks → done，或 error。"""
     settings_choice = providers.resolve_model_choice()
@@ -70,12 +96,17 @@ async def stream_response(pending: PendingStream) -> AsyncIterator[str]:
 
         from techinterview.core.config import get_settings
 
-        if get_settings().ai_fake_enabled:
+        settings = get_settings()
+        if settings.ai_fake_enabled:
             source = providers.fake_stream(pending.prompt)
         else:
             source = _model_stream(pending)
 
-        async for token in source:
+        async for token in _with_timeouts(
+            source,
+            first_token_s=settings.ai_first_token_timeout_ms / 1000,
+            idle_s=settings.ai_stream_timeout_ms / 1000,
+        ):
             # 場次進入終態時立即中止（Edge Case：時間歸零當下 AI 正在回覆）
             row = queries.find_session(pending.session_id)
             if row is None or is_terminal(SessionStatus(row["status"])):

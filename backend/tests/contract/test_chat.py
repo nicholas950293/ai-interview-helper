@@ -248,6 +248,113 @@ class TestNoOutputLimiting:
         assert len(blocks) == 1
 
 
+class TestStreamIdleTimeout:
+    """串流閒置逾時（`AI_STREAM_TIMEOUT_MS`）。
+
+    真實踩過的情境：Gemini 回 429，SDK 內部退避重試約 34 秒才放棄，期間一個 token
+    都沒有。而前端的 Next 代理在 30 秒切斷連線——後端 34 秒才送出的錯誤事件根本
+    到不了瀏覽器，EventSource 只好重連、撞上 404，最後顯示的是「連線中斷」。
+    使用者看到的原因與真正的原因無關。
+
+    因此逾時以「**閒置**」計算而非總時長：完整實作本來就可能跑 30 秒以上，
+    以總時長設限會砍掉正常的長回覆。只要 token 持續流動就不算逾時。
+    """
+
+    async def test_no_token_within_timeout_emits_ai_timeout(
+        self, session_client, fixture, monkeypatch, test_settings
+    ):
+        import asyncio
+
+        async def stalls(_prompt):
+            await asyncio.sleep(10)  # 遠超過下方設定的逾時
+            yield "永遠等不到"
+
+        monkeypatch.setattr(providers, "fake_stream", stalls)
+        monkeypatch.setattr(test_settings, "ai_first_token_timeout_ms", 150)
+        monkeypatch.setattr(test_settings, "ai_stream_timeout_ms", 150)
+
+        body = await _start_stream(session_client, fixture.question_ids[0])
+        res = await session_client.get(f"/api/chat/stream/{body['streamId']}")
+        events = parse_sse(res.text)
+
+        assert [e for e, _ in events] == ["error"]
+        assert events[0][1]["code"] == "AI_TIMEOUT"
+
+    async def test_partial_output_is_preserved(
+        self, session_client, fixture, monkeypatch, test_settings
+    ):
+        """逾時前已送出的內容 MUST 留存——那是應試者看得到的協作歷程。"""
+        import asyncio
+
+        async def stalls_midway(_prompt):
+            yield "開始寫："
+            await asyncio.sleep(10)
+            yield "永遠等不到"
+
+        monkeypatch.setattr(providers, "fake_stream", stalls_midway)
+        monkeypatch.setattr(test_settings, "ai_first_token_timeout_ms", 5_000)
+        monkeypatch.setattr(test_settings, "ai_stream_timeout_ms", 150)
+
+        body = await _start_stream(session_client, fixture.question_ids[0])
+        res = await session_client.get(f"/api/chat/stream/{body['streamId']}")
+        events = parse_sse(res.text)
+
+        assert [e for e, _ in events] == ["token", "error"]
+        assert events[0][1]["text"] == "開始寫："
+        stored = queries.list_chat_messages(fixture.session_id)[-1]
+        assert stored.content == "開始寫："
+
+    async def test_slow_but_progressing_stream_is_not_cut(
+        self, session_client, fixture, monkeypatch, test_settings
+    ):
+        """只要 token 持續流動就不逾時——總時長超過設定值也一樣。"""
+        import asyncio
+
+        async def slow_but_alive(_prompt):
+            for part in ("一", "二", "三", "四"):
+                await asyncio.sleep(0.06)
+                yield part
+
+        monkeypatch.setattr(providers, "fake_stream", slow_but_alive)
+        # 每段間隔 60ms < 100ms 逾時，但總時長 240ms > 100ms
+        monkeypatch.setattr(test_settings, "ai_first_token_timeout_ms", 5_000)
+        monkeypatch.setattr(test_settings, "ai_stream_timeout_ms", 100)
+
+        body = await _start_stream(session_client, fixture.question_ids[0])
+        res = await session_client.get(f"/api/chat/stream/{body['streamId']}")
+        events = parse_sse(res.text)
+
+        assert [e for e, _ in events].count("error") == 0
+        assert "done" in [e for e, _ in events]
+        assert "".join(d["text"] for e, d in events if e == "token") == "一二三四"
+
+    async def test_slow_first_token_is_not_cut_by_idle_budget(
+        self, session_client, fixture, monkeypatch, test_settings
+    ):
+        """thinking 模型的長時間靜默 MUST NOT 被 idle 門檻砍掉。
+
+        實測 gemini-3.5-flash 要 44 秒才吐第一個 token（總時長 56 秒，成功完成）。
+        若用 idle 的門檻去卡第一個 token，正常的完整實作會被當成故障中止。
+        """
+        import asyncio
+
+        async def thinks_then_answers(_prompt):
+            await asyncio.sleep(0.3)  # 遠超過 idle 門檻，但在 first_token 預算內
+            yield "想完了，這是實作："
+
+        monkeypatch.setattr(providers, "fake_stream", thinks_then_answers)
+        monkeypatch.setattr(test_settings, "ai_first_token_timeout_ms", 5_000)
+        monkeypatch.setattr(test_settings, "ai_stream_timeout_ms", 50)
+
+        body = await _start_stream(session_client, fixture.question_ids[0])
+        res = await session_client.get(f"/api/chat/stream/{body['streamId']}")
+        events = parse_sse(res.text)
+
+        assert "error" not in [e for e, _ in events]
+        assert "done" in [e for e, _ in events]
+        assert "".join(d["text"] for e, d in events if e == "token") == "想完了，這是實作："
+
+
 class TestSystemMessage:
     async def test_creates_system_message(self, session_client, fixture):
         res = await session_client.post(

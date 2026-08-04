@@ -53,6 +53,17 @@ class Settings(BaseSettings):
     ai_fallback_provider: Provider | None = None
     ai_fallback_model: str = ""
 
+    # 串流有兩個獨立的時間預算，因為兩段的正常值差一個量級：
+    #
+    #   first_token —— 送出請求到第一個 token。thinking 模型會先想很久：
+    #     實測 gemini-3.5-flash 對「完整實作＋單元測試」的提問要 44 秒才吐第一個字
+    #     （總時長 56 秒、7031 字元，且成功完成）。設成 20 秒會砍掉正常的工作。
+    #   idle —— token 之間的間隔。開始吐字後就該持續流動，長時間斷流代表出事了。
+    #
+    # 兩者皆 MUST 小於前方代理的連線逾時（見 frontend/next.config.ts 的
+    # experimental.proxyTimeout），否則錯誤事件來不及送達瀏覽器，
+    # 使用者看到的會是誤導的「連線中斷」而非真正的原因。
+    ai_first_token_timeout_ms: int = 90_000
     ai_stream_timeout_ms: int = 20_000
 
     # 以腳本化的假回應取代真實模型，供端到端驗證使用。

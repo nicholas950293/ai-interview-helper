@@ -21,6 +21,15 @@ const nextConfig: NextConfig = {
   // 多兩份自動產生、內容重疊又不會同步更新的檔案只會製造矛盾。
   agentRules: false,
 
+  experimental: {
+    // rewrites 的代理預設 30 秒切斷。thinking 模型光是等第一個 token 就可能
+    // 40 秒以上（實測 gemini-3.5-flash 為 44 秒），30 秒會在後端還在正常工作時
+    // 就砍掉連線——瀏覽器只看到 EventSource 斷線重連，拿不到後端的錯誤事件，
+    // 顯示的原因因此與真正的原因無關。
+    // 此值 MUST 大於後端的 AI_FIRST_TOKEN_TIMEOUT_MS，讓後端的逾時先發生。
+    proxyTimeout: 120_000,
+  },
+
   async rewrites() {
     return [{ source: '/api/:path*', destination: `${BACKEND_ORIGIN}/api/:path*` }];
   },

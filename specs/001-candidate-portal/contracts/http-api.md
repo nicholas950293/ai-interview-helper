@@ -25,6 +25,7 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 | `REVISION_STALE` | 409 | 草稿 revision 落後於伺服端 |
 | `CONTENT_TOO_LARGE` | 413 | 草稿超過 256 KB |
 | `AI_UNAVAILABLE` | 503 | 所有已設定的模型供應商皆不可用 |
+| `AI_TIMEOUT` | 504 | 串流閒置超過 `AI_STREAM_TIMEOUT_MS`（距上一個 token 的間隔，非總時長） |
 | `BLOCK_NOT_FOUND` | 404 | 指定的程式碼區塊不存在 |
 | `UNAUTHORIZED` | 401 | 無有效 session cookie |
 
@@ -203,6 +204,10 @@ SSE 串流 AI 回覆。
 - 場次進入終態時，進行中的串流 MUST 立即以 `error` 中止（Edge Case：時間歸零當下
   AI 正在回覆）。
 - 供應商全數不可用時回 `AI_UNAVAILABLE`；LangChain 的 fallback 已先行嘗試次要供應商。
+- 串流開始後若長時間沒有任何 token，以 `AI_TIMEOUT` 中止並保留已送出的部分。
+  逾時以**閒置**計算：完整實作可能跑 30 秒以上，只要 token 持續流動就不算逾時。
+  此值 MUST 明顯小於前方代理的連線逾時，否則錯誤事件來不及送達瀏覽器，
+  使用者看到的會是誤導的「連線中斷」而非真正的原因。
 
 ---
 
