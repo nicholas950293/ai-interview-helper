@@ -1,9 +1,10 @@
-# Contract: BFF HTTP API
+# Contract: HTTP API (FastAPI)
 
-**Date**: 2026-08-04 | **Plan**: [../plan.md](../plan.md)
+**Date**: 2026-08-04 | **Plan**: [../plan.md](../plan.md) | **Constitution**: v3.0.0
 
 Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly session cookie 授權。
-請求與回應皆為 JSON（AI 串流除外）。所有輸入以 Zod 於邊界驗證。
+請求與回應皆為 JSON（AI 串流除外）。所有輸入以 **Pydantic** 於邊界驗證。
+對外 JSON 一律 `camelCase`（Pydantic model 以 alias 產生），資料庫欄位為 `snake_case`。
 
 實體欄位定義見 [data-model.md](../data-model.md)，此處不重複。
 
@@ -15,15 +16,17 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 { "error": { "code": "SESSION_SUBMITTED", "message": "此場次已提交，無法再修改作答。" } }
 ```
 
-| code                  | HTTP | 情境                       |
-| --------------------- | ---- | -------------------------- |
-| `TOKEN_INVALID`       | 404  | 邀請連結不存在             |
-| `TOKEN_EXPIRED`       | 410  | 連結逾期                   |
-| `SESSION_NOT_STARTED` | 409  | 場次尚未開始               |
-| `SESSION_SUBMITTED`   | 409  | 場次已提交（含逾時提交）   |
-| `REVISION_STALE`      | 409  | 草稿 revision 落後於伺服端 |
-| `CONTENT_TOO_LARGE`   | 413  | 草稿超過 256 KB            |
-| `AI_UNAVAILABLE`      | 503  | 模型服務暫時不可用         |
+| code | HTTP | 情境 |
+| --- | --- | --- |
+| `TOKEN_INVALID` | 404 | 邀請連結不存在 |
+| `TOKEN_EXPIRED` | 410 | 連結逾期 |
+| `SESSION_NOT_STARTED` | 409 | 場次尚未開始 |
+| `SESSION_SUBMITTED` | 409 | 場次已提交（含逾時提交） |
+| `REVISION_STALE` | 409 | 草稿 revision 落後於伺服端 |
+| `CONTENT_TOO_LARGE` | 413 | 草稿超過 256 KB |
+| `AI_UNAVAILABLE` | 503 | 所有已設定的模型供應商皆不可用 |
+| `BLOCK_NOT_FOUND` | 404 | 指定的程式碼區塊不存在 |
+| `UNAUTHORIZED` | 401 | 無有效 session cookie |
 
 `message` MUST 為可直接呈現給應試者的中文說明（FR-031、FR-014）。
 
@@ -39,7 +42,14 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 
 ```json
 {
-  "session": { "id", "candidateName", "positionTitle", "deadlineAt", "status", "guidanceMode" },
+  "session": {
+    "id",
+    "candidateName",
+    "positionTitle",
+    "deadlineAt",
+    "status",
+    "collaborationMode"
+  },
   "serverTime": "2026-08-04T09:00:00.000Z"
 }
 ```
@@ -59,20 +69,33 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 ```json
 {
   "session": { "...": "同上" },
-  "questions": [ { "id", "title", "difficulty", "points", "description", "examples",
-                   "complexityRequirement", "gradingFocus", "starterCode", "quickPrompts",
-                   "order" } ],
-  "answers": [ { "questionId", "language", "content", "savedAt", "revision" } ],
-  "chat": [ { "id", "questionId", "role", "content", "createdAt", "attachedCode" } ],
+  "questions": [
+    {
+      "id", "title", "difficulty", "points", "description", "examples",
+      "complexityRequirement", "gradingFocus", "starterCode", "quickPrompts",
+      "order", "testCount"
+    }
+  ],
+  "answers": [{ "questionId", "language", "content", "savedAt", "revision" }],
+  "chat": [
+    {
+      "id", "questionId", "role", "content", "createdAt", "attachedCode",
+      "codeBlocks": [{ "blockIndex", "language", "content" }]
+    }
+  ],
   "serverTime": "2026-08-04T09:12:33.000Z"
 }
 ```
 
-`predefinedTests` 的內容 MUST NOT 出現在回應中（僅回傳測試數量），避免應試者反推期望輸出。
+- `predefinedTests` 的內容 MUST NOT 出現在回應中（僅回傳 `testCount`），
+  避免應試者反推期望輸出。
+- `chat[].content` MUST 為 AI 的完整輸出（憲章原則 I）。
+- `codeBlocks` 只出現在 `role = "assistant"` 的訊息上；空陣列表示該則回覆無程式碼。
+- 回應 MUST NOT 包含 `code_change` 歷史——那是伺服端的評分材料，前端沒有用途。
 
 ---
 
-## PUT /api/answers/:questionId
+## PUT /api/answers/{question_id}
 
 保存草稿。前端於停止輸入 1000ms 後呼叫（FR-004）。
 
@@ -82,7 +105,38 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 
 - `revision` MUST 大於伺服端現值，否則回 `REVISION_STALE` 並附帶伺服端現值供前端修復。
 - 場次非 `in_progress` 時回 `SESSION_SUBMITTED`。
+- **副作用**：保存成功時建立 `source = "candidate"` 的 `code_change`；
+  但若本次內容與最近一次 `source = "ai"` 的變更完全相同則 MUST NOT 建立
+  ——那只是套用後的第一次自動保存（research R-014）。
 - 離線補送時可一次帶多筆：`PUT /api/answers` body 為陣列，伺服端依 `revision` 排序套用。
+
+---
+
+## POST /api/answers/{question_id}/apply
+
+**套用 AI 產出的程式碼區塊至作答內容**（FR-033 ~ FR-035）。
+
+**Request**：
+
+```json
+{ "messageId": string, "blockIndex": number }
+```
+
+**Response 200**：
+
+```json
+{ "content": string, "savedAt": string, "revision": number }
+```
+
+- 伺服端以 `messageId` + `blockIndex` 取出 `chat_code_block`，將其 `content`
+  **逐字**寫入該題作答內容。MUST NOT 有任何裁切、改寫或格式調整（FR-034）。
+- 回應的 `content` MUST 與該區塊的 `content` 完全相同——前端據此更新編輯器，
+  這也是 SC-004 的斷言對象。
+- **副作用**：建立 `source = "ai"` 的 `code_change`，並記錄 `chatMessageId`
+  與 `blockIndex`（FR-035）。
+- 該訊息不屬於本場次、或 `blockIndex` 超出範圍時回 `BLOCK_NOT_FOUND`。
+- 場次非 `in_progress` 時回 `SESSION_SUBMITTED`。
+- `revision` 一律遞增，前端據此同步，避免與進行中的 debounce 保存互相覆蓋。
 
 ---
 
@@ -105,7 +159,7 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 
 **Response 200**：`{ "submittedAt": string, "status": "submitted" }`
 
-- 冪等：重複呼叫回傳既有結果，不視為錯誤。
+- 冪等：重複呼叫回傳既有結果，不視為錯誤，且 MUST NOT 覆寫既有終態。
 - 提交後所有寫入端點回 `SESSION_SUBMITTED`。
 
 ---
@@ -133,20 +187,23 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 
 ---
 
-## GET /api/chat/stream/:streamId _(text/event-stream)_
+## GET /api/chat/stream/{stream_id} _(text/event-stream)_
 
 SSE 串流 AI 回覆。
 
-| event   | data                                             | 說明                               |
-| ------- | ------------------------------------------------ | ---------------------------------- |
-| `token` | `{ "text": string }`                             | 增量文字                           |
-| `done`  | `{ "messageId", "guardrailTriggered": boolean }` | 回覆結束                           |
-| `error` | `{ "code", "message" }`                          | 中止，前端顯示錯誤與重試（FR-014） |
+| event | data | 說明 |
+| --- | --- | --- |
+| `token` | `{ "text": string }` | 增量文字 |
+| `blocks` | `{ "codeBlocks": [{ "blockIndex", "language", "content" }] }` | 串流結束後解析出的程式碼區塊 |
+| `done` | `{ "messageId", "provider", "model" }` | 回覆結束 |
+| `error` | `{ "code", "message" }` | 中止，前端顯示錯誤與重試（FR-014） |
 
-- 圍欄後處理若攔截，串流 MUST 以引導式訊息取代原內容後才送出 `token`
-  （不得先送出違規內容再撤回）。
+- **本端點沒有任何輸出攔截或改寫**。AI 產出什麼就送出什麼（憲章原則 I）。
+- `blocks` 事件於 `done` 之前送出；前端據此渲染每個區塊的「套用至編輯器」按鈕。
+  區塊由後端在**完整回覆**上解析，不由前端拼裝串流片段（research R-013）。
 - 場次進入終態時，進行中的串流 MUST 立即以 `error` 中止（Edge Case：時間歸零當下
   AI 正在回覆）。
+- 供應商全數不可用時回 `AI_UNAVAILABLE`；LangChain 的 fallback 已先行嘗試次要供應商。
 
 ---
 
@@ -160,29 +217,33 @@ SSE 串流 AI 回覆。
 
 ---
 
-## PATCH /api/session/guidance-mode
+## PATCH /api/session/collaboration-mode
 
-切換引導模式（FR-012）。
+切換協作模式（FR-012）。
 
-**Request**：`{ "mode": "light" | "deep" }` → **Response 200**：`{ "mode": "light" | "deep" }`
+**Request**：`{ "mode": "discuss" | "implement" }` →
+**Response 200**：`{ "mode": "discuss" | "implement" }`
 
-模式僅影響回覆詳細度；圍欄段落不隨模式變動（憲章原則 I）。
+- 模式僅改變送往模型的系統提示，MUST NOT 限制 AI 輸出的完整性（憲章原則 I）。
+- 切換 MUST NOT 清空既有對話。
+- 預設為 `implement`。
 
 ---
 
 ## POST /api/events
 
-回報環境事件（FR-025）。可批次。
+回報平台外工具事件（FR-025）。可批次。
 
-**Request**：`[ { "type": "window_blur" | "tab_hidden", "startedAt": string, "durationMs": number } ]`
+**Request**：`[{ "type": "window_blur" | "tab_hidden", "startedAt": string, "durationMs": number }]`
 
 **Response 202**：`{ "accepted": number }`
 
 `durationMs < 1000` 的項目伺服端 MUST 靜默丟棄，計入 `accepted` 之外。
+Request schema MUST NOT 包含任何判定性欄位（FR-026）。
 
 ---
 
-## POST /api/tests/:questionId
+## POST /api/tests/{question_id}
 
 執行單元測試（本期回報預定義結果，FR-030）。
 

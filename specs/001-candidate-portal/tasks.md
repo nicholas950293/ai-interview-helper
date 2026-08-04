@@ -2,6 +2,20 @@
 description: 'Task list for TechInterview Pro — Candidate Portal'
 ---
 
+> [!WARNING]
+> **本檔已過時（2026-08-04）。**
+>
+> 憲章 v3.0.0 反轉了原則 I（AI 護欄 → AI 協作可評估性），spec 的 US2 與 FR-010 ~ FR-036
+> 隨之改寫，plan.md 也已依憲章原則 V 重寫技術棧（Python + FastAPI、Supabase、
+> LangChain 雙供應商、Next.js）。
+>
+> 下方 108 個任務是**舊技術棧與舊產品定位**的產物，全數標記為完成僅代表
+> 「當時那份 plan 已實作完畢」，MUST NOT 作為當前工作依據。
+>
+> 請執行 `/speckit-tasks` 依新的 plan.md 重新產生任務清單。
+
+---
+
 # Tasks: TechInterview Pro — Candidate Portal
 
 **Input**: Design documents from `/specs/001-candidate-portal/`
