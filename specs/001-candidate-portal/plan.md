@@ -101,13 +101,16 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 **順序**：後端 → 資料庫 → AI 層 → 前端框架 → 容器化 → CI 流程。
 
-理由：HTTP 契約是前後端唯一的耦合點。先把後端換成 FastAPI 並維持**相同的契約**，
-前端在該階段完全不需改動，可持續作為驗證後端是否等價的活體測試。反過來先換前端的話，
-會同時失去前端與後端兩邊的參照基準。
+理由：HTTP 契約是前後端唯一的耦合點，先換後端可讓改動範圍收斂在契約之內。
+
+**等價性如何保證**：原本設想「以既有 Vite 前端零改動驗證」，但 tasks.md 的 T007 會就地
+把 `frontend/` 改為 Next.js，舊前端不再存在。改以**契約測試一對一移植**達成——
+`httpx` 的 `ASGITransport` 對應原本 Node 實作的 `app.request()`（research R-016），
+每一條測試的意圖可逐條對照，等價性由此保證而非靠人工點擊。
 
 | 階段 | 內容 | 完成的判準 |
 | --- | --- | --- |
-| M1 | Python + FastAPI 重建全部端點，維持既有 HTTP 契約 | 既有前端不改一行即可運作；契約測試等價通過 |
+| M1 | Python + FastAPI 重建全部端點 | 契約測試依 research R-016 一對一移植，逐條對照通過 |
 | M2 | SQLite → Supabase；schema 以 migrations 重建 | 資料存取層測試通過；seed 於本地 Supabase 可執行 |
 | M3 | 拆除三層圍欄；改以 LangChain 編排 Gemini + Claude | 圍欄程式碼與越獄語料刪除；雙供應商可經設定切換 |
 | M4 | 新增 `code_change` 與套用流程（FR-033 ~ FR-036） | 套用一致性與歸屬正確性的測試通過（SC-004） |
