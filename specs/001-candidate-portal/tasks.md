@@ -148,19 +148,19 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 ### Tests for User Story 3 ⚠️ 先寫，先失敗
 
-- [ ] T063 [P] [US3] 撰寫 `flushPendingSave()` 的失敗測試（未保存變更先落地才送出）於 `frontend/tests/unit/flush-pending-save.test.ts`
-- [ ] T064 [P] [US3] 撰寫聯動送出 Context 正確性的元件測試（停留 Q2 時送出的 questionId 為 Q2）於 `frontend/tests/component/cross-panel.test.tsx`
-- [ ] T065 [P] [US3] 撰寫 `POST /api/chat/system` 的契約測試於 `backend/tests/contract/chat-system.test.ts`
-- [ ] T066 [P] [US3] 撰寫端到端聯動情境於 `frontend/tests/e2e/cross-panel-context.spec.ts`（對應 quickstart V3）
+- [X] T063 [P] [US3] 撰寫 `flushPendingSave()` 的失敗測試（未保存變更先落地才送出）於 `frontend/tests/unit/flush-pending-save.test.ts`
+- [X] T064 [P] [US3] 撰寫聯動送出 Context 正確性的元件測試（停留 Q2 時送出的 questionId 為 Q2）於 `frontend/tests/component/cross-panel.test.tsx`
+- [X] T065 [P] [US3] 撰寫 `POST /api/chat/system` 的契約測試於 `backend/tests/contract/chat-system.test.ts`
+- [X] T066 [P] [US3] 撰寫端到端聯動情境於 `frontend/tests/e2e/cross-panel-context.spec.ts`（對應 quickstart V3）
 
 ### Implementation for User Story 3
 
-- [ ] T067 [US3] 實作 `flushPendingSave()` 於 `frontend/src/store/persistence.ts`
-- [ ] T068 [P] [US3] 實作 `POST /api/chat/system`（題目切換系統訊息）於 `backend/src/routes/chat.ts`
-- [ ] T069 [US3] 實作切換題目動作序列（flush → setCurrentQuestion → 系統訊息 → 面板同步）於 `frontend/src/store/session.ts`，依 [contracts/ui-contracts.md](./contracts/ui-contracts.md#a-01-切換題目)
-- [ ] T070 [P] [US3] 實作「詢問 AI 題目重點」按鈕於 `frontend/src/components/question/AskAiButton.tsx`
-- [ ] T071 [P] [US3] 實作「傳送至 AI 側邊欄」按鈕（先 flush 再送出，訊息標示已附帶程式碼）於 `frontend/src/components/workspace/SendToAiButton.tsx`；離線導致 flush 失敗時 MUST 阻擋送出並提示「目前離線，程式碼尚未同步」，MUST NOT 以較舊的伺服端草稿充當附帶 Context
-- [ ] T072 [P] [US3] 實作 In-Context 狀態列（訂閱 `currentQuestion`，不接受傳參）於 `frontend/src/components/copilot/StatusBar.tsx`
+- [X] T067 [US3] 實作 `flushPendingSave()` 於 `frontend/src/store/persistence.ts`
+- [X] T068 [P] [US3] 實作 `POST /api/chat/system`（題目切換系統訊息）於 `backend/src/routes/chat.ts`
+- [X] T069 [US3] 實作切換題目動作序列（flush → setCurrentQuestion → 系統訊息 → 面板同步）於 `frontend/src/store/session.ts`，依 [contracts/ui-contracts.md](./contracts/ui-contracts.md#a-01-切換題目)
+- [X] T070 [P] [US3] 實作「詢問 AI 題目重點」按鈕於 `frontend/src/components/question/AskAiButton.tsx`
+- [X] T071 [P] [US3] 實作「傳送至 AI 側邊欄」按鈕（先 flush 再送出，訊息標示已附帶程式碼）於 `frontend/src/components/workspace/SendToAiButton.tsx`；離線導致 flush 失敗時 MUST 阻擋送出並提示「目前離線，程式碼尚未同步」，MUST NOT 以較舊的伺服端草稿充當附帶 Context
+- [X] T072 [P] [US3] 實作 In-Context 狀態列（訂閱 `currentQuestion`，不接受傳參）於 `frontend/src/components/copilot/StatusBar.tsx`
 
 **Checkpoint**: 三面板完全聯動，Context 正確率可驗證
 

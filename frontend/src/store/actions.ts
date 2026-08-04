@@ -1,6 +1,6 @@
 import { useSessionStore } from './session';
 import { flushPendingSave } from './persistence';
-import { ApiError, postChat } from '../services/api';
+import { ApiError, postChat, postChatSystemMessage } from '../services/api';
 import { openChatStream, type StreamController } from '../services/chat-stream';
 import type { ChatSource } from '../types';
 
@@ -17,15 +17,51 @@ import type { ChatSource } from '../types';
  *
  *   1. flushPendingSave() —— 未保存的變更先落地，否則切走就遺失
  *   2. setCurrentQuestion() —— 三個面板同時看到新題目；尚無作答的題目載入 starter code
- *
- * 步驟 3（於對話 Feed 插入系統訊息）由 US3 的 T069 接上。
+ *   3. POST /api/chat/system —— 於 Feed 記錄切換，使對話歷程可追溯到當時的題目脈絡
+ *   4. StatusBar 與 Chips 訂閱 currentQuestion，自動反映，不需另行通知
  */
 export async function switchQuestion(questionId: string): Promise<void> {
   const store = useSessionStore.getState();
-  if (questionId === store.currentQuestionId) return;
+  const fromQuestionId = store.currentQuestionId;
+  if (questionId === fromQuestionId) return;
 
   await flushPendingSave();
   useSessionStore.getState().setCurrentQuestion(questionId);
+
+  // 系統訊息失敗不該擋住切題——應試者已經在新題目上了。
+  try {
+    const { message } = await postChatSystemMessage({ fromQuestionId, toQuestionId: questionId });
+    useSessionStore.getState().appendChatMessage(message);
+  } catch {
+    useSessionStore.getState().appendChatMessage({
+      id: `local-switch-${Date.now()}`,
+      questionId,
+      role: 'system',
+      content: '已切換題目。接下來的討論會以這一題為準。',
+      createdAt: new Date().toISOString(),
+      attachedCode: null,
+    });
+  }
+}
+
+/**
+ * 「詢問 AI 題目重點」（ui-contracts A-02）。
+ *
+ * questionId 由 `sendChat` 從 store 讀取——按鈕不傳參，
+ * 因此不可能送出過期的題目（憲章原則 II）。
+ */
+export const QUESTION_HINT_PROMPT = '請簡要說明這道題目的核心評分要點。';
+
+export function askQuestionHint(): Promise<void> {
+  return sendChat({ content: QUESTION_HINT_PROMPT, source: 'question_hint' });
+}
+
+/** 「傳送至 AI 側邊欄」（ui-contracts A-03）—— attachCode 會先 flush 待保存的草稿。 */
+export const CODE_REVIEW_PROMPT =
+  '請檢查我目前的程式碼有哪些 Corner Case 沒處理到，以及可能的潛在缺陷。不要給我修好的版本，指出方向就好。';
+
+export function sendCodeForReview(): Promise<void> {
+  return sendChat({ content: CODE_REVIEW_PROMPT, attachCode: true, source: 'code_review' });
 }
 
 // --- AI 對話 ----------------------------------------------------------------

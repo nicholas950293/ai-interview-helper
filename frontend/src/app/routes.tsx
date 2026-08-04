@@ -6,6 +6,7 @@ import { AppLayout } from './AppLayout';
 import { Toaster } from '../components/ui/toast';
 import { QuestionTabs } from '../components/question/QuestionTabs';
 import { QuestionContent } from '../components/question/QuestionContent';
+import { AskAiButton } from '../components/question/AskAiButton';
 import { AnswerWorkspace } from '../components/workspace/AnswerWorkspace';
 import { CopilotPanel } from '../components/copilot/CopilotPanel';
 import { useSession } from '../store/selectors';
@@ -96,6 +97,9 @@ function PortalScreen() {
             <QuestionTabs />
             <div className="min-h-0 flex-1">
               <QuestionContent />
+            </div>
+            <div className="shrink-0 border-t border-border px-4 py-2">
+              <AskAiButton />
             </div>
           </div>
         }

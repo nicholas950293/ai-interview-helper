@@ -8,6 +8,7 @@ import { CodeEditor } from './CodeEditor';
 import { LanguageSelect } from './LanguageSelect';
 import { SaveIndicator } from './SaveIndicator';
 import { TestConsole } from './TestConsole';
+import { SendToAiButton } from './SendToAiButton';
 
 /** 作答內容上限，與伺服端的 `CONTENT_TOO_LARGE` 門檻一致。 */
 const MAX_CONTENT_BYTES = 256 * 1024;
@@ -82,6 +83,8 @@ export function AnswerWorkspace() {
         </button>
 
         <TestConsole questionId={question.id} disabled={readOnly} />
+
+        <SendToAiButton />
 
         <div className="ml-auto">
           <SaveIndicator questionId={question.id} />
