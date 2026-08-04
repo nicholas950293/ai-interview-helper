@@ -1,5 +1,5 @@
 ---
-description: 'Task list for TechInterview Pro — Candidate Portal (Constitution v3.0.0)'
+description: 'Task list for TechInterview Pro — Candidate Portal (Constitution v3.0.2)'
 ---
 
 # Tasks: TechInterview Pro — Candidate Portal
@@ -9,7 +9,7 @@ description: 'Task list for TechInterview Pro — Candidate Portal (Constitution
 **Prerequisites**: [plan.md](./plan.md)、[spec.md](./spec.md)、[research.md](./research.md)、
 [data-model.md](./data-model.md)、[contracts/](./contracts/)
 
-**Constitution**: v3.0.0
+**Constitution**: v3.0.2
 
 **Tests**: 含測試任務，且為**強制項**。憲章原則 III「互動邏輯測試先行」與原則 I
 「上述記錄 MUST 有自動化測試覆蓋」使測試不可略過。計時、debounce 保存、提交、
@@ -323,8 +323,8 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [X] T119 拆除舊技術棧資產：`backend/` 的 TypeScript 實作、`backend/src/ai/guardrails.ts`、`postprocess.ts`、`backend/tests/guardrails/`（25 組越獄語料、11 則錄製回應、59 個測試）、`frontend/` 的 Vite 設定。**PR 描述 MUST 載明這是憲章 v3.0.0 反轉原則 I 的結果，不是品質問題**
 - [ ] T120 [P] 建立 `docker/Dockerfile.frontend`（Next.js standalone）、`docker/Dockerfile.backend`（Python 3.12-slim + `uv sync --frozen`）與 `docker/compose.yaml`，執行環境對齊 Ubuntu 24.04
 - [X] T121 完成 CI 於 `.github/workflows/ci.yml`：`pull_request` 觸發，關卡為測試套件、**協作歷程記錄測試**、axe-core 檢核；憑證隔離檢查擴及 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
-- [ ] T122 [P] 改寫 `README.md`（uv / Supabase CLI / Docker 先決條件、雙供應商設定、新的品質關卡、憲章六原則）
-- [ ] T123 依 [quickstart.md](./quickstart.md) 完整走過 V1–V5 五個驗證情境並記錄結果
+- [X] T122 [P] 改寫 `README.md`（uv / Supabase CLI / Docker 先決條件、雙供應商設定、新的品質關卡、憲章六原則）
+- [X] T123 依 [quickstart.md](./quickstart.md) 完整走過 V1–V5 五個驗證情境並記錄結果
 
 ---
 

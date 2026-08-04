@@ -1,6 +1,8 @@
 # Quickstart & Validation Guide: Candidate Portal
 
-**Date**: 2026-08-04 | **Plan**: [plan.md](./plan.md) | **Constitution**: v3.0.0
+**Date**: 2026-08-04 | **Plan**: [plan.md](./plan.md) | **Constitution**: v3.0.2
+
+**最後驗證**：2026-08-04，全部五個情境通過（結果記於各情境末）。
 
 本文件說明如何啟動本專案並驗證功能確實可用。實作細節屬 `tasks.md` 與實作階段，
 此處只描述「怎麼跑」與「跑出什麼才算通過」。
@@ -9,12 +11,19 @@
 
 ## 先決條件
 
+**目前必要**：
+
 - Node.js 22 LTS、npm 10+（前端）
 - Python 3.12、[uv](https://docs.astral.sh/uv/)（後端；憲章原則 V 指定）
-- Docker（Supabase 本地實例與容器化建置）
-- [Supabase CLI](https://supabase.com/docs/guides/local-development)
-- Gemini API 金鑰與 Anthropic API 金鑰（皆僅供後端使用）
 - 現代桌機瀏覽器，視窗寬度 ≥ 1280px
+
+**選用**：Gemini 或 Anthropic API 金鑰。未設定時後端自動改用腳本化假回應
+（`AI_FAKE`），串流、區塊解析、套用與作者歸屬的路徑完全相同，
+因此本文件的五個情境**不需要金鑰即可全數驗證**。
+
+**尚未需要**：Docker 與 [Supabase CLI](https://supabase.com/docs/guides/local-development)。
+兩者是憲章落差表中僅存的兩列，待後續增量；目前持久化以 SQLite 實作，
+`db/client.py` 與 `db/queries.py` 的介面已設計為可抽換。
 
 安裝 uv（若尚未安裝）：
 
@@ -27,27 +36,23 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ## 設定
 
 ```bash
-# 前端
-cd frontend && npm install && cd ..
-
-# 後端（uv 會自行建立 venv）
-cd backend && uv sync --frozen && cd ..
-
-# 環境變數
+npm install                          # 前端（npm workspace）
+cd backend && uv sync --frozen && cd ..   # 後端，uv 會自行建立 venv
 cp backend/.env.example backend/.env
 ```
 
-`backend/.env` 需填入：
+`backend/.env` 至少要有 `SESSION_SECRET`；其餘留空即可跑起來：
 
 ```text
-SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_SERVICE_ROLE_KEY=<supabase start 輸出的 service_role key>
 SESSION_SECRET=<random 32+ chars>
-GOOGLE_API_KEY=<your Gemini key>
-ANTHROPIC_API_KEY=<your Claude key>
+DATABASE_PATH=./data/portal.db
+PORT=8787
+
+# 留空則自動使用腳本化假回應
+GOOGLE_API_KEY=
+ANTHROPIC_API_KEY=
 AI_PROVIDER=google_genai            # 或 anthropic
 AI_MODEL=gemini-2.5-flash
-PORT=8787
 ```
 
 > 下列憑證 MUST NOT 出現在 `frontend/` 的任何檔案或環境變數中（憲章「憑證隔離」）：
@@ -65,10 +70,9 @@ python -c "import secrets; print(secrets.token_hex(32))"
 ## 啟動
 
 ```bash
-supabase start                   # 啟動本地 Supabase（Docker）
-supabase db reset                # 套用 supabase/migrations/ 並執行 seed
+npm run db:migrate               # 建立 SQLite schema
 npm run seed                     # 載入示範場次（3 題）與一組邀請 token
-npm run dev                      # 同時啟動 backend:8787 與 frontend:3000
+npm run dev                      # 同時啟動 backend:8787 與 frontend:5173
 ```
 
 `npm run seed` 會輸出可直接開啟的邀請連結：
@@ -77,7 +81,7 @@ npm run dev                      # 同時啟動 backend:8787 與 frontend:3000
 [db] 已建立示範場次：
   sessionId : sess-demo
   題目      : API 限流器、LRU 快取、訊息佇列
-  邀請連結  : http://localhost:3000/s/9fK2xQ...
+  邀請連結  : http://localhost:5173/s/9fK2xQ...
 ```
 
 短場次（驗證計時與強制提交）：
@@ -86,7 +90,10 @@ npm run dev                      # 同時啟動 backend:8787 與 frontend:3000
 npm run seed -- --duration 6m
 ```
 
-容器化完整啟動：
+> 根目錄的 script 一律是直接指令、不是巢狀的 `npm run`——後者會把 `--` 之後的
+> 參數當成外層 npm 自己的旗標吃掉，`--duration` 與 `--grep` 都會靜默失效。
+
+容器化完整啟動（T120，尚未實作）：
 
 ```bash
 docker compose -f docker/compose.yaml up --build
@@ -112,6 +119,8 @@ docker compose -f docker/compose.yaml up --build
 npm run test:e2e -- --grep "draft persistence"
 ```
 
+**結果（2026-08-04）**：5 個測試通過 ✅
+
 ### V2 — 透過 AI 完成實作（US2）
 
 1. 確認側欄頂部的規範 Banner 說明「AI 全面開放」與「協作歷程會被記錄」。
@@ -128,9 +137,13 @@ npm run test:e2e -- --grep "draft persistence"
 12. **預期**：AI 以說明回應、不產出可套用的程式碼區塊；切回實作模式後可再取得完整實作。
 
 ```bash
-npm run test:contract -w backend -- collaboration   # 套用一致性與作者歸屬，CI 必過
+npm run test:collaboration                          # 套用一致性與作者歸屬，CI 必過
 npm run test:e2e -- --grep "ai implementation"
 ```
+
+**結果（2026-08-04）**：後端 24 個、端到端 12 個測試通過 ✅
+端到端的斷言直接查 `code_change` 資料表，不停在 UI——畫面上套用成功但紀錄
+寫成 `candidate`，這個產品就評不了分。
 
 **通過標準**：
 
@@ -150,6 +163,8 @@ npm run test:e2e -- --grep "ai implementation"
 npm run test:e2e -- --grep "cross-panel context"
 ```
 
+**結果（2026-08-04）**：5 個測試通過 ✅
+
 ### V4 — 計時與提交（US4）
 
 以可控時鐘驗證，不需真的等 45 分鐘：
@@ -167,9 +182,12 @@ npm run seed -- --duration 6m
    進行中的 AI 串流一併中止。
 
 ```bash
-npm run test -w frontend -- timer                # fake timers 邊界
-npm run test -w backend -- submission            # 逾時提交與冪等性
+npm run test:e2e -- --grep "timer and submission"
+npm run test:frontend -- timer                   # fake timers 邊界
+cd backend && uv run pytest -k submission        # 逾時提交與冪等性
 ```
+
+**結果（2026-08-04）**：端到端 7 個、前端 15 個、後端 22 個測試通過 ✅
 
 ### V5 — 全螢幕與平台外工具監測（US5）
 
@@ -183,14 +201,17 @@ npm run test -w backend -- submission            # 逾時提交與冪等性
 npm run test:e2e -- --grep "environment monitoring"
 ```
 
+**結果（2026-08-04）**：4 個測試通過 ✅
+
 ---
 
 ## 品質關卡（合併前必過，憲章要求）
 
 ```bash
-npm test                              # 前後端完整測試套件
-npm run test:collaboration -w backend # 協作歷程記錄：套用一致性 + 作者歸屬
-npm run test:a11y                     # axe-core：對比與 ARIA
+npm test                              # 前後端完整測試套件（pytest 142 + vitest 123）
+npm run test:collaboration            # 協作歷程記錄：套用一致性 + 作者歸屬（24）
+npm run test:a11y                     # axe-core：對比與 ARIA（7）
+npm run lint && npm run typecheck && npm run format:check
 ```
 
 CI 另有一道**憑證隔離**檢查：以假金鑰建置前端，若建置產物含有該字串即失敗。
@@ -212,7 +233,8 @@ npm run perf:editor
 | 開啟連結顯示「連結已失效」 | seed 的 token 已被提交過 | 重跑 `npm run seed` 取得新連結 |
 | AI 側欄一直顯示錯誤 | 兩個供應商的金鑰皆未設或額度用罄 | 檢查 `backend/.env` 與後端日誌；LangChain 的 fallback 已先試過次要供應商 |
 | 「套用至編輯器」沒有反應 | 場次已進入終態，或該訊息不屬於本場次 | 檢查回應的錯誤碼；終態下按鈕應為停用 |
-| 套用後內容與畫面上的不一致 | 套用走了 `onChange` 而非 `onApplyExternal` | 這會同時破壞 SC-004 與作者歸屬，屬憲章原則 I 違規，須修正 |
+| 套用後內容與畫面上的不一致 | 編輯器的外部寫入沒有帶上 `externalWrite` 標記，因而觸發了 `onChange` | 這會讓套用被當成應試者自行輸入、記為 `candidate`，同時破壞 SC-004 與作者歸屬，屬憲章原則 I 違規，須修正 |
+| `npm run seed -- --duration 6m` 沒有效果 | 該 script 被改成巢狀的 `npm run` | 根目錄的 script MUST 為直接指令，否則 `--` 之後的參數會被外層 npm 吃掉 |
 | 草稿狀態卡在「儲存草稿中…」 | 後端未啟動 | 確認 8787 埠；草稿此時仍保留於 IndexedDB，不會遺失 |
 | 計時與預期不符 | 前端時鐘偏移 | 檢查 `GET /api/time` 的校時回應 |
-| `supabase start` 失敗 | Docker 未執行 | 啟動 Docker 後重試 |
+| `supabase start` 失敗 | Docker 未執行 | 啟動 Docker 後重試（Supabase 為待實作的落差，目前用不到） |
