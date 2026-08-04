@@ -1,5 +1,5 @@
 import { useSessionStore } from '../store/session';
-import { flushQueue } from '../store/persistence';
+import { flushQueue, flushEnvironmentQueue } from '../store/persistence';
 
 /**
  * 連線狀態偵測與離線佇列補送（FR-028）。
@@ -22,7 +22,9 @@ function clearRetry(): void {
 }
 
 async function attemptFlush(): Promise<void> {
-  const ok = await flushQueue();
+  // 草稿與環境事件共用同一輪補送；任一失敗都維持 offline 並重試。
+  const [savesOk, eventsOk] = await Promise.all([flushQueue(), flushEnvironmentQueue()]);
+  const ok = savesOk && eventsOk;
 
   if (ok) {
     clearRetry();

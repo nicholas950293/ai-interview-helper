@@ -4,6 +4,7 @@ import { submitSession } from '../../store/actions';
 import { toast } from '../ui/toast';
 import { CountdownTimer } from './CountdownTimer';
 import { SubmitDialog } from './SubmitDialog';
+import { FullscreenToggle } from './FullscreenToggle';
 
 /**
  * Header（FR-032：僅呈現姓名與職稱兩項個資）。
@@ -46,6 +47,7 @@ export function AppHeader() {
       <div className="ml-auto flex items-center gap-4">
         <CountdownTimer onExpire={handleExpire} />
         <span className="text-sm text-text-secondary">{session?.candidateName}</span>
+        <FullscreenToggle />
         <SubmitDialog />
       </div>
     </div>

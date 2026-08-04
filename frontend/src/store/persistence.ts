@@ -1,6 +1,12 @@
 import { openDB, type IDBPDatabase } from 'idb';
 import { useSessionStore } from './session';
-import { ApiError, saveAnswer, saveAnswersBatch, type SaveAnswerInput } from '../services/api';
+import {
+  ApiError,
+  postEnvironmentEvents,
+  saveAnswer,
+  saveAnswersBatch,
+  type SaveAnswerInput,
+} from '../services/api';
 import type { Language } from '../types';
 
 /**
@@ -12,8 +18,9 @@ import type { Language } from '../types';
 export const SAVE_DEBOUNCE_MS = 1000;
 
 const DB_NAME = 'techinterview-portal';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const QUEUE_STORE = 'pending-saves';
+const EVENT_STORE = 'pending-events';
 
 export interface QueuedSave {
   id?: number;
@@ -31,6 +38,9 @@ function getQueueDb(): Promise<IDBPDatabase> {
     upgrade(db) {
       if (!db.objectStoreNames.contains(QUEUE_STORE)) {
         db.createObjectStore(QUEUE_STORE, { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains(EVENT_STORE)) {
+        db.createObjectStore(EVENT_STORE, { keyPath: 'id', autoIncrement: true });
       }
     },
   });
@@ -80,6 +90,56 @@ export async function flushQueue(): Promise<boolean> {
   }
 
   await clearQueue();
+  return true;
+}
+
+// --- 環境事件佇列 -----------------------------------------------------------
+
+export interface QueuedEnvironmentEvent {
+  id?: number;
+  type: 'window_blur' | 'tab_hidden';
+  startedAt: string;
+  durationMs: number;
+}
+
+/**
+ * 環境事件與草稿共用同一套離線補送機制（T096）。
+ *
+ * 事件在離線期間同樣不能遺失——公正性記錄若因斷線而缺漏，
+ * 對後續評分的意義就不完整（憲章「防作弊監測」）。
+ */
+export async function enqueueEnvironmentEvent(
+  event: Omit<QueuedEnvironmentEvent, 'id'>
+): Promise<void> {
+  const db = await getQueueDb();
+  await db.add(EVENT_STORE, event);
+}
+
+export async function readEnvironmentQueue(): Promise<QueuedEnvironmentEvent[]> {
+  const db = await getQueueDb();
+  const all = (await db.getAll(EVENT_STORE)) as QueuedEnvironmentEvent[];
+  return all.sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt));
+}
+
+export async function clearEnvironmentQueue(): Promise<void> {
+  const db = await getQueueDb();
+  await db.clear(EVENT_STORE);
+}
+
+/** 與 `flushQueue` 一致：失敗時保留佇列且不向外擲出。 */
+export async function flushEnvironmentQueue(): Promise<boolean> {
+  const queued = await readEnvironmentQueue();
+  if (queued.length === 0) return true;
+
+  try {
+    await postEnvironmentEvents(
+      queued.map(({ type, startedAt, durationMs }) => ({ type, startedAt, durationMs }))
+    );
+  } catch {
+    return false;
+  }
+
+  await clearEnvironmentQueue();
   return true;
 }
 

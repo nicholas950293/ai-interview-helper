@@ -204,18 +204,18 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 ### Tests for User Story 5 ⚠️ 先寫，先失敗
 
-- [ ] T088 [P] [US5] 撰寫 `fullscreenchange` 狀態同步的失敗測試（含 Esc 退出）於 `frontend/tests/unit/fullscreen.test.ts`
-- [ ] T089 [P] [US5] 撰寫環境事件門檻的失敗測試（< 1000ms 不記錄；非全螢幕狀態下不記錄）於 `frontend/tests/unit/environment-events.test.ts`
-- [ ] T090 [P] [US5] 撰寫 `POST /api/events` 的契約測試（批次、伺服端二次過濾）於 `backend/tests/contract/events.test.ts`
-- [ ] T091 [P] [US5] 撰寫端到端環境監測情境於 `frontend/tests/e2e/environment-monitoring.spec.ts`（對應 quickstart V5）
+- [X] T088 [P] [US5] 撰寫 `fullscreenchange` 狀態同步的失敗測試（含 Esc 退出）於 `frontend/tests/unit/fullscreen.test.ts`
+- [X] T089 [P] [US5] 撰寫環境事件門檻的失敗測試（< 1000ms 不記錄；非全螢幕狀態下不記錄）於 `frontend/tests/unit/environment-events.test.ts`
+- [X] T090 [P] [US5] 撰寫 `POST /api/events` 的契約測試（批次、伺服端二次過濾）於 `backend/tests/contract/events.test.ts`
+- [X] T091 [P] [US5] 撰寫端到端環境監測情境於 `frontend/tests/e2e/environment-monitoring.spec.ts`（對應 quickstart V5）
 
 ### Implementation for User Story 5
 
-- [ ] T092 [P] [US5] 實作 `POST /api/events`（僅記錄客觀事實，無判定欄位）於 `backend/src/routes/events.ts`
-- [ ] T093 [P] [US5] 實作全螢幕 hook（監聽 `fullscreenchange` 同步按鈕與圖示）於 `frontend/src/lib/use-fullscreen.ts`
-- [ ] T094 [P] [US5] 實作 blur／visibilitychange 偵測與 1000ms 門檻於 `frontend/src/services/environment-monitor.ts`；監聽 MUST 僅於全螢幕狀態啟用，退出全螢幕時解除（憲章「防作弊監測」與 FR-025）
-- [ ] T095 [US5] 實作全螢幕按鈕與返回提醒 Toast 於 `frontend/src/components/header/FullscreenToggle.tsx`
-- [ ] T096 [US5] 將環境事件併入離線佇列補送機制於 `frontend/src/store/persistence.ts`
+- [X] T092 [P] [US5] 實作 `POST /api/events`（僅記錄客觀事實，無判定欄位）於 `backend/src/routes/events.ts`
+- [X] T093 [P] [US5] 實作全螢幕 hook（監聽 `fullscreenchange` 同步按鈕與圖示）於 `frontend/src/lib/use-fullscreen.ts`
+- [X] T094 [P] [US5] 實作 blur／visibilitychange 偵測與 1000ms 門檻於 `frontend/src/services/environment-monitor.ts`；監聽 MUST 僅於全螢幕狀態啟用，退出全螢幕時解除（憲章「防作弊監測」與 FR-025）
+- [X] T095 [US5] 實作全螢幕按鈕與返回提醒 Toast 於 `frontend/src/components/header/FullscreenToggle.tsx`
+- [X] T096 [US5] 將環境事件併入離線佇列補送機制於 `frontend/src/store/persistence.ts`
 
 **Checkpoint**: 全部 User Story 獨立可用
 

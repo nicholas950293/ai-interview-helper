@@ -6,6 +6,7 @@ import { testRoutes } from './routes/tests.js';
 import { chatRoutes } from './routes/chat.js';
 import { timeRoutes } from './routes/time.js';
 import { submitRoutes } from './routes/submit.js';
+import { eventRoutes } from './routes/events.js';
 
 /**
  * BFF 應用組裝點。
@@ -22,6 +23,7 @@ export function createApp() {
   app.route('/api', chatRoutes);
   app.route('/api', timeRoutes);
   app.route('/api', submitRoutes);
+  app.route('/api', eventRoutes);
 
   // 全域錯誤映射（contracts/http-api.md「錯誤格式（全端點共用）」）
   app.onError((err, c) => {

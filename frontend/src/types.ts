@@ -31,6 +31,9 @@ export type ChatSource = 'typed' | 'quick_prompt' | 'question_hint' | 'code_revi
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
+/** 環境事件類型（FR-025）—— 僅客觀事實，無判定性類型。 */
+export type EnvironmentEventType = 'window_blur' | 'tab_hidden';
+
 /** 保存狀態指示的四態（contracts/ui-contracts.md「元件狀態契約」）。 */
 export type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
