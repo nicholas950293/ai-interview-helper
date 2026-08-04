@@ -233,6 +233,10 @@ AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而
 
 已符合，無須變更：TypeScript（前端）、Tailwind CSS、GitHub Actions、SDD 流程。
 
+**增量進度**：產品負責人 2026-08-04 裁決先行處理「後端語言／框架」與「AI 能力定位」
+兩列（Increment 1，見 `specs/001-candidate-portal/plan.md`）。其餘各列**維持落差狀態**，
+MUST 於後續增量逐一關閉；本次未處理不代表默許（見本章節開頭第二條）。
+
 ### 尚未實作的功能（非落差）
 
 - **Google Login (Google OAuth)**：原則 V 已將其列為 MUST，但本期尚未實作，

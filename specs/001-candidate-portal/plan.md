@@ -96,6 +96,24 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ## Migration Strategy
 
+### 本次增量範圍（Increment 1）—— 產品負責人 2026-08-04 裁決
+
+**只做 M1：後端移植為 Python + FastAPI，現有作答畫面維持可運作。**
+
+| 項目 | 本次 | 理由 |
+| --- | --- | --- |
+| 後端語言／框架 | ✅ Python + FastAPI + uv | 本次唯一目標 |
+| AI 編排 | ✅ 改走 LangChain | 圍欄必須拆除（憲章原則 I 禁止輸出限制層），拆的同時直接換上 LangChain 比先搬圍欄再拆兩次省事 |
+| 雙供應商 | ✅ 程式碼支援 / ⏸ 僅設定 Gemini | 憲章要求的是程式碼可經設定切換；金鑰是執行期設定，缺 Anthropic 金鑰不影響實作 |
+| 資料庫 | ⏸ 暫留 SQLite | 已列於憲章落差表；Supabase CLI 與 Docker 待後續 feature |
+| 前端框架 | ⏸ 暫留 Vite SPA | 僅做端點更名對應的最小調整，不做 Next.js 遷移 |
+| 套用與作者歸屬（FR-033~036） | ⏸ 延後 | 需要前端 UI 才能驗收，與 Next.js 遷移一起做 |
+| 容器化 / PR 制 CI | ⏸ 延後 | 已列於憲章落差表 |
+
+**此範圍收窄 MUST 記錄於憲章的落差表**，MUST NOT 因時間經過被視為默許。
+未完成的項目在 Increment 1 交付後仍是落差，不因「這次沒做」而消失。
+
+
 `main` 上的既有實作與本計畫的技術棧完全不同。本節說明遷移順序與其理由；
 逐項任務由 `/speckit-tasks` 產出。
 

@@ -54,6 +54,33 @@ description: 'Task list for TechInterview Pro — Candidate Portal (Constitution
 
 ---
 
+## 本次增量（Increment 1）—— 只做後端移植
+
+產品負責人 2026-08-04 裁決：本次只做 plan.md 的 M1，其餘維持現狀並保留於憲章落差表。
+詳見 [plan.md 的「本次增量範圍」](./plan.md#本次增量範圍increment-1-產品負責人-2026-08-04-裁決)。
+
+**本次要做的任務**（其餘任務保留於本檔，待後續增量）：
+
+| 範圍 | 任務 |
+| --- | --- |
+| 後端工具鏈 | T001–T005 |
+| 資料層與授權（SQLite 暫留） | T018–T027（T014–T017 的 Supabase 遷移改以既有 SQLite schema 沿用） |
+| 作答與測試端點 | T034、T040、T041 |
+| AI 層（拆圍欄、改 LangChain） | T053、T058、T061–T063、T065、T068 |
+| 聯動、計時、提交、事件端點 | T082、T089、T092、T093、T103、T105 |
+| 前端最小調整 | 端點更名對應（`guidance-mode` → `collaboration-mode`），不做框架遷移 |
+
+**本次明確不做**：T006–T013（Supabase CLI / Next.js / Playwright / PR 制 CI）、
+T014–T017（Supabase 遷移）、T028–T033 與各 Story 的前端任務、
+T055–T057 / T064 / T066 / T067（套用與作者歸屬，需前端 UI 才能驗收）、
+T110–T123（Polish，含 Docker 與舊資產拆除）。
+
+**唯一不可延後的項目**：圍欄拆除。憲章原則 I 禁止輸出限制層，
+把 `guardrails.ts` / `postprocess.ts` 照樣移植到 Python 等於主動實作違憲的東西。
+因此本次的 AI 層直接以 LangChain 重建，不含任何輸出攔截。
+
+---
+
 ## Phase 1: Setup (Shared Infrastructure)
 
 **Purpose**: 建立新技術棧的工具鏈（憲章原則 V）
