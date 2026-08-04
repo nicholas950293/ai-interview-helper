@@ -368,13 +368,32 @@ export interface SeedResult {
   url: string;
 }
 
-export function seed(db: Db = getDb()): SeedResult {
+export interface SeedOptions {
+  /** 場次總時長；`--duration 6m` 供 quickstart V4 以短場次驗證計時。 */
+  durationSec?: number;
+  /** 場次 id；e2e 以不同 id 產生互不干擾的平行場次。 */
+  sessionId?: string;
+}
+
+/** 解析 `6m` / `90s` / `3600` 形式的時長。 */
+export function parseDuration(input: string): number {
+  const match = /^(\d+)\s*(s|m|h)?$/i.exec(input.trim());
+  if (!match?.[1]) {
+    throw new Error(`無法解析時長「${input}」，可用格式：3600、90s、6m、1h`);
+  }
+  const value = Number(match[1]);
+  const unit = (match[2] ?? 's').toLowerCase();
+  const multiplier = unit === 'h' ? 3600 : unit === 'm' ? 60 : 1;
+  return value * multiplier;
+}
+
+export function seed(db: Db = getDb(), options: SeedOptions = {}): SeedResult {
   runMigrations(db);
 
-  const sessionId = 'sess-demo';
+  const sessionId = options.sessionId ?? 'sess-demo';
   // 128-bit 隨機值，URL 安全編碼（R-009）
   const token = randomBytes(16).toString('base64url');
-  const durationSec = 90 * 60;
+  const durationSec = options.durationSec ?? 90 * 60;
   const expiresAt = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
 
   const apply = db.transaction(() => {
@@ -434,14 +453,33 @@ export function seed(db: Db = getDb()): SeedResult {
     });
   });
 
-  apply();
+  // IMMEDIATE：多個 seed 程序同時執行時（e2e 平行測試）以寫鎖排隊，
+  // DEFERRED 交易會在升級為寫入時直接撞上 SQLITE_BUSY，busy_timeout 也救不了。
+  apply.immediate();
 
   return { sessionId, token, url: `http://localhost:5173/s/${token}` };
 }
 
-// `npm run db:seed`
+function parseArgs(argv: string[]): SeedOptions {
+  const options: SeedOptions = {};
+  for (let i = 0; i < argv.length; i += 1) {
+    const flag = argv[i];
+    const value = argv[i + 1];
+    if (flag === '--duration' && value) {
+      options.durationSec = parseDuration(value);
+      i += 1;
+    } else if (flag === '--session-id' && value) {
+      options.sessionId = value;
+      i += 1;
+    }
+  }
+  return options;
+}
+
+// `npm run db:seed [-- --duration 6m] [--session-id sess-x]`
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
-  const result = seed();
+  const options = parseArgs(process.argv.slice(2));
+  const result = seed(getDb(), options);
   console.log('[db] 已建立示範場次：');
   console.log(`  sessionId : ${result.sessionId}`);
   console.log(`  題目      : ${QUESTIONS.map((q) => q.title).join('、')}`);

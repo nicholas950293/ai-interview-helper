@@ -42,7 +42,7 @@ export function runMigrations(db: Db = getDb()): string[] {
       db.exec(sql);
       db.prepare('INSERT INTO schema_migration (name) VALUES (?)').run(file);
     });
-    apply();
+    apply.immediate();
     executed.push(file);
   }
 

@@ -14,6 +14,9 @@ function open(path: string): Db {
   const db = new Database(path);
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
+  // 寫入者互相等待而非立刻回 SQLITE_BUSY——SSE 串流、草稿保存與 seed
+  // 可能同時寫入，直接失敗會讓應試者看到不該出現的錯誤。
+  db.pragma('busy_timeout = 5000');
   return db;
 }
 

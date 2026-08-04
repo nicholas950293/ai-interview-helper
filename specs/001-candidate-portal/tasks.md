@@ -77,28 +77,28 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 ### Tests for User Story 1 ⚠️ 先寫，先失敗
 
-- [ ] T026 [P] [US1] 撰寫 debounce 保存的失敗測試（fake timers：連續輸入 3 秒僅產生 1 次請求）於 `frontend/tests/unit/persistence.test.ts`
-- [ ] T027 [P] [US1] 撰寫離線佇列的失敗測試（離線累積、恢復連線依 revision 排序補送）於 `frontend/tests/unit/offline-queue.test.ts`
-- [ ] T028 [P] [US1] 撰寫草稿保存的契約測試（revision 遞增、`REVISION_STALE`、`CONTENT_TOO_LARGE`、場次終態拒寫）於 `backend/tests/contract/answers.test.ts`
-- [ ] T029 [P] [US1] 撰寫保存狀態指示的元件測試（idle/saving/saved/error 四態文字與 aria-live）於 `frontend/tests/component/save-indicator.test.tsx`
-- [ ] T030 [P] [US1] 撰寫題目切換保留內容的元件測試於 `frontend/tests/component/question-tabs.test.tsx`
-- [ ] T031 [P] [US1] 撰寫端到端草稿保全情境於 `frontend/tests/e2e/draft-persistence.spec.ts`（對應 quickstart V1）
+- [X] T026 [P] [US1] 撰寫 debounce 保存的失敗測試（fake timers：連續輸入 3 秒僅產生 1 次請求）於 `frontend/tests/unit/persistence.test.ts`
+- [X] T027 [P] [US1] 撰寫離線佇列的失敗測試（離線累積、恢復連線依 revision 排序補送）於 `frontend/tests/unit/offline-queue.test.ts`
+- [X] T028 [P] [US1] 撰寫草稿保存的契約測試（revision 遞增、`REVISION_STALE`、`CONTENT_TOO_LARGE`、場次終態拒寫）於 `backend/tests/contract/answers.test.ts`
+- [X] T029 [P] [US1] 撰寫保存狀態指示的元件測試（idle/saving/saved/error 四態文字與 aria-live）於 `frontend/tests/component/save-indicator.test.tsx`
+- [X] T030 [P] [US1] 撰寫題目切換保留內容的元件測試於 `frontend/tests/component/question-tabs.test.tsx`
+- [X] T031 [P] [US1] 撰寫端到端草稿保全情境於 `frontend/tests/e2e/draft-persistence.spec.ts`（對應 quickstart V1）
 
 ### Implementation for User Story 1
 
-- [ ] T032 [US1] 實作 `PUT /api/answers/:questionId` 與批次 `PUT /api/answers` 於 `backend/src/routes/answers.ts`
-- [ ] T033 [P] [US1] 實作 `POST /api/tests/:questionId`（回報預定義結果，不執行任何用戶端程式碼）於 `backend/src/routes/tests.ts`
-- [ ] T034 [P] [US1] 封裝 CodeMirror 6 編輯器（value/onChange/language/readOnly 介面，含行號、語法高亮、Tab 縮排）於 `frontend/src/components/workspace/CodeEditor.tsx`
-- [ ] T035 [US1] 實作 debounce 1000ms 保存與 IndexedDB 離線佇列於 `frontend/src/store/persistence.ts`
-- [ ] T036 [P] [US1] 實作連線狀態偵測與 `connectivity` 狀態更新於 `frontend/src/services/connectivity.ts`
-- [ ] T037 [P] [US1] 實作語言選單與「是否以新語言 starter code 取代」確認對話框於 `frontend/src/components/workspace/LanguageSelect.tsx`
-- [ ] T038 [P] [US1] 實作保存狀態指示於 `frontend/src/components/workspace/SaveIndicator.tsx`
-- [ ] T039 [P] [US1] 實作程式碼格式化（JS/TS 用 Prettier standalone；Python/Go 用縮排正規化；失敗時 Toast 提示且不破壞內容）於 `frontend/src/lib/format-code.ts`
-- [ ] T040 [US1] 組裝作答區（語言選單、保存狀態、格式化、編輯器、控制台、執行測試按鈕）於 `frontend/src/components/workspace/AnswerWorkspace.tsx`
-- [ ] T041 [P] [US1] 實作題目頁籤與難度／配分標籤於 `frontend/src/components/question/QuestionTabs.tsx`
-- [ ] T042 [P] [US1] 實作題目內容呈現（描述、範例 Input/Output、複雜度要求、評分重點）於 `frontend/src/components/question/QuestionContent.tsx`
-- [ ] T043 [US1] 實作切換題目時同步載入該題 starter code 或既有草稿於 `frontend/src/store/session.ts`
-- [ ] T044 [P] [US1] 實作測試結果 Toast（✅ 通過 5/5 個測試案例）於 `frontend/src/components/workspace/TestConsole.tsx`
+- [X] T032 [US1] 實作 `PUT /api/answers/:questionId` 與批次 `PUT /api/answers` 於 `backend/src/routes/answers.ts`
+- [X] T033 [P] [US1] 實作 `POST /api/tests/:questionId`（回報預定義結果，不執行任何用戶端程式碼）於 `backend/src/routes/tests.ts`
+- [X] T034 [P] [US1] 封裝 CodeMirror 6 編輯器（value/onChange/language/readOnly 介面，含行號、語法高亮、Tab 縮排）於 `frontend/src/components/workspace/CodeEditor.tsx`
+- [X] T035 [US1] 實作 debounce 1000ms 保存與 IndexedDB 離線佇列於 `frontend/src/store/persistence.ts`
+- [X] T036 [P] [US1] 實作連線狀態偵測與 `connectivity` 狀態更新於 `frontend/src/services/connectivity.ts`
+- [X] T037 [P] [US1] 實作語言選單與「是否以新語言 starter code 取代」確認對話框於 `frontend/src/components/workspace/LanguageSelect.tsx`
+- [X] T038 [P] [US1] 實作保存狀態指示於 `frontend/src/components/workspace/SaveIndicator.tsx`
+- [X] T039 [P] [US1] 實作程式碼格式化（JS/TS 用 Prettier standalone；Python/Go 用縮排正規化；失敗時 Toast 提示且不破壞內容）於 `frontend/src/lib/format-code.ts`
+- [X] T040 [US1] 組裝作答區（語言選單、保存狀態、格式化、編輯器、控制台、執行測試按鈕）於 `frontend/src/components/workspace/AnswerWorkspace.tsx`
+- [X] T041 [P] [US1] 實作題目頁籤與難度／配分標籤於 `frontend/src/components/question/QuestionTabs.tsx`
+- [X] T042 [P] [US1] 實作題目內容呈現（描述、範例 Input/Output、複雜度要求、評分重點）於 `frontend/src/components/question/QuestionContent.tsx`
+- [X] T043 [US1] 實作切換題目時同步載入該題 starter code 或既有草稿於 `frontend/src/store/session.ts`
+- [X] T044 [P] [US1] 實作測試結果 Toast（✅ 通過 5/5 個測試案例）於 `frontend/src/components/workspace/TestConsole.tsx`
 
 **Checkpoint**: US1 可獨立驗證 — 作答、保存、切題、重整還原全數運作，無需 AI 功能
 

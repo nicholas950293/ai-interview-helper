@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useSessionStore } from '../store/session';
 import { ApiError, fetchSession, redeemToken } from '../services/api';
+import { initConnectivity } from '../services/connectivity';
 import { AppLayout } from './AppLayout';
+import { Toaster } from '../components/ui/toast';
+import { QuestionTabs } from '../components/question/QuestionTabs';
+import { QuestionContent } from '../components/question/QuestionContent';
+import { AnswerWorkspace } from '../components/workspace/AnswerWorkspace';
+import { useSession } from '../store/selectors';
 
 /**
  * 路由 `/s/:token`。
@@ -63,8 +69,13 @@ export function AppRoutes() {
     void loadSession(token);
   }, [token]);
 
+  useEffect(() => {
+    if (phase !== 'ready') return;
+    return initConnectivity();
+  }, [phase]);
+
   if (phase === 'ready') {
-    return <AppLayout />;
+    return <PortalScreen />;
   }
 
   if (phase === 'error' && loadError) {
@@ -72,6 +83,49 @@ export function AppRoutes() {
   }
 
   return <LoadingScreen />;
+}
+
+function PortalScreen() {
+  return (
+    <>
+      <AppLayout
+        header={<AppHeader />}
+        questionPanel={
+          <div className="flex h-full flex-col">
+            <QuestionTabs />
+            <div className="min-h-0 flex-1">
+              <QuestionContent />
+            </div>
+          </div>
+        }
+        answerPanel={<AnswerWorkspace />}
+        copilotPanel={<CopilotPlaceholder />}
+      />
+      <Toaster />
+    </>
+  );
+}
+
+/** Header 的完整內容（計時器、全螢幕、提交）由 US4 / US5 接上。 */
+function AppHeader() {
+  const session = useSession();
+
+  return (
+    <div className="flex items-center gap-4 border-b border-border bg-surface px-(--layout-gap) py-3">
+      <span className="font-semibold text-text-primary">TechInterview Pro</span>
+      <span className="text-text-secondary">{session?.positionTitle}</span>
+      <span className="ml-auto text-text-secondary">{session?.candidateName}</span>
+    </div>
+  );
+}
+
+/** AI 側欄由 US2 接上。 */
+function CopilotPlaceholder() {
+  return (
+    <div className="flex h-full items-center justify-center p-6 text-center text-sm text-text-muted">
+      AI 助教即將在此提供引導。
+    </div>
+  );
 }
 
 function LoadingScreen() {

@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { toErrorResponse } from './lib/errors.js';
 import { sessionRoutes } from './routes/session.js';
+import { answerRoutes } from './routes/answers.js';
+import { testRoutes } from './routes/tests.js';
 
 /**
  * BFF 應用組裝點。
@@ -12,6 +14,8 @@ export function createApp() {
   app.get('/api/health', (c) => c.json({ ok: true }));
 
   app.route('/api', sessionRoutes);
+  app.route('/api', answerRoutes);
+  app.route('/api', testRoutes);
 
   // 全域錯誤映射（contracts/http-api.md「錯誤格式（全端點共用）」）
   app.onError((err, c) => {
