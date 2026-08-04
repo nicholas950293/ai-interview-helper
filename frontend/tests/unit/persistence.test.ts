@@ -25,7 +25,7 @@ const payload: SessionPayload = {
     positionTitle: '資深全端工程師模擬面試',
     deadlineAt: new Date(Date.now() + 3600_000).toISOString(),
     status: 'in_progress',
-    guidanceMode: 'light',
+    collaborationMode: 'implement',
   },
   questions: [
     {

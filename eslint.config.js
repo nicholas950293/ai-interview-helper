@@ -8,6 +8,8 @@ export default tseslint.config(
   {
     ignores: [
       '**/node_modules/**',
+      '**/.venv/**',
+      '**/__pycache__/**',
       '**/dist/**',
       '**/build/**',
       '**/coverage/**',

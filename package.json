@@ -5,29 +5,29 @@
   "type": "module",
   "description": "TechInterview Pro — Candidate Portal",
   "workspaces": [
-    "frontend",
-    "backend"
+    "frontend"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace backend & npm run dev --workspace frontend",
+    "dev": "npm run dev:backend & npm run dev:frontend",
     "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "lint": "eslint .",
+    "test": "npm run test:backend && npm run test:frontend",
+    "lint": "eslint . && cd backend && uv run ruff check .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "db:migrate": "npm run db:migrate --workspace backend",
-    "db:seed": "npm run db:seed --workspace backend",
-    "test:guardrails": "npm run test:guardrails --workspace backend",
-    "test:guardrails:live": "npm run test:guardrails:live --workspace backend",
+    "typecheck": "npm run typecheck --workspace frontend",
+    "db:migrate": "cd backend && uv run python -m techinterview.db.client",
+    "db:seed": "cd backend && uv run python -m techinterview.db.seed",
     "test:e2e": "npm run test:e2e --workspace frontend",
     "test:a11y": "npm run test:a11y --workspace frontend",
     "test:perf": "npm run test:perf --workspace frontend",
-    "seed": "npm run db:seed --workspace backend",
+    "seed": "npm run db:seed",
     "perf:editor": "npm run test:perf --workspace frontend",
-    "dev:backend": "npm run dev --workspace backend",
-    "dev:frontend": "npm run dev --workspace frontend"
+    "dev:backend": "cd backend && uv run uvicorn techinterview.main:app --reload --port 8787",
+    "dev:frontend": "npm run dev --workspace frontend",
+    "test:backend": "cd backend && uv run pytest",
+    "test:frontend": "npm run test --workspace frontend",
+    "test:collaboration": "cd backend && uv run pytest tests/collaboration"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

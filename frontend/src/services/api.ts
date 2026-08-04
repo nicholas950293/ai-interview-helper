@@ -1,6 +1,6 @@
 import type {
   ChatSource,
-  GuidanceMode,
+  CollaborationMode,
   Language,
   SessionPayload,
   Session,
@@ -80,8 +80,10 @@ export function fetchSession(): Promise<SessionPayload> {
   return request('/session');
 }
 
-export function setGuidanceMode(mode: GuidanceMode): Promise<{ mode: GuidanceMode }> {
-  return request('/session/guidance-mode', {
+export function setCollaborationMode(
+  mode: CollaborationMode
+): Promise<{ mode: CollaborationMode }> {
+  return request('/session/collaboration-mode', {
     method: 'PATCH',
     body: JSON.stringify({ mode }),
   });

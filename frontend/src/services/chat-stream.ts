@@ -48,6 +48,12 @@ export function openChatStream(streamId: string, handlers: StreamHandlers): Stre
     buffer += (JSON.parse((event as MessageEvent).data) as { text: string }).text;
   });
 
+  // 後端新增的 blocks 事件（FR-033）。Increment 1 的前端尚未渲染套用按鈕，
+  // 這裡只確保未知事件不會中斷串流——套用 UI 於前端遷移時接上。
+  source.addEventListener('blocks', () => {
+    // no-op
+  });
+
   source.addEventListener('replace', (event) => {
     buffer = '';
     handlers.onReplace((JSON.parse((event as MessageEvent).data) as { text: string }).text);

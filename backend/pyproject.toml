@@ -1,0 +1,51 @@
+[project]
+name = "techinterview-backend"
+version = "0.1.0"
+description = "TechInterview Pro — Candidate Portal BFF"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.1",
+    "pydantic>=2.13.4",
+    "pydantic-settings>=2.14.2",
+    "itsdangerous>=2.2.0",
+    # AI 一律經 LangChain 編排（憲章原則 V）——應用程式碼不得 import 供應商 SDK。
+    # 這兩個 partner 套件只提供 init_chat_model 的實作，僅由 ai/providers.py 間接使用。
+    "langchain>=1.3.14",
+    "langchain-google-genai>=4.3.2",
+    "langchain-anthropic>=1.5.3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.0.0",
+    "httpx>=0.28.1",
+    "ruff>=0.9.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/techinterview"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+# 契約測試以 httpx ASGITransport 直接打 ASGI app，不啟動真實伺服器（research R-016）
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+# seed.py 內嵌各語言的 starter code 字面值——長行是被引用的程式碼，不是本檔的程式碼。
+"src/techinterview/db/seed.py" = ["E501"]

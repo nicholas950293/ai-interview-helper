@@ -23,7 +23,8 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 
 export type SessionStatus = 'not_started' | 'in_progress' | 'submitted' | 'expired_submitted';
 
-export type GuidanceMode = 'light' | 'deep';
+/** 協作模式（FR-012）。兩者皆不限制 AI 輸出的完整性（憲章原則 I）。 */
+export type CollaborationMode = 'discuss' | 'implement';
 
 export type ChatRole = 'candidate' | 'assistant' | 'system';
 
@@ -68,7 +69,7 @@ export interface Session {
   positionTitle: string;
   deadlineAt: string | null;
   status: SessionStatus;
-  guidanceMode: GuidanceMode;
+  collaborationMode: CollaborationMode;
 }
 
 export interface ChatMessage {

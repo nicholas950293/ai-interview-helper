@@ -3,7 +3,7 @@ import type {
   AnswerState,
   ChatMessage,
   Connectivity,
-  GuidanceMode,
+  CollaborationMode,
   Language,
   Question,
   SaveState,
@@ -26,7 +26,7 @@ export interface SessionState {
   currentQuestionId: string;
   answers: Record<string, AnswerState>;
   chat: ChatMessage[];
-  guidanceMode: GuidanceMode;
+  collaborationMode: CollaborationMode;
   streaming: { active: boolean; messageId?: string };
   connectivity: Connectivity;
   lastTestResult: TestResult | null;
@@ -53,7 +53,7 @@ export interface SessionState {
   appendChatMessage: (message: ChatMessage) => void;
   replaceChatMessage: (id: string, message: Partial<ChatMessage>) => void;
   appendStreamToken: (messageId: string, text: string) => void;
-  setGuidanceMode: (mode: GuidanceMode) => void;
+  setCollaborationMode: (mode: CollaborationMode) => void;
   setStreaming: (streaming: { active: boolean; messageId?: string }) => void;
   setConnectivity: (connectivity: Connectivity) => void;
   setSessionStatus: (status: SessionStatus) => void;
@@ -103,7 +103,7 @@ const INITIAL = {
   currentQuestionId: '',
   answers: {},
   chat: [],
-  guidanceMode: 'light' as GuidanceMode,
+  collaborationMode: 'implement' as CollaborationMode,
   streaming: { active: false },
   connectivity: 'online' as Connectivity,
   lastTestResult: null,
@@ -122,7 +122,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       currentQuestionId: payload.questions[0]?.id ?? '',
       answers: initialAnswers(payload),
       chat: payload.chat,
-      guidanceMode: payload.session.guidanceMode,
+      collaborationMode: payload.session.collaborationMode,
       lastTestResult: null,
       phase: 'ready',
       loadError: null,
@@ -217,7 +217,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       chat: get().chat.map((m) => (m.id === messageId ? { ...m, content: m.content + text } : m)),
     }),
 
-  setGuidanceMode: (mode) => set({ guidanceMode: mode }),
+  setCollaborationMode: (mode) => set({ collaborationMode: mode }),
 
   setStreaming: (streaming) => set({ streaming }),
 
