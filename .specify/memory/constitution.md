@@ -1,5 +1,19 @@
 <!--
 Sync Impact Report
+- Version change: 2.0.0 → 2.1.0
+- Bump rationale: MINOR —— 新增「生效範圍與遷移狀態」章節，記錄產品負責人對
+  v2.0.0 六項技術選型衝突的裁決。原則本身無移除、無不相容重新定義。
+- Added sections:
+  - 生效範圍與遷移狀態 —— 明載原則 V 為目標狀態；裁決為「調整程式碼以符合憲章」；
+    列出 001-candidate-portal 的六項待遷移落差；並將 Google Login 標示為
+    尚未實作的目標（非落差），同時記錄它與 spec FR-027 的既有牴觸。
+- Modified principles:
+  - V. 技術棧治理 —— 認證段落補上指向「生效範圍與遷移狀態」的說明，
+    使「已列為 MUST 但尚未實作」不被誤讀為違規。
+- Removed sections: none
+- Deferred TODOs: 遷移工作本身尚未排入 feature；待 /speckit-specify 立案。
+
+Prior report (2.0.0):
 - Version change: 1.1.0 → 2.0.0
 - Bump rationale: MAJOR —— 移除一項既有原則，並以不相容的方式重新定義開發流程。
   兩者依版本政策皆屬 MAJOR。
@@ -135,6 +149,8 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 
 - 使用者登入 MUST 採 Google Login (Google OAuth)。
 - OAuth client secret MUST 僅存在於伺服端（見「公正性與安全要求」的憑證隔離）。
+- 本項為尚未實作的目標狀態，實作時機與既有邀請連結機制的關係見
+  「生效範圍與遷移狀態」。
 
 **部署與基礎設施**
 
@@ -160,6 +176,38 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 
 **理由**：應試者在高壓與長時間閱讀下作答；一致、低干擾且可及的介面是公平性的一部分，
 不是美術偏好。
+
+## 生效範圍與遷移狀態 (Scope & Migration Status)
+
+原則 V 的技術選型自 v2.0.0 起為**目標狀態**。既有的 `001-candidate-portal` 實作早於本次
+修訂，與原則 V 存在已知落差。產品負責人已裁決：**調整程式碼以符合憲章**，而非放寬憲章。
+
+- 新功能 MUST 直接遵守原則 V，MUST NOT 沿用下表中待遷移的技術棧。
+- 遷移期間，下列落差 MUST 保留於本表並持續更新；MUST NOT 因時間經過而被視為默許
+  或既成事實。
+- 每完成一項遷移，MUST 於同一次 PR 更新本表的狀態欄。全表清空後，本章節 MUST 移除。
+
+### 待遷移落差（001-candidate-portal）
+
+| 項目 | 憲章要求 | 現況 | 狀態 |
+| --- | --- | --- | --- |
+| 後端語言／框架 | Python + FastAPI，uv + venv | Node.js + TypeScript + Hono 4，npm workspaces | 待遷移（優先） |
+| 資料庫 | Supabase | SQLite（better-sqlite3）+ 自寫遷移 | 待遷移 |
+| AI 編排 | LangChain 統一編排 Gemini 與 Claude | 僅 Gemini，直接裸接 `@google/genai` SDK | 待遷移 |
+| 前端框架 | Next.js | Vite + React SPA（自寫路由解析） | 待遷移 |
+| 容器化 | Docker，目標 Ubuntu 24.04 | 尚未建立 Dockerfile | 待補齊 |
+| CI/CD 流程 | PR 制，CI 通過才可合併 | GitHub Actions 已就位，但僅於 `push: main` 觸發 | 待調整 |
+
+已符合，無須變更：TypeScript（前端）、Tailwind CSS、GitHub Actions、SDD 流程。
+
+### 尚未實作的功能（非落差）
+
+- **Google Login (Google OAuth)**：原則 V 已將其列為 MUST，但本期尚未實作，
+  因此不計入上表的落差。
+- 實作 Google Login 時 MUST 一併修訂 `specs/001-candidate-portal/spec.md` 的 FR-027
+  ——該條目前明文「MUST NOT 要求應試者註冊帳號」，與 Google 登入直接牴觸。
+  修訂 MUST 說明登入對象是應試者、面試官，或兩者。
+- 在該規格修訂完成前，應試者端維持一次性邀請連結，MUST NOT 視為違反本憲章。
 
 ## 公正性與安全要求 (Fairness & Security Requirements)
 
@@ -200,4 +248,4 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 - **執行指引**：日常開發指引見 `docs/PRD.md` 與各 feature 的 `specs/` 目錄；
   兩者 MUST NOT 與本憲章牴觸。
 
-**Version**: 2.0.0 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04
+**Version**: 2.1.0 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04
