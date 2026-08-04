@@ -10,7 +10,7 @@ const MODES: { value: CollaborationMode; label: string; hint: string }[] = [
 ];
 
 /**
- * 引導模式切換（FR-012）。
+ * 協作模式切換（FR-012）。
  *
  * 模式只改變送往模型的系統提示，MUST NOT 限制 AI 輸出的完整性（憲章原則 I）。
  * 切換 MUST NOT 清空既有對話——這裡只改狀態，不動 chat。

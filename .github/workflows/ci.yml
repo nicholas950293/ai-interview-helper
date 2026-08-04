@@ -1,8 +1,10 @@
 name: CI
 
-# 憲章 v1.1.0「開發流程與品質關卡」：採單一主幹開發，
-# 品質關卡於每次推送 main 由 CI 強制執行。關卡失敗時 MUST 立即修復或還原。
+# 憲章 v3.0.0「開發流程與品質關卡」：所有變更需經 PR 並通過 CI 才能合併 main。
+# 保留 push 觸發，讓直接推上 main 的變更同樣被關卡檢核。
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -13,6 +15,8 @@ concurrency:
 
 env:
   NODE_VERSION: '22'
+  # 憲章原則 V：後端 Python 3.12 + uv
+  PYTHON_VERSION: '3.12'
 
 jobs:
   # 關卡 0：靜態檢查（非憲章關卡，但阻擋明顯錯誤進入後續關卡）
@@ -25,12 +29,18 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      # `npm run lint` 同時跑 eslint 與 ruff，因此本 job 需要 Python 工具鏈
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: npm ci
       - run: npm run format:check
       - run: npm run lint
       - run: npm run typecheck
 
   # 關卡 1：測試套件（憲章原則 III）
+  # `npm test` = 後端 pytest + 前端 vitest，兩邊都要 toolchain。
   tests:
     name: 'Gate 1 — 測試套件'
     runs-on: ubuntu-latest
@@ -40,30 +50,41 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: npm ci
       - run: npm test
 
-  # 關卡 2：圍欄越獄測試（憲章原則 I，NON-NEGOTIABLE）
-  guardrails:
-    name: 'Gate 2 — 圍欄越獄測試'
+  # 關卡 2：協作可評估性（憲章原則 I，NON-NEGOTIABLE）
+  #
+  # v3.0.0 之前這裡是「圍欄越獄測試」，驗證 AI 不會輸出完整實作。憲章反轉後
+  # 圍欄已不存在，該關卡的前提隨之消滅。取而代之的不可妥協要求是：
+  # AI 的輸出 MUST 完整不受限，且每一段程式碼 MUST 能區分是應試者自己寫的
+  # 還是套用 AI 的產出——後者若失守，這個產品就無法評分，比圍欄失守更嚴重。
+  collaboration:
+    name: 'Gate 2 — 協作可評估性（完整輸出與來源歸屬）'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
-      # 以錄製的模型回應驗證後處理層；真實模型測試由排程作業另行執行。
-      - run: npm run test:guardrails
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
+      - run: npm run test:collaboration
+      # 憲章原則 V：AI 一律經 LangChain 編排，MUST NOT 裸接個別 provider SDK。
+      # 這是 AST 掃描，不是字串比對——夾在註解裡的 provider 名稱不會誤判。
+      - name: 'AST 掃描：無任何模組裸接 provider SDK'
+        run: cd backend && uv run pytest tests/unit/test_providers.py -q
 
-  # 關卡 3：無障礙對比檢核（憲章原則 V）
+  # 關卡 3：無障礙對比檢核（憲章原則 VI）
   a11y:
     name: 'Gate 3 — axe-core 檢核'
     runs-on: ubuntu-latest
-    # backend/.env 不進版控（憲章「憑證隔離」），啟動 BFF 的 job 需自備環境變數。
+    # backend/.env 不進版控（憲章「憑證隔離」），啟動後端的 job 需自備環境變數。
     # SESSION_SECRET 是 CI 專用假值：資料庫每次全新、不對外提供服務。
-    # 刻意不設 NODE_ENV=test —— 那會讓 env.ts 改用 :memory: 資料庫，
+    # 刻意不設 ENVIRONMENT=test —— 那會讓設定改用 :memory: 資料庫，
     # seed 出來的場次就不在 dev server 讀取的那一個裡。
     env:
       SESSION_SECRET: ci-only-session-secret-not-used-in-any-real-environment
@@ -76,6 +97,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run db:migrate && npm run db:seed
@@ -87,18 +112,14 @@ jobs:
           path: frontend/playwright-report/
           retention-days: 7
 
-  # 編輯器延遲量測（憲章原則 IV 的條件式要求，此處無條件執行）
+  # 編輯器延遲量測。憲章 v2.0.0 移除了效能預算原則，此處保留為回歸偵測：
+  # 不作為合併門檻的理由已不存在於憲章，但延遲突然劣化仍值得在 PR 上看見。
   perf:
     name: '編輯器延遲量測 (p95 < 50ms)'
     runs-on: ubuntu-latest
-    # backend/.env 不進版控（憲章「憑證隔離」），啟動 BFF 的 job 需自備環境變數。
-    # SESSION_SECRET 是 CI 專用假值：資料庫每次全新、不對外提供服務。
-    # 刻意不設 NODE_ENV=test —— 那會讓 env.ts 改用 :memory: 資料庫，
-    # seed 出來的場次就不在 dev server 讀取的那一個裡。
     env:
       SESSION_SECRET: ci-only-session-secret-not-used-in-any-real-environment
       DATABASE_PATH: ./data/portal.db
-      # e2e／a11y／perf 一律以腳本化假回應驗證，CI MUST NOT 需要真實模型金鑰。
       AI_FAKE: '1'
     steps:
       - uses: actions/checkout@v4
@@ -106,6 +127,10 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv python install ${{ env.PYTHON_VERSION }}
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run db:migrate && npm run db:seed
@@ -119,7 +144,7 @@ jobs:
 
   # 憑證隔離：前端建置產物 MUST NOT 含模型金鑰（憲章「公正性與安全要求」）
   credential-isolation:
-    name: '憑證隔離 — bundle 不含 GEMINI_API_KEY'
+    name: '憑證隔離 — bundle 不含模型金鑰'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -129,14 +154,17 @@ jobs:
           cache: npm
       - run: npm ci
       # 刻意注入假金鑰：若建置產物含有它，代表金鑰有洩漏至前端的路徑。
-      - name: Build frontend with a canary key in the environment
+      # 涵蓋雙供應商與 Supabase service role key（憲章原則 V 的三組憑證）。
+      - name: Build frontend with canary keys in the environment
         env:
-          GEMINI_API_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
-          VITE_GEMINI_API_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
+          GOOGLE_API_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
+          ANTHROPIC_API_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
+          SUPABASE_SERVICE_ROLE_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
+          VITE_GOOGLE_API_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
         run: npm run build --workspace frontend
       - name: Assert bundle is clean
         run: |
-          if grep -rlE 'CANARY_a1b2c3d4e5f6|GEMINI_API_KEY' frontend/dist/ 2>/dev/null; then
+          if grep -rlE 'CANARY_a1b2c3d4e5f6|GOOGLE_API_KEY|ANTHROPIC_API_KEY|SUPABASE_SERVICE_ROLE_KEY' frontend/dist/ 2>/dev/null; then
             echo "::error::前端建置產物含有模型憑證，違反憲章「憑證隔離」。"
             exit 1
           fi

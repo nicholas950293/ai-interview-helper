@@ -37,7 +37,9 @@ test.describe('accessibility', () => {
 
     await page.getByLabel('向 AI 助教提問').fill('邊界條件有哪些？');
     await page.getByRole('button', { name: '送出' }).click();
-    await expect(page.getByText(/需要記住的到底是/)).toBeVisible();
+    // 串流途中就掃描——pending 態的 aria-live 與忙碌按鈕也必須無違規。
+    // 錨定在假回應的開頭句，確保只到了第一批 token 就開始檢核。
+    await expect(page.getByText(/我先照你的需求做一版/)).toBeVisible();
 
     const results = await new AxeBuilder({ page }).withTags(WCAG_AA_TAGS).analyze();
     expect(results.violations.map((v) => v.id)).toEqual([]);

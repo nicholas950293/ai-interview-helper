@@ -84,14 +84,22 @@ export function ChatFeed() {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <p className="max-w-xs text-center text-sm text-text-muted">
-          卡住的時候問我。我不會給你答案，但可以陪你把問題想清楚。
+          直接說你要什麼。要我實作、重構或解釋都可以，你的每一次提問與套用都會被記錄。
         </p>
       </div>
     );
   }
 
   return (
-    <div className="h-full overflow-auto px-3 py-3">
+    // 對話一長就會產生捲軸，可捲動容器 MUST 可鍵盤聚焦，否則純鍵盤使用者
+    // 捲不動它（axe: scrollable-region-focusable）。聚焦的是容器而非內層 ul，
+    // 因此名稱掛在這裡，ul 保留 role="list" 的語意給輔助技術瀏覽。
+    <div
+      tabIndex={0}
+      role="region"
+      aria-label="與 AI 助教的對話"
+      className="h-full overflow-auto px-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-text"
+    >
       <ul aria-label="與 AI 助教的對話" className="flex flex-col gap-3">
         {chat.map((message) => {
           if (message.role === 'candidate') {

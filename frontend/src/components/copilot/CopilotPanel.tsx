@@ -1,4 +1,4 @@
-import { GuardrailBanner } from './GuardrailBanner';
+import { CollaborationBanner } from './CollaborationBanner';
 import { StatusBar } from './StatusBar';
 import { ModeToggle } from './ModeToggle';
 import { ChatFeed } from './ChatFeed';
@@ -15,7 +15,7 @@ import { Composer } from './Composer';
 export function CopilotPanel() {
   return (
     <div className="flex h-full flex-col">
-      <GuardrailBanner />
+      <CollaborationBanner />
       <StatusBar />
 
       <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">

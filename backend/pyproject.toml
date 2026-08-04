@@ -33,6 +33,9 @@ packages = ["src/techinterview"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# 測試之間以 `from tests.conftest import ...` 互相取用輔助函式，需要 backend/ 本身
+# 在 sys.path 上；pytest 預設只會插入 rootdir 下的測試目錄，不含 backend/。
+pythonpath = ["."]
 asyncio_mode = "auto"
 # 契約測試以 httpx ASGITransport 直接打 ASGI app，不啟動真實伺服器（research R-016）
 addopts = "-q"

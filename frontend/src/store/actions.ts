@@ -234,8 +234,6 @@ export async function sendChat({
 
   activeStream = openChatStream(streamId, {
     onToken: (text) => useSessionStore.getState().appendStreamToken(messageId, text),
-    onReplace: (text) =>
-      useSessionStore.getState().replaceChatMessage(messageId, { content: text }),
     onDone: () => {
       useSessionStore.getState().replaceChatMessage(messageId, { pending: false });
       useSessionStore.getState().setStreaming({ active: false });

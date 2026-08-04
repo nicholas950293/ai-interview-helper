@@ -140,11 +140,12 @@ test.describe('ai implementation', () => {
     ).toBeVisible();
   });
 
-  test('AI 使用規範長駐於側欄頂部（FR-011）', async ({ page }) => {
+  test('AI 協作說明長駐於側欄頂部（FR-011）', async ({ page }) => {
     const { url } = seedSession();
     await enterSession(page, url);
 
-    await expect(page.getByText(/不會替你寫/)).toBeVisible();
+    await expect(page.getByText(/AI 全面開放/)).toBeVisible();
+    await expect(page.getByText(/都會被記錄並作為評分依據/)).toBeVisible();
   });
 
   test('對話隨場次留存，重新整理後還原（FR-015）', async ({ page }) => {

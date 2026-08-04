@@ -9,9 +9,7 @@ const FLUSH_INTERVAL_MS = 50;
 export interface StreamHandlers {
   /** 批次後的增量文字。 */
   onToken: (text: string) => void;
-  /** 圍欄攔截：前端 MUST 整段丟棄既有內容，改用此文字。 */
-  onReplace: (text: string) => void;
-  onDone: (payload: { messageId: string; guardrailTriggered: boolean }) => void;
+  onDone: (payload: { messageId: string; provider: string; model: string }) => void;
   onError: (payload: { code: string; message: string }) => void;
 }
 
@@ -54,18 +52,14 @@ export function openChatStream(streamId: string, handlers: StreamHandlers): Stre
     // no-op
   });
 
-  source.addEventListener('replace', (event) => {
-    buffer = '';
-    handlers.onReplace((JSON.parse((event as MessageEvent).data) as { text: string }).text);
-  });
-
   source.addEventListener('done', (event) => {
     flush();
     close();
     handlers.onDone(
       JSON.parse((event as MessageEvent).data) as {
         messageId: string;
-        guardrailTriggered: boolean;
+        provider: string;
+        model: string;
       }
     );
   });

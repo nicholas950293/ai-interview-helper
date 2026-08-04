@@ -45,7 +45,7 @@ description: 'Task list for TechInterview Pro — Candidate Portal (Constitution
 | M4 | 程式碼變更歸屬與套用 | T055–T057、T064–T067、T071–T072 | ✅ 後端部分（T071–T072 為前端，延後） |
 | M5 | Vite SPA → Next.js | T007–T011、各 Story 的前端任務 | ⏸ 延後 |
 | M6 | Docker 化 | T120 | ⏸ 延後 |
-| M7 | CI 改為 PR 制 | T013、T121 | ⏸ 延後 |
+| M7 | CI 改為 PR 制 | T013、T121 | ✅ 完成 |
 
 **與 plan.md 的一處偏離**：plan 的 M1 原本要「以既有 Vite 前端零改動驗證新後端等價」。
 本清單於 T007 就地把 `frontend/` 改為 Next.js，舊 Vite 前端不再存在，該驗證方式不可行。
@@ -104,7 +104,7 @@ T110–T123（Polish，含 Docker 與舊資產拆除）。
 - [ ] T010 [P] 設定 Vitest（jsdom + React Testing Library）於 `frontend/vitest.config.ts` 與 `frontend/tests/setup.ts`
 - [ ] T011 [P] 設定 Playwright 三個 project（e2e / a11y / perf）於 `frontend/playwright.config.ts`
 - [ ] T012 [P] 設定 ESLint 9 + Prettier 於 `eslint.config.js`，含「前端不得讀取金鑰」規則，涵蓋 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
-- [ ] T013 建立 CI 工作流骨架於 `.github/workflows/ci.yml`，**觸發條件為 `pull_request`**（憲章：所有變更 MUST 經 PR）
+- [X] T013 建立 CI 工作流骨架於 `.github/workflows/ci.yml`，**觸發條件為 `pull_request`**（憲章：所有變更 MUST 經 PR）
 
 ---
 
@@ -216,7 +216,7 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [ ] T072 [US2] 實作套用動作編排於 `frontend/src/store/actions.ts`，依 [ui-contracts A-05](./contracts/ui-contracts.md) 五步：忙碌 → 呼叫 apply → `onApplyExternal` → 同步 revision → 取消進行中的 debounce 計時器
 - [ ] T073 [P] [US2] 實作輸入區（多行、Ctrl+Enter 送出、附帶程式碼按鈕、語音輸入佔位）於 `frontend/src/components/copilot/Composer.tsx`
 - [ ] T074 [P] [US2] 實作協作模式切換分段控制項於 `frontend/src/components/copilot/ModeToggle.tsx`（預設 `implement`）
-- [ ] T075 [P] [US2] 實作 AI 使用規範長駐 Banner 於 `frontend/src/components/copilot/CollaborationBanner.tsx`——MUST 說明「AI 全面開放」與「協作歷程會被記錄並作為評分依據」（憲章原則 I 的知情要求）
+- [X] T075 [P] [US2] 實作 AI 使用規範長駐 Banner 於 `frontend/src/components/copilot/CollaborationBanner.tsx`——MUST 說明「AI 全面開放」與「協作歷程會被記錄並作為評分依據」（憲章原則 I 的知情要求）
 - [ ] T076 [P] [US2] 實作隨當前題目變動的快捷提問 Chips 於 `frontend/src/components/copilot/QuickPromptChips.tsx`
 - [ ] T077 [US2] 組裝 AI 側欄並處理 `AI_UNAVAILABLE` 與連線中斷（轉為 Feed 中的系統訊息，不影響作答內容）於 `frontend/src/components/copilot/CopilotPanel.tsx`
 
@@ -320,7 +320,7 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [ ] T118 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99）與進場耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`（**產品目標，非憲章關卡**——原則 IV 已於 v3.0.0 移除）
 - [ ] T119 拆除舊技術棧資產：`backend/` 的 TypeScript 實作、`backend/src/ai/guardrails.ts`、`postprocess.ts`、`backend/tests/guardrails/`（25 組越獄語料、11 則錄製回應、59 個測試）、`frontend/` 的 Vite 設定。**PR 描述 MUST 載明這是憲章 v3.0.0 反轉原則 I 的結果，不是品質問題**
 - [ ] T120 [P] 建立 `docker/Dockerfile.frontend`（Next.js standalone）、`docker/Dockerfile.backend`（Python 3.12-slim + `uv sync --frozen`）與 `docker/compose.yaml`，執行環境對齊 Ubuntu 24.04
-- [ ] T121 完成 CI 於 `.github/workflows/ci.yml`：`pull_request` 觸發，關卡為測試套件、**協作歷程記錄測試**、axe-core 檢核；憑證隔離檢查擴及 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
+- [X] T121 完成 CI 於 `.github/workflows/ci.yml`：`pull_request` 觸發，關卡為測試套件、**協作歷程記錄測試**、axe-core 檢核；憑證隔離檢查擴及 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
 - [ ] T122 [P] 改寫 `README.md`（uv / Supabase CLI / Docker 先決條件、雙供應商設定、新的品質關卡、憲章六原則）
 - [ ] T123 依 [quickstart.md](./quickstart.md) 完整走過 V1–V5 五個驗證情境並記錄結果
 

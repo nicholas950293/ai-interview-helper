@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ChatFeed } from '../../src/components/copilot/ChatFeed';
 import { Composer } from '../../src/components/copilot/Composer';
-import { GuardrailBanner } from '../../src/components/copilot/GuardrailBanner';
+import { CollaborationBanner } from '../../src/components/copilot/CollaborationBanner';
 import { QuickPromptChips } from '../../src/components/copilot/QuickPromptChips';
 import { useSessionStore } from '../../src/store/session';
 import { loadTestSession } from '../helpers/store';
@@ -34,7 +34,7 @@ describe('對話 Feed（contracts/ui-contracts.md「對話 Feed」）', () => {
 
   it('沒有訊息時顯示引導語，不是空白', () => {
     render(<ChatFeed />);
-    expect(screen.getByText(/我不會給你答案/)).toBeInTheDocument();
+    expect(screen.getByText(/要我實作、重構或解釋都可以/)).toBeInTheDocument();
   });
 
   it('三種角色各有對應呈現', () => {
@@ -180,13 +180,21 @@ describe('輸入區（FR-009）', () => {
   });
 });
 
-describe('AI 使用規範長駐 Banner（FR-011）', () => {
-  it('說明 AI 不會提供完整實作，且無關閉按鈕', () => {
-    render(<GuardrailBanner />);
+describe('AI 協作說明長駐 Banner（FR-011）', () => {
+  // 憲章原則 I 的知情要求有兩個缺一不可的部分：AI 全面開放、協作歷程會被評分。
+  // 只說前者會讓應試者以為隨便用都沒差，只說後者則讀起來像威脅。
+  it('同時說明 AI 全面開放與協作歷程會被記錄評分，且無關閉按鈕', () => {
+    render(<CollaborationBanner />);
 
-    expect(screen.getByText(/不會替你寫/)).toBeInTheDocument();
-    expect(screen.getByText(/完整實作/)).toBeInTheDocument();
+    expect(screen.getByText(/AI 全面開放/)).toBeInTheDocument();
+    expect(screen.getByText(/來源.*都會被記錄並作為評分依據/s)).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('不再出現舊定位的圍欄文案', () => {
+    render(<CollaborationBanner />);
+
+    expect(screen.queryByText(/不會替你寫/)).not.toBeInTheDocument();
   });
 });
 
