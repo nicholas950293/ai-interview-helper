@@ -107,7 +107,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 | 雙供應商 | ✅ 程式碼支援 / ⏸ 僅設定 Gemini | 憲章要求的是程式碼可經設定切換；金鑰是執行期設定，缺 Anthropic 金鑰不影響實作 |
 | 資料庫 | ⏸ 暫留 SQLite | 已列於憲章落差表；Supabase CLI 與 Docker 待後續 feature |
 | 前端框架 | ⏸ 暫留 Vite SPA | 僅做端點更名對應的最小調整，不做 Next.js 遷移 |
-| 套用與作者歸屬（FR-033~036） | ⏸ 延後 | 需要前端 UI 才能驗收，與 Next.js 遷移一起做 |
+| 套用與作者歸屬（FR-033~036） | ✅ 後端部分 | `/speckit-analyze` 指出（C1）：排除它們會讓交付的後端違反憲章原則 I 的兩條 MUST。這些全是後端工作，契約測試即可驗收；延後的是 UI 不是能力 |
 | 容器化 / PR 制 CI | ⏸ 延後 | 已列於憲章落差表 |
 
 **此範圍收窄 MUST 記錄於憲章的落差表**，MUST NOT 因時間經過被視為默許。

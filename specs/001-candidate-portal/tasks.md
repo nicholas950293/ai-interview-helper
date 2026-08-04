@@ -37,15 +37,15 @@ description: 'Task list for TechInterview Pro — Candidate Portal (Constitution
 
 本清單同時是一份遷移清單。plan.md 的階段與本清單的對應：
 
-| plan | 內容 | 對應任務 |
-| --- | --- | --- |
-| M1 | Python + FastAPI 重建端點 | Phase 1–2 的後端任務 + 各 Story 的後端任務 |
-| M2 | SQLite → Supabase | T014–T019 |
-| M3 | 拆除圍欄，改用 LangChain 雙供應商 | T061–T063、T119 |
-| M4 | 程式碼變更歸屬與套用 | T055–T057、T064–T067、T071–T072 |
-| M5 | Vite SPA → Next.js | T007–T011、各 Story 的前端任務 |
-| M6 | Docker 化 | T120 |
-| M7 | CI 改為 PR 制 | T013、T121 |
+| plan | 內容 | 對應任務 | Increment 1 |
+| --- | --- | --- | --- |
+| M1 | Python + FastAPI 重建端點 | Phase 1–2 的後端任務 + 各 Story 的後端任務 | ✅ 全部 |
+| M2 | SQLite → Supabase | T014–T019 | ⏸ 僅 T018–T019（以 SQLite 實作） |
+| M3 | 拆除圍欄，改用 LangChain 雙供應商 | T061–T063、T119 | ✅ T061–T063（T119 延後） |
+| M4 | 程式碼變更歸屬與套用 | T055–T057、T064–T067、T071–T072 | ✅ 後端部分（T071–T072 為前端，延後） |
+| M5 | Vite SPA → Next.js | T007–T011、各 Story 的前端任務 | ⏸ 延後 |
+| M6 | Docker 化 | T120 | ⏸ 延後 |
+| M7 | CI 改為 PR 制 | T013、T121 | ⏸ 延後 |
 
 **與 plan.md 的一處偏離**：plan 的 M1 原本要「以既有 Vite 前端零改動驗證新後端等價」。
 本清單於 T007 就地把 `frontend/` 改為 Next.js，舊 Vite 前端不再存在，該驗證方式不可行。
@@ -64,15 +64,22 @@ description: 'Task list for TechInterview Pro — Candidate Portal (Constitution
 | 範圍 | 任務 |
 | --- | --- |
 | 後端工具鏈 | T001–T005 |
-| 資料層與授權（SQLite 暫留） | T018–T027（T014–T017 的 Supabase 遷移改以既有 SQLite schema 沿用） |
+| 資料層與授權 | T018–T027。**本次以 SQLite 實作**（T014–T017 的 Supabase 遷移延後）；`db/client.py` 與 `db/queries.py` 的介面 MUST 設計為可抽換，後續增量替換為 Supabase 時不動呼叫端 |
 | 作答與測試端點 | T034、T040、T041 |
-| AI 層（拆圍欄、改 LangChain） | T053、T058、T061–T063、T065、T068 |
+| AI 層（拆圍欄、改 LangChain） | T053、T054、T058、T061–T065 |
+| **套用與作者歸屬** | T055–T057、T066、T067、T068 —— 含 `chat_code_block` 與 `code_change` 兩張表（SQLite 版，含 CHECK 約束） |
 | 聯動、計時、提交、事件端點 | T082、T089、T092、T093、T103、T105 |
-| 前端最小調整 | 端點更名對應（`guidance-mode` → `collaboration-mode`），不做框架遷移 |
+| 前端最小調整 | T124 |
+
+**為什麼套用與歸屬不能延後**：`/speckit-analyze` 指出（C1），若排除它們，
+本次交付的後端會有 AI 完整輸出、卻沒有套用途徑也沒有作者歸屬——
+憲章原則 I（NON-NEGOTIABLE）的兩條 MUST 同時落空。
+這些**全是後端工作**，由 T055–T057 的契約測試即可完整驗收，不需要前端 UI；
+UI 只是這些端點的消費者，延後的是 UI 不是能力。
 
 **本次明確不做**：T006–T013（Supabase CLI / Next.js / Playwright / PR 制 CI）、
-T014–T017（Supabase 遷移）、T028–T033 與各 Story 的前端任務、
-T055–T057 / T064 / T066 / T067（套用與作者歸屬，需前端 UI 才能驗收）、
+T014–T017（Supabase 遷移）、T028–T033 與各 Story 的前端任務（T124 除外）、
+T069–T077 / T084–T086 / T094–T100 / T106–T109（前端元件）、
 T110–T123（Polish，含 Docker 與舊資產拆除）。
 
 **唯一不可延後的項目**：圍欄拆除。憲章原則 I 禁止輸出限制層，
@@ -310,12 +317,20 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [ ] T115 [P] 實作超長貼上內容處理（256 KB 上限提示，編輯器維持可用）於 `frontend/src/components/workspace/CodeEditor.tsx`
 - [ ] T116 [P] 實作題目載入失敗、連結失效與多分頁的狀態畫面於 `frontend/src/app/ErrorStates.tsx`
 - [ ] T117 [P] 建立 axe-core 對比與 ARIA 全頁檢核於 `frontend/tests/e2e/a11y.spec.ts`（含程式碼區塊與套用按鈕的可存取名稱）
-- [ ] T118 [P] 建立編輯器延遲量測腳本於 `frontend/tests/perf/editor-latency.spec.ts`（**產品目標，非憲章關卡**——原則 IV 已於 v3.0.0 移除）
+- [ ] T118 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99）與進場耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`（**產品目標，非憲章關卡**——原則 IV 已於 v3.0.0 移除）
 - [ ] T119 拆除舊技術棧資產：`backend/` 的 TypeScript 實作、`backend/src/ai/guardrails.ts`、`postprocess.ts`、`backend/tests/guardrails/`（25 組越獄語料、11 則錄製回應、59 個測試）、`frontend/` 的 Vite 設定。**PR 描述 MUST 載明這是憲章 v3.0.0 反轉原則 I 的結果，不是品質問題**
 - [ ] T120 [P] 建立 `docker/Dockerfile.frontend`（Next.js standalone）、`docker/Dockerfile.backend`（Python 3.12-slim + `uv sync --frozen`）與 `docker/compose.yaml`，執行環境對齊 Ubuntu 24.04
 - [ ] T121 完成 CI 於 `.github/workflows/ci.yml`：`pull_request` 觸發，關卡為測試套件、**協作歷程記錄測試**、axe-core 檢核；憑證隔離檢查擴及 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
 - [ ] T122 [P] 改寫 `README.md`（uv / Supabase CLI / Docker 先決條件、雙供應商設定、新的品質關卡、憲章六原則）
 - [ ] T123 依 [quickstart.md](./quickstart.md) 完整走過 V1–V5 五個驗證情境並記錄結果
+
+---
+
+## Phase 9: Increment 1 的前端銜接
+
+**Purpose**: 讓現有的 Vite 前端能對接新的 Python 後端，不做框架遷移
+
+- [ ] T124 更新前端對後端契約的呼叫於 `frontend/src/services/api.ts`、`frontend/src/components/copilot/ModeToggle.tsx` 與 `frontend/src/types.ts`：`guidance-mode` → `collaboration-mode`、`light/deep` → `discuss/implement`；並容忍 SSE 新增的 `blocks` 事件（本次前端不渲染套用按鈕，僅不得因未知事件而中斷串流）
 
 ---
 
