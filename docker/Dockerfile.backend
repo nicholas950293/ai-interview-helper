@@ -33,6 +33,7 @@ FROM ubuntu:24.04 AS runtime
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
+    PORT=8787 \
     PATH="/app/.venv/bin:$PATH"
 
 RUN apt-get update \
@@ -52,6 +53,10 @@ EXPOSE 8787
 # 憲章「憑證隔離」：金鑰一律由執行時的環境變數注入，
 # MUST NOT 以 ARG／ENV 烘進映像——映像會被推到 registry，層是可以被讀出來的。
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD python3 -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/api/health', timeout=2).status==200 else 1)"
+  CMD python3 -c "import os,urllib.request,sys; sys.exit(0 if urllib.request.urlopen(f\"http://127.0.0.1:{os.environ.get('PORT','8787')}/api/health\", timeout=2).status==200 else 1)"
 
-CMD ["uvicorn", "techinterview.main:app", "--host", "0.0.0.0", "--port", "8787"]
+# 以 shell 形式讀取 $PORT：PaaS（Render、Fly、Cloud Run）會注入自己的埠號並
+# 期待服務監聽它。寫死埠號在本機沒事，但在那些平台上會導致「建置成功、
+# 服務掃不到」——症狀與程式錯誤無關，很難查。
+# `exec` 讓 uvicorn 取代 sh 成為 PID 1，SIGTERM 才收得到（否則關機要等強制終止）。
+CMD ["sh", "-c", "exec uvicorn techinterview.main:app --host 0.0.0.0 --port ${PORT:-8787}"]
