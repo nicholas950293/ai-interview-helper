@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, Annotation } from '@codemirror/state';
 import { EditorView, keymap, lineNumbers, highlightActiveLine } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
 import { syntaxHighlighting, defaultHighlightStyle, indentUnit } from '@codemirror/language';
@@ -43,6 +43,19 @@ function languageExtension(language: Language) {
 
 const languageCompartment = new Compartment();
 const readOnlyCompartment = new Compartment();
+
+/**
+ * 標記「內容由外部寫入」的交易（切換題目、還原草稿、**套用 AI 產出**）。
+ *
+ * 帶此標記的變更 MUST NOT 觸發 `onChange`。套用 AI 產出是這條規則存在的理由：
+ * 走 `onChange` 就會被當成應試者自行輸入、排入 debounce 保存並記為
+ * `source='candidate'`，憲章原則 I 要求的作者歸屬會在前端就先被抹平
+ * （contracts/ui-contracts.md A-05 步驟 3）。
+ *
+ * 切換題目與還原草稿同樣是外部寫入，一併適用——它們原本會產生一次
+ * 內容完全相同的多餘保存請求。
+ */
+const externalWrite = Annotation.define<boolean>();
 
 const editorTheme = EditorView.theme({
   '&': {
@@ -110,6 +123,7 @@ export function CodeEditor({
           }),
           EditorView.updateListener.of((update) => {
             if (!update.docChanged) return;
+            if (update.transactions.some((tr) => tr.annotation(externalWrite) === true)) return;
             const next = update.state.doc.toString();
 
             if (maxBytes !== undefined && new Blob([next]).size > maxBytes) {
@@ -131,7 +145,7 @@ export function CodeEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 外部值變更（切換題目、格式化、還原草稿）時同步文件內容。
+  // 外部值變更（切換題目、還原草稿、套用 AI 產出）時同步文件內容。
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
@@ -140,6 +154,7 @@ export function CodeEditor({
 
     view.dispatch({
       changes: { from: 0, to: current.length, insert: value },
+      annotations: externalWrite.of(true),
     });
   }, [value]);
 

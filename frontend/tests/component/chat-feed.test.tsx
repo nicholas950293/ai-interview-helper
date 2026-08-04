@@ -10,10 +10,11 @@ import { loadTestSession } from '../helpers/store';
 import type { ChatMessage } from '../../src/types';
 
 const sendChat = vi.hoisted(() => vi.fn());
+const applyCodeBlock = vi.hoisted(() => vi.fn());
 
 vi.mock('../../src/store/actions', async () => {
   const actual = await vi.importActual('../../src/store/actions');
-  return { ...actual, sendChat };
+  return { ...actual, sendChat, applyCodeBlock };
 });
 
 function message(overrides: Partial<ChatMessage> & { id: string; role: ChatMessage['role'] }) {
@@ -177,6 +178,113 @@ describe('輸入區（FR-009）', () => {
   it('語音輸入僅保留入口，本期不可用', () => {
     render(<Composer />);
     expect(screen.getByLabelText('語音輸入（尚未提供）')).toBeDisabled();
+  });
+});
+
+describe('AI 產出的程式碼區塊與套用按鈕（FR-033、ui-contracts A-05）', () => {
+  const reply = '我先做一版：\n\n```javascript\nfunction solve() {}\n```\n\n複雜度 O(n)。';
+
+  const withBlocks = (blocks: { blockIndex: number; language: string | null; content: string }[]) =>
+    message({ id: 'm-ai', role: 'assistant', content: reply, codeBlocks: blocks });
+
+  beforeEach(() => {
+    loadTestSession();
+    applyCodeBlock.mockClear();
+  });
+
+  it('串流中 MUST NOT 出現套用按鈕，但程式碼照樣完整可見', () => {
+    useSessionStore
+      .getState()
+      .appendChatMessage(message({ id: 'm-ai', role: 'assistant', content: reply, pending: true }));
+
+    render(<ChatFeed />);
+
+    expect(screen.queryByRole('button', { name: /套用/ })).not.toBeInTheDocument();
+    // 憲章原則 I：尚未解析不等於可以先藏起來
+    expect(screen.getByText(/function solve/)).toBeInTheDocument();
+  });
+
+  it('blocks 抵達後渲染區塊與套用按鈕，內容逐字相同', () => {
+    useSessionStore
+      .getState()
+      .appendChatMessage(
+        withBlocks([{ blockIndex: 0, language: 'javascript', content: 'function solve() {}\n' }])
+      );
+
+    render(<ChatFeed />);
+
+    expect(screen.getByRole('button', { name: '套用至編輯器' })).toBeEnabled();
+    expect(screen.getByText('javascript')).toBeInTheDocument();
+    expect(screen.getByText(/function solve\(\) \{\}/)).toBeInTheDocument();
+  });
+
+  it('同一則回覆的多個區塊各有可區分的可存取名稱', () => {
+    const two = '```javascript\nconst a = 1;\n```\n\n再來：\n\n```javascript\nconst b = 2;\n```';
+    useSessionStore.getState().appendChatMessage(
+      message({
+        id: 'm-ai',
+        role: 'assistant',
+        content: two,
+        codeBlocks: [
+          { blockIndex: 0, language: 'javascript', content: 'const a = 1;\n' },
+          { blockIndex: 1, language: 'javascript', content: 'const b = 2;\n' },
+        ],
+      })
+    );
+
+    render(<ChatFeed />);
+
+    // 只寫「套用」會讓螢幕閱讀器使用者無從分辨要套用哪一段
+    expect(screen.getByRole('button', { name: '套用第 1 段程式碼至編輯器' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '套用第 2 段程式碼至編輯器' })).toBeInTheDocument();
+  });
+
+  it('點擊套用時帶上 messageId 與 blockIndex', async () => {
+    const user = userEvent.setup();
+    useSessionStore
+      .getState()
+      .appendChatMessage(
+        withBlocks([{ blockIndex: 0, language: 'javascript', content: 'function solve() {}\n' }])
+      );
+
+    render(<ChatFeed />);
+    await user.click(screen.getByRole('button', { name: '套用至編輯器' }));
+
+    expect(applyCodeBlock).toHaveBeenCalledWith('m-ai', 0);
+  });
+
+  it('場次進入終態後套用按鈕停用（FR-024）', () => {
+    useSessionStore
+      .getState()
+      .appendChatMessage(
+        withBlocks([{ blockIndex: 0, language: 'javascript', content: 'function solve() {}\n' }])
+      );
+    useSessionStore.getState().setSessionStatus('submitted');
+
+    render(<ChatFeed />);
+
+    expect(screen.getByRole('button', { name: '套用至編輯器' })).toBeDisabled();
+  });
+
+  it('某個區塊套用中時，全部套用按鈕停用以免互相覆蓋', () => {
+    useSessionStore.getState().appendChatMessage(
+      message({
+        id: 'm-ai',
+        role: 'assistant',
+        content: '```javascript\nconst a = 1;\n```\n\n```javascript\nconst b = 2;\n```',
+        codeBlocks: [
+          { blockIndex: 0, language: 'javascript', content: 'const a = 1;\n' },
+          { blockIndex: 1, language: 'javascript', content: 'const b = 2;\n' },
+        ],
+      })
+    );
+    useSessionStore.getState().setApplyingBlock('m-ai:0');
+
+    render(<ChatFeed />);
+
+    expect(screen.getByRole('button', { name: '套用第 1 段程式碼至編輯器' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '套用第 2 段程式碼至編輯器' })).toBeDisabled();
+    expect(screen.getByText('套用中…')).toBeInTheDocument();
   });
 });
 

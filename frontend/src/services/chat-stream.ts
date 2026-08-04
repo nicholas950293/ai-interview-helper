@@ -4,11 +4,18 @@
  * token 以批次方式套用至狀態——效能契約明定 MUST NOT 每個 token 觸發一次全域更新，
  * 否則長回覆會讓整棵樹重繪數百次，直接吃掉編輯器的延遲預算。
  */
+import type { CodeBlock } from '../types';
+
 const FLUSH_INTERVAL_MS = 50;
 
 export interface StreamHandlers {
   /** 批次後的增量文字。 */
   onToken: (text: string) => void;
+  /**
+   * 後端於完整回覆上解析出的可套用區塊（FR-033）。
+   * 抵達時串流已結束，此後才能渲染套用按鈕。
+   */
+  onBlocks: (blocks: CodeBlock[]) => void;
   onDone: (payload: { messageId: string; provider: string; model: string }) => void;
   onError: (payload: { code: string; message: string }) => void;
 }
@@ -46,10 +53,13 @@ export function openChatStream(streamId: string, handlers: StreamHandlers): Stre
     buffer += (JSON.parse((event as MessageEvent).data) as { text: string }).text;
   });
 
-  // 後端新增的 blocks 事件（FR-033）。Increment 1 的前端尚未渲染套用按鈕，
-  // 這裡只確保未知事件不會中斷串流——套用 UI 於前端遷移時接上。
-  source.addEventListener('blocks', () => {
-    // no-op
+  source.addEventListener('blocks', (event) => {
+    // blocks 在 done 之前抵達，但 token 可能還在緩衝區裡；先 flush 再交付，
+    // 否則區塊會比它所屬的那段文字更早出現在畫面上。
+    flush();
+    handlers.onBlocks(
+      (JSON.parse((event as MessageEvent).data) as { codeBlocks: CodeBlock[] }).codeBlocks
+    );
   });
 
   source.addEventListener('done', (event) => {

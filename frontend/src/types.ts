@@ -72,6 +72,18 @@ export interface Session {
   collaborationMode: CollaborationMode;
 }
 
+/**
+ * AI 回覆中可套用的程式碼區塊（FR-033）。
+ *
+ * 由後端在**完整回覆**上解析並留存，前端不自行從串流片段拼裝——
+ * 套用的逐字一致性（SC-004）比對的是資料庫裡的那一份（research R-013）。
+ */
+export interface CodeBlock {
+  blockIndex: number;
+  language: string | null;
+  content: string;
+}
+
 export interface ChatMessage {
   id: string;
   questionId: string;
@@ -81,6 +93,8 @@ export interface ChatMessage {
   attachedCode: string | null;
   /** 串流中的訊息尚未落地，僅存在於前端。 */
   pending?: boolean;
+  /** 串流結束（`blocks` 事件）後才有值；重新載入時由 bootstrap 帶回。 */
+  codeBlocks?: CodeBlock[];
 }
 
 export interface AnswerState {

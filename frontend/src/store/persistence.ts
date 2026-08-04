@@ -234,6 +234,20 @@ export async function flushPendingSave(): Promise<void> {
   await performSave(questionId);
 }
 
+/**
+ * 丟棄待保存的變更（ui-contracts A-05 步驟 5）。
+ *
+ * 套用 AI 產出時使用：伺服端已寫入新內容，此刻若讓排程中的計時器跑完，
+ * 送出的會是套用**前**的草稿，不但覆蓋掉剛套用的內容，還會被記成
+ * 應試者自行輸入的變更。與 `flushPendingSave` 相反——這裡是刻意不落地。
+ */
+export function cancelPendingSave(questionId?: string): void {
+  if (!pending) return;
+  if (questionId !== undefined && pending.questionId !== questionId) return;
+  clearTimeout(pending.timer);
+  pending = null;
+}
+
 /** 測試用：清除計時器與 revision 計數，避免測試之間互相影響。 */
 export function resetPersistence(): void {
   if (pending) {

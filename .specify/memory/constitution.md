@@ -232,7 +232,7 @@ AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而
 | 後端語言／框架 | Python + FastAPI，uv + venv | Python + FastAPI（142 測試通過）；舊 TypeScript 實作仍在檔案樹中但無人載入 | ✅ 已關閉（殘檔待 T119 拆除） |
 | AI 編排 | LangChain 統一編排 Gemini 與 Claude | 一律經 `init_chat_model`，雙供應商與退回皆已實作；AST 掃描於 CI 阻擋裸接 SDK | ✅ 已關閉（Anthropic 金鑰未配置，屬設定非程式碼） |
 | AI 能力定位 | AI 全開，可產出完整實作並套用 | 圍欄與輸出後處理已不存在，AI 輸出原樣送達 | ✅ 已關閉 |
-| 協作歷程歸屬 | 每次程式碼變更記錄作者（應試者／AI） | `code_change.source` 加 CHECK 約束於資料庫層強制；套用端點已上線 | ✅ 已關閉（前端套用按鈕隨 Next.js 遷移補上） |
+| 協作歷程歸屬 | 每次程式碼變更記錄作者（應試者／AI） | `code_change.source` 加 CHECK 約束於資料庫層強制；套用端點與「套用至編輯器」按鈕皆已上線，端到端驗證含資料層斷言 | ✅ 已關閉 |
 | CI/CD 流程 | PR 制，CI 通過才可合併 | `pull_request` 觸發，關卡涵蓋 pytest／vitest／協作可評估性／axe-core／憑證隔離 | ✅ 已關閉 |
 | 資料庫 | Supabase | SQLite + 自寫遷移；`queries` 層介面已設計為可抽換 | 待遷移 |
 | 前端框架 | Next.js | Vite + React SPA（自寫路由解析） | 待遷移 |

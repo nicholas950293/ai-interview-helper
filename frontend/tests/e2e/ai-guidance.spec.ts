@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedSession, enterSession } from './helpers';
+import { seedSession, enterSession, readCode, readCodeChanges } from './helpers';
 
 /**
  * quickstart V2 —— 透過 AI 完成實作（US2）。
@@ -148,15 +148,99 @@ test.describe('ai implementation', () => {
     await expect(page.getByText(/都會被記錄並作為評分依據/)).toBeVisible();
   });
 
+  test('套用 AI 產出後，編輯器內容逐字一致且記為 ai（SC-004、FR-035）', async ({ page }) => {
+    const { sessionId, url } = seedSession();
+    await enterSession(page, url);
+
+    await page.getByLabel('向 AI 助教提問').fill('幫我實作這一題');
+    await page.getByRole('button', { name: '送出' }).click();
+    // 套用按鈕要等 blocks 事件抵達才會渲染
+    const applyButton = page.getByRole('button', { name: '套用至編輯器' });
+    await expect(applyButton).toBeVisible();
+
+    const blockText = await page
+      .getByRole('list', { name: '與 AI 助教的對話' })
+      .getByRole('region', { name: '程式碼' })
+      .innerText();
+
+    await applyButton.click();
+    await expect(page.getByText('已自動儲存草稿')).toBeVisible();
+
+    // 逐字一致：CodeMirror 的 innerText 會逐行還原，比對去除行尾空白後的內容
+    const editorText = await readCode(page);
+    const normalise = (s: string) =>
+      s
+        .split('\n')
+        .map((l) => l.replace(/\s+$/, ''))
+        .join('\n')
+        .trim();
+    expect(normalise(editorText)).toBe(normalise(blockText));
+
+    const changes = readCodeChanges(sessionId, 'q-rate-limiter');
+    const aiChange = changes.filter((c) => c.source === 'ai').at(-1);
+    expect(aiChange).toBeDefined();
+    expect(aiChange!.chatMessageId).not.toBeNull();
+    expect(aiChange!.blockIndex).toBe(0);
+    expect(normalise(aiChange!.content)).toBe(normalise(blockText));
+  });
+
+  test('套用後的自動保存 MUST NOT 把 AI 的產出記成應試者自行輸入（憲章原則 I）', async ({
+    page,
+  }) => {
+    const { sessionId, url } = seedSession();
+    await enterSession(page, url);
+
+    await page.getByLabel('向 AI 助教提問').fill('幫我實作這一題');
+    await page.getByRole('button', { name: '送出' }).click();
+    await page.getByRole('button', { name: '套用至編輯器' }).click();
+    await expect(page.getByText('已自動儲存草稿')).toBeVisible();
+
+    // 套用會整份取代編輯器內容；若那次同步被當成一般輸入，
+    // debounce 一到就會補上一筆 candidate，兩者從此無法區分。
+    await page.waitForTimeout(1500);
+
+    const changes = readCodeChanges(sessionId, 'q-rate-limiter');
+    const lastAiIndex = changes.map((c) => c.source).lastIndexOf('ai');
+    expect(lastAiIndex).toBeGreaterThanOrEqual(0);
+    expect(changes.slice(lastAiIndex + 1).filter((c) => c.source === 'candidate')).toEqual([]);
+  });
+
+  test('之後自行修改仍記為 candidate，兩種來源並存可追溯', async ({ page }) => {
+    const { sessionId, url } = seedSession();
+    await enterSession(page, url);
+
+    await page.getByLabel('向 AI 助教提問').fill('幫我實作這一題');
+    await page.getByRole('button', { name: '送出' }).click();
+    await page.getByRole('button', { name: '套用至編輯器' }).click();
+    await expect(page.getByText('已自動儲存草稿')).toBeVisible();
+
+    // 套用後 saveState 已是 saved，等「已自動儲存草稿」會立刻通過而測不到這次輸入；
+    // 必須等真正的 PUT 回來，才知道 candidate 那筆已經寫進去了。
+    const draftSaved = page.waitForResponse(
+      (res) => res.request().method() === 'PUT' && /\/api\/answers\//.test(res.url()) && res.ok()
+    );
+    await page.getByTestId('code-editor').locator('.cm-content').click();
+    await page.keyboard.press('End');
+    await page.keyboard.type('\n// 我自己補的註解');
+    await draftSaved;
+
+    const changes = readCodeChanges(sessionId, 'q-rate-limiter');
+    const sources = changes.map((c) => c.source);
+    expect(sources).toContain('ai');
+    expect(sources.lastIndexOf('candidate')).toBeGreaterThan(sources.lastIndexOf('ai'));
+    expect(changes.at(-1)!.content).toContain('我自己補的註解');
+  });
+
   test('對話隨場次留存，重新整理後還原（FR-015）', async ({ page }) => {
     const { url } = seedSession();
     await enterSession(page, url);
 
     await page.getByLabel('向 AI 助教提問').fill('會被留存的提問');
     await page.getByRole('button', { name: '送出' }).click();
-    // 重整前必須等串流結束——半截的回覆還沒寫回資料庫，重整後自然還原不出來
-    await expect(page.getByRole('button', { name: '回覆中…' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '送出' })).toBeVisible({ timeout: 15_000 });
+    // 重整前必須等串流結束——半截的回覆還沒寫回資料庫，重整後自然還原不出來。
+    // 以「套用按鈕出現」為準：它在 blocks 事件之後才渲染，代表回覆已完整落地。
+    // 不改用「回覆中…」消失來判斷——假回應只跑約 100ms，那個狀態本來就抓不穩。
+    await expect(page.getByRole('button', { name: '套用至編輯器' })).toBeVisible();
 
     await page.reload();
     await page.getByTestId('code-editor').waitFor();

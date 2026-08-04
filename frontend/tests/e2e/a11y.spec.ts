@@ -45,6 +45,23 @@ test.describe('accessibility', () => {
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 
+  test('程式碼區塊與套用按鈕無違規，且可存取名稱能區分不同區塊（T117）', async ({ page }) => {
+    const { url } = seedSession({ durationSec: 3600 });
+    await enterSession(page, url);
+
+    await page.getByLabel('向 AI 助教提問').fill('幫我實作這一題');
+    await page.getByRole('button', { name: '送出' }).click();
+    await expect(page.getByRole('button', { name: '套用至編輯器' })).toBeVisible();
+
+    const results = await new AxeBuilder({ page }).withTags(WCAG_AA_TAGS).analyze();
+    expect(results.violations.map((v) => v.id)).toEqual([]);
+
+    // 區塊可捲動，因此 MUST 可鍵盤聚焦——否則純鍵盤使用者看不到超出視窗的部分
+    await expect(
+      page.getByRole('list', { name: '與 AI 助教的對話' }).getByRole('region', { name: '程式碼' })
+    ).toBeVisible();
+  });
+
   test('提交確認對話框無違規（焦點陷阱與 ARIA 由 Radix 提供）', async ({ page }) => {
     const { url } = seedSession({ durationSec: 3600 });
     await enterSession(page, url);

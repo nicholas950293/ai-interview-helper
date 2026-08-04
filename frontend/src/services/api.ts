@@ -106,6 +106,25 @@ export function saveAnswer(input: SaveAnswerInput): Promise<{ savedAt: string; r
   });
 }
 
+/**
+ * 套用 AI 產出的程式碼區塊（ui-contracts A-05 步驟 2）。
+ *
+ * 為什麼要往返後端而不是前端直接塞進編輯器：走一般的保存路徑，這次變更就會與
+ * 應試者自行輸入無法區分——正是憲章原則 I 禁止的「混為一談」。
+ * 回應的 `content` 是資料庫裡那一份，前端一律以它為準寫入編輯器。
+ */
+export function applyCodeBlock(input: {
+  questionId: string;
+  messageId: string;
+  blockIndex: number;
+}): Promise<{ content: string; savedAt: string; revision: number }> {
+  const { questionId, ...body } = input;
+  return request(`/answers/${encodeURIComponent(questionId)}/apply`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
 /** 離線補送：一次帶多筆，伺服端依 revision 排序套用。 */
 export function saveAnswersBatch(
   inputs: SaveAnswerInput[]

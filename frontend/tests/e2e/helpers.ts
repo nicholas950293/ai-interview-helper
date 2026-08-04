@@ -54,3 +54,48 @@ export async function typeCode(page: Page, code: string): Promise<void> {
 export async function readCode(page: Page): Promise<string> {
   return page.getByTestId('code-editor').locator('.cm-content').innerText();
 }
+
+export interface CodeChangeRow {
+  seq: number;
+  source: 'candidate' | 'ai';
+  content: string;
+  revision: number;
+  chatMessageId: string | null;
+  blockIndex: number | null;
+}
+
+/**
+ * 直接讀取作者歸屬紀錄。
+ *
+ * 憲章原則 I 的可評估性只有在資料庫裡成立才算數——畫面上看起來套用成功，
+ * 但紀錄寫成 candidate，這個產品就評不了分。因此斷言打到資料層，
+ * 不停在 UI。
+ */
+export function readCodeChanges(sessionId: string, questionId: string): CodeChangeRow[] {
+  const script = `
+import json, sqlite3, sys
+conn = sqlite3.connect("data/portal.db")
+conn.row_factory = sqlite3.Row
+rows = conn.execute(
+    "SELECT seq, source, content, revision, chat_message_id, block_index"
+    " FROM code_change WHERE session_id = ? AND question_id = ? ORDER BY seq",
+    (sys.argv[1], sys.argv[2]),
+).fetchall()
+print(json.dumps([
+    {
+        "seq": r["seq"], "source": r["source"], "content": r["content"],
+        "revision": r["revision"], "chatMessageId": r["chat_message_id"],
+        "blockIndex": r["block_index"],
+    }
+    for r in rows
+]))
+`;
+
+  const output = execFileSync('uv', ['run', 'python', '-c', script, sessionId, questionId], {
+    cwd: resolve(REPO_ROOT, 'backend'),
+    encoding: 'utf8',
+    env: { ...process.env, PATH: `${process.env.HOME}/.local/bin:${process.env.PATH}` },
+  });
+
+  return JSON.parse(output) as CodeChangeRow[];
+}

@@ -57,5 +57,7 @@ export const useStreaming = () => useSessionStore((s) => s.streaming);
 export const useConnectivity = () => useSessionStore((s) => s.connectivity);
 export const useHasUnsavedChanges = () => useSessionStore(selectHasUnsavedChanges);
 
+export const useApplyingBlockKey = () => useSessionStore((s) => s.applyingBlockKey);
+
 /** 只訂閱單一題目的作答，避免其他題目的變更觸發重繪。 */
 export const useAnswer = (questionId: string) => useSessionStore((s) => s.answers[questionId]);

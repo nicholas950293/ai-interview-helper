@@ -1,11 +1,13 @@
 import { useSessionStore } from './session';
-import { flushPendingSave } from './persistence';
+import { cancelPendingSave, flushPendingSave } from './persistence';
 import {
   ApiError,
+  applyCodeBlock as apiApplyCodeBlock,
   postChat,
   postChatSystemMessage,
   submitSession as apiSubmitSession,
 } from '../services/api';
+import { toast } from '../components/ui/toast';
 import { openChatStream, type StreamController } from '../services/chat-stream';
 import type { ChatSource } from '../types';
 
@@ -67,6 +69,50 @@ export const CODE_REVIEW_PROMPT =
 
 export function sendCodeForReview(): Promise<void> {
   return sendChat({ content: CODE_REVIEW_PROMPT, attachCode: true, source: 'code_review' });
+}
+
+// --- 套用 AI 產出 -----------------------------------------------------------
+
+export function blockKeyOf(messageId: string, blockIndex: number): string {
+  return `${messageId}:${blockIndex}`;
+}
+
+/**
+ * 套用某個程式碼區塊至編輯器（ui-contracts A-05）。
+ *
+ *   1. setApplyingBlock() —— 該按鈕轉忙碌，擋掉重複點擊
+ *   2. POST /api/answers/{currentQuestionId}/apply —— 伺服端逐字寫入並記為 source='ai'
+ *   3. cancelPendingSave() —— 丟棄排程中的草稿保存，否則它會用套用前的內容覆蓋回去
+ *   4. applyAiContent() —— 以伺服端回傳的 content 更新 store，編輯器隨之同步
+ *   5. 失敗時 MUST NOT 改動編輯器內容
+ *
+ * 步驟 3 先於 4：兩者之間若插入計時器回呼，被送出的仍是舊草稿。
+ * questionId 由 store 讀取而非由呼叫端傳入（憲章原則 II）——按鈕上的區塊
+ * 可能來自更早的題目，但套用的對象永遠是「現在這一題」。
+ */
+export async function applyCodeBlock(messageId: string, blockIndex: number): Promise<void> {
+  const store = useSessionStore.getState();
+  const questionId = store.currentQuestionId;
+  if (!questionId || store.applyingBlockKey !== null) return;
+
+  useSessionStore.getState().setApplyingBlock(blockKeyOf(messageId, blockIndex));
+
+  try {
+    const result = await apiApplyCodeBlock({ questionId, messageId, blockIndex });
+    cancelPendingSave(questionId);
+    useSessionStore.getState().applyAiContent(questionId, result);
+  } catch (err) {
+    toast({
+      tone: 'warning',
+      title: '套用失敗',
+      description:
+        err instanceof ApiError
+          ? err.message
+          : '無法套用這段程式碼，你目前的作答內容沒有被改動，稍後可再試一次。',
+    });
+  } finally {
+    useSessionStore.getState().setApplyingBlock(null);
+  }
 }
 
 // --- 提交 -------------------------------------------------------------------
@@ -234,6 +280,8 @@ export async function sendChat({
 
   activeStream = openChatStream(streamId, {
     onToken: (text) => useSessionStore.getState().appendStreamToken(messageId, text),
+    onBlocks: (codeBlocks) =>
+      useSessionStore.getState().replaceChatMessage(messageId, { codeBlocks }),
     onDone: () => {
       useSessionStore.getState().replaceChatMessage(messageId, { pending: false });
       useSessionStore.getState().setStreaming({ active: false });

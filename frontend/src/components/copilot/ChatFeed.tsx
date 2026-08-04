@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useChat } from '../../store/selectors';
+import { segmentMessage } from '../../lib/message-segments';
+import { CodeBlock } from './CodeBlock';
 import type { ChatMessage } from '../../types';
 
 /**
@@ -41,6 +43,14 @@ function CandidateMessage({ message }: { message: ChatMessage }) {
 
 function AssistantMessage({ message }: { message: ChatMessage }) {
   const streaming = message.pending === true;
+  const blockCount = message.codeBlocks?.length ?? 0;
+
+  // 串流期間 blocks 尚未抵達，segmentMessage 會原樣回傳整段文字——
+  // 圍籬與程式碼因此照樣逐字顯示，只是還不能套用（ui-contracts）。
+  const segments = useMemo(
+    () => segmentMessage(message.content, message.codeBlocks),
+    [message.content, message.codeBlocks]
+  );
 
   return (
     <li className="flex justify-start">
@@ -48,12 +58,24 @@ function AssistantMessage({ message }: { message: ChatMessage }) {
         className="max-w-[85%] rounded-lg rounded-bl-sm border border-border bg-surface-subtle px-3 py-2"
         aria-busy={streaming}
       >
-        <p className="text-sm whitespace-pre-wrap text-text-primary">
-          {message.content}
-          {streaming && message.content.length === 0 && (
-            <span className="text-text-muted">AI 助教正在思考…</span>
-          )}
-        </p>
+        {segments.map((segment) =>
+          segment.kind === 'prose' ? (
+            <p key={segment.key} className="text-sm whitespace-pre-wrap text-text-primary">
+              {segment.text}
+            </p>
+          ) : (
+            <CodeBlock
+              key={segment.key}
+              block={segment.block}
+              messageId={message.id}
+              total={blockCount}
+            />
+          )
+        )}
+
+        {streaming && message.content.length === 0 && (
+          <p className="text-sm text-text-muted">AI 助教正在思考…</p>
+        )}
         {streaming && message.content.length > 0 && (
           <span className="sr-only" aria-live="polite">
             AI 回覆產生中

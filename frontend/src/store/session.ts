@@ -30,6 +30,11 @@ export interface SessionState {
   streaming: { active: boolean; messageId?: string };
   connectivity: Connectivity;
   lastTestResult: TestResult | null;
+  /**
+   * 正在套用中的區塊鍵（`${messageId}:${blockIndex}`），無則為 null。
+   * 只允許一個——套用會整份取代作答內容，同時進行兩個等於互相覆蓋。
+   */
+  applyingBlockKey: string | null;
 
   // --- 載入狀態 ---
   phase: 'idle' | 'loading' | 'ready' | 'error';
@@ -50,6 +55,11 @@ export interface SessionState {
   setLanguage: (questionId: string, language: Language, content?: string) => void;
   setSaveState: (questionId: string, saveState: SaveState) => void;
   markSaved: (questionId: string, savedAt: string, revision: number) => void;
+  setApplyingBlock: (blockKey: string | null) => void;
+  applyAiContent: (
+    questionId: string,
+    payload: { content: string; savedAt: string; revision: number }
+  ) => void;
   appendChatMessage: (message: ChatMessage) => void;
   replaceChatMessage: (id: string, message: Partial<ChatMessage>) => void;
   appendStreamToken: (messageId: string, text: string) => void;
@@ -107,6 +117,7 @@ const INITIAL = {
   streaming: { active: false },
   connectivity: 'online' as Connectivity,
   lastTestResult: null,
+  applyingBlockKey: null,
   phase: 'idle' as const,
   loadError: null,
   clockOffsetMs: 0,
@@ -200,6 +211,33 @@ export const useSessionStore = create<SessionState>((set, get) => ({
       answers: {
         ...get().answers,
         [questionId]: { ...existing, saveState: 'saved', savedAt, revision, dirty: false },
+      },
+    });
+  },
+
+  setApplyingBlock: (blockKey) => set({ applyingBlockKey: blockKey }),
+
+  /**
+   * 以 AI 產出整份取代作答（ui-contracts A-05 步驟 4）。
+   *
+   * `dirty: false` 是關鍵：伺服端已經寫入並記為 `source='ai'`，
+   * 若留成 dirty，接下來的 debounce 保存會把同一份內容再送一次、
+   * 記成 candidate，作者歸屬就被抹掉了。
+   */
+  applyAiContent: (questionId, { content, savedAt, revision }) => {
+    const existing = get().answers[questionId];
+    if (!existing) return;
+    set({
+      answers: {
+        ...get().answers,
+        [questionId]: {
+          ...existing,
+          content,
+          savedAt,
+          revision,
+          saveState: 'saved',
+          dirty: false,
+        },
       },
     });
   },

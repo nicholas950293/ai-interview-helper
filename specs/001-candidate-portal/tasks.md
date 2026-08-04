@@ -42,7 +42,7 @@ description: 'Task list for TechInterview Pro — Candidate Portal (Constitution
 | M1 | Python + FastAPI 重建端點 | Phase 1–2 的後端任務 + 各 Story 的後端任務 | ✅ 全部 |
 | M2 | SQLite → Supabase | T014–T019 | ⏸ 僅 T018–T019（以 SQLite 實作） |
 | M3 | 拆除圍欄，改用 LangChain 雙供應商 | T061–T063、T119 | ✅ T061–T063（T119 延後） |
-| M4 | 程式碼變更歸屬與套用 | T055–T057、T064–T067、T071–T072 | ✅ 後端部分（T071–T072 為前端，延後） |
+| M4 | 程式碼變更歸屬與套用 | T055–T057、T064–T067、T071–T072 | ✅ 完成（後端與前端套用 UI 皆已上線） |
 | M5 | Vite SPA → Next.js | T007–T011、各 Story 的前端任務 | ⏸ 延後 |
 | M6 | Docker 化 | T120 | ⏸ 延後 |
 | M7 | CI 改為 PR 制 | T013、T121 | ✅ 完成 |
@@ -162,7 +162,7 @@ T110–T123（Polish，含 Docker 與舊資產拆除）。
 
 - [X] T040 [US1] 實作 `PUT /api/answers/{question_id}` 與批次 `PUT /api/answers` 於 `backend/src/techinterview/api/answers.py`
 - [X] T041 [P] [US1] 實作 `POST /api/tests/{question_id}`（回報預定義結果，不執行任何用戶端程式碼）於 `backend/src/techinterview/api/tests.py`
-- [ ] T042 [P] [US1] 封裝 CodeMirror 6 編輯器於 `frontend/src/components/workspace/CodeEditor.tsx`，介面為 `value / onChange / language / readOnly` **加上 `onApplyExternal`**——外部套用不得走 `onChange`，否則 US2 的作者歸屬無從區分（research R-001）
+- [X] T042 [P] [US1] 封裝 CodeMirror 6 編輯器於 `frontend/src/components/workspace/CodeEditor.tsx`，介面為 `value / onChange / language / readOnly`；**外部寫入不得走 `onChange`**，否則 US2 的作者歸屬無從區分（research R-001）。實作以 CodeMirror 的 `Annotation`（`externalWrite`）標記外部交易並於 `updateListener` 略過，未新增 `onApplyExternal` prop——內容本來就由 store 經 `value` 下傳，額外的 imperative handle 只會多一條同樣的路徑；標記法一併修掉切換題目時那次內容相同的多餘保存
 - [ ] T043 [US1] 實作 debounce 1000ms 保存與 IndexedDB 離線佇列於 `frontend/src/store/persistence.ts`
 - [ ] T044 [P] [US1] 實作連線狀態偵測與退避補送於 `frontend/src/services/connectivity.ts`
 - [ ] T045 [P] [US1] 實作語言選單與「是否以新語言 starter code 取代」確認對話框於 `frontend/src/components/workspace/LanguageSelect.tsx`
@@ -197,7 +197,7 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [X] T056 [P] [US2] 撰寫**作者歸屬**的契約測試（套用 → `source='ai'` 且記錄 messageId/blockIndex；手動保存 → `source='candidate'`；**套用後的第一次自動保存 MUST NOT 產生重複的 candidate 記錄**）於 `backend/tests/collaboration/test_attribution.py`
 - [X] T057 [P] [US2] 撰寫資料庫 CHECK 約束的測試（違反 source／欄位對應的寫入 MUST 被資料庫拒絕）於 `backend/tests/collaboration/test_constraints.py`
 - [X] T058 [P] [US2] 撰寫 `POST /api/chat` 與 SSE 串流的契約測試（token / blocks / done / error 事件；**回應內容 MUST 與模型輸出完全相同，無任何攔截**）於 `backend/tests/contract/test_chat.py`
-- [ ] T059 [P] [US2] 撰寫對話 Feed 與套用按鈕的元件測試（三角色呈現、每個區塊各有套用按鈕且可存取名稱可區分、串流中不顯示套用按鈕）於 `frontend/tests/component/chat-feed.test.tsx`
+- [X] T059 [P] [US2] 撰寫對話 Feed 與套用按鈕的元件測試（三角色呈現、每個區塊各有套用按鈕且可存取名稱可區分、串流中不顯示套用按鈕）於 `frontend/tests/component/chat-feed.test.tsx`
 - [ ] T060 [P] [US2] 撰寫端到端 AI 實作情境於 `frontend/tests/e2e/ai-implementation.spec.ts`（對應 quickstart V2）
 
 ### Implementation for User Story 2
@@ -210,10 +210,10 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [X] T066 [US2] 實作 `POST /api/answers/{question_id}/apply` 於 `backend/src/techinterview/api/answers.py`——逐字寫入指定區塊、遞增 `revision`、回傳寫入後的 `content`
 - [X] T067 [US2] 實作 `code_change` 歸屬於 `backend/src/techinterview/domain/attribution.py`：套用時記 `ai`、debounce 保存時記 `candidate`，**且與最近一次 `ai` 變更內容相同時不重複記錄**（research R-014）；並將 candidate 記錄接上 T040 的保存流程
 - [X] T068 [P] [US2] 實作 `PATCH /api/session/collaboration-mode` 於 `backend/src/techinterview/api/session.py`
-- [ ] T069 [P] [US2] 實作 SSE 用戶端於 `frontend/src/services/chat-stream.ts`（token 批次套用、處理 `blocks` 事件）
+- [X] T069 [P] [US2] 實作 SSE 用戶端於 `frontend/src/services/chat-stream.ts`（token 批次套用、處理 `blocks` 事件）
 - [ ] T070 [P] [US2] 實作對話 Feed（candidate／assistant／system 三種呈現）於 `frontend/src/components/copilot/ChatFeed.tsx`
-- [ ] T071 [P] [US2] 實作程式碼區塊元件與「套用至編輯器」按鈕於 `frontend/src/components/copilot/CodeBlock.tsx`——內容 MUST 完整顯示不摺疊隱藏；可存取名稱 MUST 能區分同一則回覆的不同區塊
-- [ ] T072 [US2] 實作套用動作編排於 `frontend/src/store/actions.ts`，依 [ui-contracts A-05](./contracts/ui-contracts.md) 五步：忙碌 → 呼叫 apply → `onApplyExternal` → 同步 revision → 取消進行中的 debounce 計時器
+- [X] T071 [P] [US2] 實作程式碼區塊元件與「套用至編輯器」按鈕於 `frontend/src/components/copilot/CodeBlock.tsx`——內容 MUST 完整顯示不摺疊隱藏；可存取名稱 MUST 能區分同一則回覆的不同區塊
+- [X] T072 [US2] 實作套用動作編排於 `frontend/src/store/actions.ts`，依 [ui-contracts A-05](./contracts/ui-contracts.md) 五步：忙碌 → 呼叫 apply → 取消進行中的 debounce 計時器 → 以伺服端回傳內容更新 store（編輯器經 `externalWrite` 標記同步，不觸發 `onChange`）→ 失敗時不動編輯器內容。**取消計時器先於更新 store**：兩者之間若插入計時器回呼，送出的仍是套用前的草稿
 - [ ] T073 [P] [US2] 實作輸入區（多行、Ctrl+Enter 送出、附帶程式碼按鈕、語音輸入佔位）於 `frontend/src/components/copilot/Composer.tsx`
 - [ ] T074 [P] [US2] 實作協作模式切換分段控制項於 `frontend/src/components/copilot/ModeToggle.tsx`（預設 `implement`）
 - [X] T075 [P] [US2] 實作 AI 使用規範長駐 Banner 於 `frontend/src/components/copilot/CollaborationBanner.tsx`——MUST 說明「AI 全面開放」與「協作歷程會被記錄並作為評分依據」（憲章原則 I 的知情要求）
@@ -316,7 +316,7 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [ ] T114 [P] 實作多分頁同場次偵測（BroadcastChannel）於 `frontend/src/services/tab-guard.ts`
 - [ ] T115 [P] 實作超長貼上內容處理（256 KB 上限提示，編輯器維持可用）於 `frontend/src/components/workspace/CodeEditor.tsx`
 - [ ] T116 [P] 實作題目載入失敗、連結失效與多分頁的狀態畫面於 `frontend/src/app/ErrorStates.tsx`
-- [ ] T117 [P] 建立 axe-core 對比與 ARIA 全頁檢核於 `frontend/tests/e2e/a11y.spec.ts`（含程式碼區塊與套用按鈕的可存取名稱）
+- [X] T117 [P] 建立 axe-core 對比與 ARIA 全頁檢核於 `frontend/tests/e2e/a11y.spec.ts`（含程式碼區塊與套用按鈕的可存取名稱）
 - [ ] T118 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99）與進場耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`（**產品目標，非憲章關卡**——原則 IV 已於 v3.0.0 移除）
 - [ ] T119 拆除舊技術棧資產：`backend/` 的 TypeScript 實作、`backend/src/ai/guardrails.ts`、`postprocess.ts`、`backend/tests/guardrails/`（25 組越獄語料、11 則錄製回應、59 個測試）、`frontend/` 的 Vite 設定。**PR 描述 MUST 載明這是憲章 v3.0.0 反轉原則 I 的結果，不是品質問題**
 - [ ] T120 [P] 建立 `docker/Dockerfile.frontend`（Next.js standalone）、`docker/Dockerfile.backend`（Python 3.12-slim + `uv sync --frozen`）與 `docker/compose.yaml`，執行環境對齊 Ubuntu 24.04
