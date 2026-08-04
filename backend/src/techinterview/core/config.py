@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_role_key: str = ""
 
+    # 產生邀請連結時的網址前綴。寫死 localhost 會讓正式環境 seed 出來的連結
+    # 直接不能用——token 有效但前綴是錯的，拿到的人只會看到連不上。
+    public_app_url: str = "http://localhost:5173"
+
     # --- Session Cookie -----------------------------------------------------
     session_secret: str = Field(min_length=32)
     cookie_secure: bool = False

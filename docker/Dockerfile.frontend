@@ -41,15 +41,9 @@ RUN npm ci
 # --- builder ----------------------------------------------------------------
 FROM deps AS builder
 
-# next.config.ts 的 rewrites() 是**建置時**求值、寫進 routes-manifest.json 的，
-# standalone 伺服器不會在執行時重新讀取——因此後端位址必須在此決定。
-# 實測踩過：只在 runtime 設 BACKEND_ORIGIN，容器仍會去打 localhost:8787。
-#
-# 代價是映像與後端位址綁定。要做到「一份映像跑各環境」得改用 middleware
-# 或在前面擺一層 gateway 統一路由 /api——本階段用不到，不預先加複雜度。
-ARG BACKEND_ORIGIN=http://backend:8787
-ENV BACKEND_ORIGIN=${BACKEND_ORIGIN}
-
+# BACKEND_ORIGIN 刻意**不是** build arg：代理已改為執行時的 Route Handler
+# （frontend/src/app/api/[...path]/route.ts），因此同一份映像在本機、compose、
+# 任何 PaaS 上都能用，換後端位址不必重新建置。
 COPY frontend ./frontend
 COPY tsconfig.base.json ./
 

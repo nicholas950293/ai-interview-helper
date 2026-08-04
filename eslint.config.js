@@ -79,6 +79,18 @@ export default tseslint.config(
     },
   },
   {
+    // Route Handler 是**伺服端**程式碼，編譯進 .next/server/ 而非送到瀏覽器，
+    // 因此讀 process.env 不違反憑證隔離——BFF 代理需要知道後端位址。
+    // 刻意只放行 `process`：金鑰識別字的禁令（no-restricted-syntax）仍然生效，
+    // 這裡若出現 GOOGLE_API_KEY 之類的名稱一樣會被擋下。
+    // CI 的憑證隔離檢查掃的是 .next/static/（真正送到瀏覽器的那一份），
+    // 本目錄的程式碼不在其中。
+    files: ['frontend/src/app/api/**/*.ts'],
+    rules: {
+      'no-restricted-globals': 'off',
+    },
+  },
+  {
     // 建置／測試設定檔執行於 Node，不會進入前端 bundle。
     files: ['frontend/*.config.ts', 'frontend/tests/**/*.{ts,tsx}'],
     languageOptions: {

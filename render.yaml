@@ -1,0 +1,91 @@
+# Render Blueprint —— 一鍵部署前後端兩個服務
+#
+# 用法：Render Dashboard → New → Blueprint → 選這個倉庫。
+# `sync: false` 的變數會在建立時要你填。
+#
+# 為什麼用 Blueprint 而不是在 Dashboard 逐欄手動設定：手動設定有好幾個欄位
+# 填錯就會失敗，而且症狀都與程式無關、很難查。已經踩過一個——
+# Start Command 填了 `npx next start`，但 standalone 映像沒有 next CLI，
+# 容器以 status 128 結束，而建置階段完全成功、log 一切正常。
+# 寫進檔案就不會再有人填錯。
+#
+# **Build Command 與 Start Command 一律不設**：映像的 CMD 已經是對的，
+# `PORT` 由 Render 注入後應用程式會自行讀取。
+
+services:
+  # --- 後端（Python 3.12 + FastAPI）----------------------------------------
+  - type: web
+    name: techinterview-backend
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile.backend
+    # 建置上下文為倉庫根目錄：Dockerfile 會 COPY backend/...
+    dockerContext: .
+    plan: free
+    region: singapore # 與 Supabase 專案同區（ap-southeast-1），少一趟跨洲往返
+    healthCheckPath: /api/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: COOKIE_SECURE
+        value: 'true'
+      - key: AI_FAKE
+        value: 'false'
+      # 兩段式串流逾時。first_token 給 thinking 模型推理的時間（實測
+      # gemini-3.5-flash 要 44 秒才吐第一個 token），idle 管開始吐字後的斷流。
+      # 兩者 MUST 小於平台的連線逾時，否則後端還在正常工作就被砍，
+      # 錯誤事件送不出去，使用者看到的會是誤導的「連線中斷」。
+      - key: AI_FIRST_TOKEN_TIMEOUT_MS
+        value: '90000'
+      - key: AI_STREAM_TIMEOUT_MS
+        value: '20000'
+      - key: AI_PROVIDER
+        value: google_genai
+      - key: AI_MODEL
+        value: gemini-3.6-flash
+      # Render 產生 32 bytes 隨機值——不必自己想，也不會經過任何聊天紀錄
+      - key: SESSION_SECRET
+        generateValue: true
+      # --- 以下於建立 Blueprint 時填入 ---
+      #
+      # DATABASE_URL MUST 用 Supabase 的 **pooler** 主機：
+      # db.<ref>.supabase.co 不解析（新專案不再提供），且直連是 IPv6-only、
+      # Render 出口是 IPv4。埠用 5432 的 session mode——6543 的 transaction
+      # mode 不支援 prepared statement，psycopg 預設會用，會出錯。
+      # 形如：
+      #   postgresql://postgres.<ref>:<pw>@aws-0-<region>.pooler.supabase.com:5432/postgres
+      - key: DATABASE_URL
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      # 主要供應商 429 時由此接手。Gemini 免費層每個模型每天僅 20 次請求，
+      # 正式環境強烈建議設定（AI_FALLBACK_PROVIDER=anthropic）。
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: AI_FALLBACK_PROVIDER
+        sync: false
+      - key: AI_FALLBACK_MODEL
+        sync: false
+      # seed 產生邀請連結時的網址前綴——填前端服務部署後的網址。
+      # 不填的話 seed 出來的連結指向 localhost，拿到的人開不起來。
+      - key: PUBLIC_APP_URL
+        sync: false
+
+  # --- 前端（Next.js 16 standalone）----------------------------------------
+  - type: web
+    name: techinterview-frontend
+    runtime: docker
+    dockerfilePath: ./docker/Dockerfile.frontend
+    dockerContext: .
+    plan: free
+    region: singapore
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # 執行時變數。代理是 Route Handler（src/app/api/[...path]/route.ts），
+      # 每個請求才讀它——因此同一份映像在任何環境都能用，換位址不必重建。
+      # 原本用 next.config 的 rewrites，那是 build 時求值、會把位址烘進映像。
+      - key: BACKEND_ORIGIN
+        fromService:
+          name: techinterview-backend
+          type: web
+          property: hostport

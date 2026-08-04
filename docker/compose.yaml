@@ -30,9 +30,9 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.frontend
-      args:
-        # 建置時決定：Next 的 rewrites 在 build 階段就寫進 routes-manifest
-        BACKEND_ORIGIN: http://backend:8787
+    environment:
+      # 執行時變數：代理是 Route Handler，每個請求才讀它
+      BACKEND_ORIGIN: http://backend:8787
     ports:
       - '5173:5173'
     depends_on:

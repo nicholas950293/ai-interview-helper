@@ -16,6 +16,7 @@ from typing import Any
 import psycopg
 from psycopg.types.json import Jsonb
 
+from techinterview.core.config import get_settings
 from techinterview.db.client import get_db
 
 STARTER = {
@@ -323,7 +324,7 @@ def seed(
     return {
         "session_id": session_id,
         "token": token,
-        "url": f"http://localhost:5173/s/{token}",
+        "url": f"{get_settings().public_app_url.rstrip('/')}/s/{token}",
     }
 
 
