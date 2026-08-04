@@ -1,0 +1,31 @@
+{
+  "name": "backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:guardrails": "vitest run tests/guardrails --exclude \"**/live.test.ts\"",
+    "test:guardrails:live": "vitest run tests/guardrails/live.test.ts",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^2.15.0",
+    "@hono/node-server": "^2.1.0",
+    "better-sqlite3": "^13.0.2",
+    "hono": "^4.13.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.5",
+    "vitest": "^4.1.10"
+  }
+}

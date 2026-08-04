@@ -1,0 +1,43 @@
+{
+  "name": "ai-interview-helper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TechInterview Pro — Candidate Portal",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "db:migrate": "npm run db:migrate --workspace backend",
+    "db:seed": "npm run db:seed --workspace backend",
+    "test:guardrails": "npm run test:guardrails --workspace backend",
+    "test:guardrails:live": "npm run test:guardrails:live --workspace backend",
+    "test:e2e": "npm run test:e2e --workspace frontend",
+    "test:a11y": "npm run test:a11y --workspace frontend",
+    "test:perf": "npm run test:perf --workspace frontend"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.9.0",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.66.0"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  }
+}

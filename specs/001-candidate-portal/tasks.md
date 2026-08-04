@@ -1,6 +1,5 @@
 ---
-
-description: "Task list for TechInterview Pro — Candidate Portal"
+description: 'Task list for TechInterview Pro — Candidate Portal'
 ---
 
 # Tasks: TechInterview Pro — Candidate Portal
@@ -31,15 +30,15 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 **Purpose**: 專案初始化與工具鏈
 
-- [ ] T001 建立 npm workspaces 根結構於 `package.json`（workspaces: frontend、backend）與 `.gitignore`
-- [ ] T002 [P] 初始化前端專案（Vite 6 + React 19 + TypeScript 5.7）於 `frontend/`
-- [ ] T003 [P] 初始化後端專案（Hono 4 + TypeScript + tsx）於 `backend/`
-- [ ] T004 [P] 設定 ESLint 與 Prettier 於 `eslint.config.js` 與 `.prettierrc`
-- [ ] T005 [P] 建立 Tailwind CSS 4 淺色主題 token（單一來源）於 `frontend/src/styles/theme.css`
-- [ ] T006 [P] 設定 Vitest 於 `frontend/vitest.config.ts` 與 `backend/vitest.config.ts`
-- [ ] T007 [P] 設定 Playwright 與 axe-core 於 `frontend/playwright.config.ts`
-- [ ] T008 [P] 建立 `backend/.env.example` 與型別安全的環境變數載入於 `backend/src/lib/env.ts`
-- [ ] T009 建立 CI 工作流於 `.github/workflows/ci.yml`，於**每次推送 `main`** 執行憲章三道關卡（測試套件、圍欄越獄測試、axe-core 檢核）＋編輯器延遲量測（原則 IV 的條件式要求，此處無條件執行）；並驗證前端建置產物不含 `GEMINI_API_KEY`
+- [X] T001 建立 npm workspaces 根結構於 `package.json`（workspaces: frontend、backend）與 `.gitignore`
+- [X] T002 [P] 初始化前端專案（Vite 6 + React 19 + TypeScript 5.7）於 `frontend/`
+- [X] T003 [P] 初始化後端專案（Hono 4 + TypeScript + tsx）於 `backend/`
+- [X] T004 [P] 設定 ESLint 與 Prettier 於 `eslint.config.js` 與 `.prettierrc`
+- [X] T005 [P] 建立 Tailwind CSS 4 淺色主題 token（單一來源）於 `frontend/src/styles/theme.css`
+- [X] T006 [P] 設定 Vitest 於 `frontend/vitest.config.ts` 與 `backend/vitest.config.ts`
+- [X] T007 [P] 設定 Playwright 與 axe-core 於 `frontend/playwright.config.ts`
+- [X] T008 [P] 建立 `backend/.env.example` 與型別安全的環境變數載入於 `backend/src/lib/env.ts`
+- [X] T009 建立 CI 工作流於 `.github/workflows/ci.yml`，於**每次推送 `main`** 執行憲章三道關卡（測試套件、圍欄越獄測試、axe-core 檢核）＋編輯器延遲量測（原則 IV 的條件式要求，此處無條件執行）；並驗證前端建置產物不含 `GEMINI_API_KEY`
 
 ---
 
@@ -49,22 +48,22 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 **⚠️ CRITICAL**: 本階段完成前，任何 User Story 不得開工
 
-- [ ] T010 建立 SQLite schema 遷移（InviteToken、InterviewSession、Question、SessionQuestion、Answer、ChatMessage、EnvironmentEvent、TestRun）於 `backend/src/db/migrations/001_init.sql`，依 [data-model.md](./data-model.md)
-- [ ] T011 實作遷移執行器與 `npm run db:migrate` 於 `backend/src/db/migrate.ts`
-- [ ] T012 [P] 實作資料存取層於 `backend/src/db/queries.ts`
-- [ ] T013 [P] 定義共用 Zod schema 與型別於 `backend/src/lib/schemas.ts`
-- [ ] T014 [P] 定義錯誤碼與 HTTP 映射（見 [contracts/http-api.md](./contracts/http-api.md#錯誤格式全端點共用)）於 `backend/src/lib/errors.ts`
-- [ ] T015 [P] 撰寫場次狀態機的失敗測試（`not_started → in_progress → submitted / expired_submitted`，終態不可逆）於 `backend/tests/unit/session-state.test.ts`
-- [ ] T016 實作場次狀態機於 `backend/src/domain/session-state.ts`
-- [ ] T017 [P] 撰寫邀請 token 兌換的契約測試（首次兌換、重複兌換不重置 deadline、逾期、已提交）於 `backend/tests/contract/redeem.test.ts`
-- [ ] T018 實作 token 驗證與 session cookie 換發於 `backend/src/lib/auth.ts`
-- [ ] T019 實作 `POST /api/session/redeem` 與 `GET /api/session` 於 `backend/src/routes/session.ts`（`predefinedTests` 內容不得外洩）
-- [ ] T020 實作 seed 腳本（3 題示範：API 限流器 / LRU 快取 / 訊息佇列，含各語言 starter code 與 quickPrompts）於 `backend/src/db/seed.ts`
-- [ ] T021 [P] 建立單一 session store 於 `frontend/src/store/session.ts`（欄位見 [data-model.md](./data-model.md#前端狀態切片單一事實來源)）
-- [ ] T022 [P] 建立衍生值 selectors（`currentQuestion`、`currentAnswer`、`remainingSec`、`isReadOnly`）於 `frontend/src/store/selectors.ts`
-- [ ] T023 [P] 建立 API client 與錯誤映射於 `frontend/src/services/api.ts`
-- [ ] T024 實作路由 `/s/:token` 與場次載入流程於 `frontend/src/app/routes.tsx`
-- [ ] T025 實作三面板版面骨架（CSS grid，左右比例鎖定 6:4–7:5）於 `frontend/src/app/AppLayout.tsx`，依 [contracts/ui-contracts.md](./contracts/ui-contracts.md#版面契約)
+- [X] T010 建立 SQLite schema 遷移（InviteToken、InterviewSession、Question、SessionQuestion、Answer、ChatMessage、EnvironmentEvent、TestRun）於 `backend/src/db/migrations/001_init.sql`，依 [data-model.md](./data-model.md)
+- [X] T011 實作遷移執行器與 `npm run db:migrate` 於 `backend/src/db/migrate.ts`
+- [X] T012 [P] 實作資料存取層於 `backend/src/db/queries.ts`
+- [X] T013 [P] 定義共用 Zod schema 與型別於 `backend/src/lib/schemas.ts`
+- [X] T014 [P] 定義錯誤碼與 HTTP 映射（見 [contracts/http-api.md](./contracts/http-api.md#錯誤格式全端點共用)）於 `backend/src/lib/errors.ts`
+- [X] T015 [P] 撰寫場次狀態機的失敗測試（`not_started → in_progress → submitted / expired_submitted`，終態不可逆）於 `backend/tests/unit/session-state.test.ts`
+- [X] T016 實作場次狀態機於 `backend/src/domain/session-state.ts`
+- [X] T017 [P] 撰寫邀請 token 兌換的契約測試（首次兌換、重複兌換不重置 deadline、逾期、已提交）於 `backend/tests/contract/redeem.test.ts`
+- [X] T018 實作 token 驗證與 session cookie 換發於 `backend/src/lib/auth.ts`
+- [X] T019 實作 `POST /api/session/redeem` 與 `GET /api/session` 於 `backend/src/routes/session.ts`（`predefinedTests` 內容不得外洩）
+- [X] T020 實作 seed 腳本（3 題示範：API 限流器 / LRU 快取 / 訊息佇列，含各語言 starter code 與 quickPrompts）於 `backend/src/db/seed.ts`
+- [X] T021 [P] 建立單一 session store 於 `frontend/src/store/session.ts`（欄位見 [data-model.md](./data-model.md#前端狀態切片單一事實來源)）
+- [X] T022 [P] 建立衍生值 selectors（`currentQuestion`、`currentAnswer`、`remainingSec`、`isReadOnly`）於 `frontend/src/store/selectors.ts`
+- [X] T023 [P] 建立 API client 與錯誤映射於 `frontend/src/services/api.ts`
+- [X] T024 實作路由 `/s/:token` 與場次載入流程於 `frontend/src/app/routes.tsx`
+- [X] T025 實作三面板版面骨架（CSS grid，左右比例鎖定 6:4–7:5）於 `frontend/src/app/AppLayout.tsx`，依 [contracts/ui-contracts.md](./contracts/ui-contracts.md#版面契約)
 
 **Checkpoint**: 可用邀請連結進入空白三面板 — User Story 實作可開始
 
@@ -312,11 +311,11 @@ Task: "題目內容 in frontend/src/components/question/QuestionContent.tsx"
 ### Incremental Delivery
 
 1. Setup + Foundational → 地基就緒
-2. + US1 → 驗證 → 展示（**MVP**）
-3. + US2 → 驗證圍欄零穿透 → 展示（產品差異化成形）
-4. + US3 → 驗證 Context 正確率 → 展示（體驗完整）
-5. + US4 → 驗證計時與強制提交 → 可進行真實場次
-6. + US5 → 驗證環境監測 → 公正性完備
+2. - US1 → 驗證 → 展示（**MVP**）
+3. - US2 → 驗證圍欄零穿透 → 展示（產品差異化成形）
+4. - US3 → 驗證 Context 正確率 → 展示（體驗完整）
+5. - US4 → 驗證計時與強制提交 → 可進行真實場次
+6. - US5 → 驗證環境監測 → 公正性完備
 
 ### Parallel Team Strategy
 

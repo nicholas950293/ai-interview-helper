@@ -8,7 +8,7 @@
 
 **Input**: 產品需求文件 `docs/PRD.md` v1.0 — AI 面試作答平台 (Candidate Portal)
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - 多題作答與草稿保全 (Priority: P1)
 
@@ -150,7 +150,7 @@ Context 內容正確對應當前題目與當前程式碼。
 - 邀請連結已使用、已逾期或場次已提交：須顯示明確狀態說明並阻擋進入作答。
 - 邀請連結在場次進行中被重複開啟：須沿用同一場次狀態，不得重置計時或清空草稿。
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -221,7 +221,7 @@ Context 內容正確對應當前題目與當前程式碼。
 - **環境事件 (Environment Event)**：一次失焦或分頁切換。含類型、起始時間、持續長度。
 - **測試結果 (Test Result)**：一次單元測試執行。含通過數、總數、執行的時間點。
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

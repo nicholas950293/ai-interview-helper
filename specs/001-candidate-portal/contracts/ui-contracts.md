@@ -41,6 +41,7 @@ MUST NOT 由元件間直接傳遞快照。
 **觸發**：QuestionPanel 的 Tabs
 
 **流程**：
+
 1. `flushPendingSave()` — 若當前題目有未保存變更，先強制保存
 2. `store.setCurrentQuestion(id)`
 3. `POST /api/chat/system` 記錄切換，將回傳的系統訊息 append 至 `chat`
@@ -66,6 +67,7 @@ MUST NOT 由元件間直接傳遞快照。
 **觸發**：AnswerWorkspace 的「傳送至 AI 側邊欄」按鈕
 
 **流程**：
+
 1. `await flushPendingSave()` — **必要**，否則伺服端取到的是舊草稿
 2. `POST /api/chat` with `{ questionId, content: Code Review 提問, attachCode: true, source: "code_review" }`
 3. ChatFeed 顯示該則訊息時 MUST 標示「已附帶目前程式碼」
@@ -85,32 +87,32 @@ MUST NOT 由元件間直接傳遞快照。
 
 ### 保存狀態指示（AnswerWorkspace 標題列）
 
-| `saveState` | 顯示文字 | 可及性宣告 |
-| --- | --- | --- |
-| `idle` | 「草稿」 | 無 |
-| `saving` | 「儲存草稿中…」 | `aria-live="polite"` |
-| `saved` | 「已自動儲存草稿」 | `aria-live="polite"` |
-| `error` | 「儲存失敗，將自動重試」 | `aria-live="assertive"` |
+| `saveState` | 顯示文字                 | 可及性宣告              |
+| ----------- | ------------------------ | ----------------------- |
+| `idle`      | 「草稿」                 | 無                      |
+| `saving`    | 「儲存草稿中…」          | `aria-live="polite"`    |
+| `saved`     | 「已自動儲存草稿」       | `aria-live="polite"`    |
+| `error`     | 「儲存失敗，將自動重試」 | `aria-live="assertive"` |
 
 MUST NOT 僅以顏色區分狀態（憲章原則 V）。
 
 ### 倒數計時器（Header）
 
-| 剩餘時間 | 呈現 | 行為 |
-| --- | --- | --- |
-| > 5 分 | 一般樣式 | — |
-| ≤ 5 分 | 警示樣式 + `aria-live="assertive"` 宣告一次 | — |
-| = 0 | 鎖定樣式 | 鎖定全部輸入並觸發強制提交 |
+| 剩餘時間 | 呈現                                        | 行為                       |
+| -------- | ------------------------------------------- | -------------------------- |
+| > 5 分   | 一般樣式                                    | —                          |
+| ≤ 5 分   | 警示樣式 + `aria-live="assertive"` 宣告一次 | —                          |
+| = 0      | 鎖定樣式                                    | 鎖定全部輸入並觸發強制提交 |
 
 顯示每秒更新；權威來自 `deadlineAt` 與校時偏移，MUST NOT 以純本地累加計時。
 
 ### 對話 Feed
 
-| `role` | 呈現 |
-| --- | --- |
+| `role`      | 呈現                                                                    |
+| ----------- | ----------------------------------------------------------------------- |
 | `candidate` | 右側氣泡；`attachedCode` 存在時顯示「已附帶程式碼」標記與可展開的程式碼 |
-| `assistant` | 左側氣泡；串流中顯示逐字輸出與忙碌指示 |
-| `system` | 置中細體分隔訊息（題目切換通知） |
+| `assistant` | 左側氣泡；串流中顯示逐字輸出與忙碌指示                                  |
+| `system`    | 置中細體分隔訊息（題目切換通知）                                        |
 
 串流期間 Composer 的送出按鈕 MUST 呈忙碌且不可重複送出。
 
@@ -123,12 +125,12 @@ MUST NOT 僅以顏色區分狀態（憲章原則 V）。
 
 ## 鍵盤契約
 
-| 快捷鍵 | 作用 | 位置 |
-| --- | --- | --- |
-| `Ctrl/Cmd + Enter` | 送出提問 | Composer |
-| `Tab` / `Shift + Tab` | 縮排／反縮排 | CodeEditor |
-| `Esc` | 關閉對話框；退出全螢幕 | 全域 |
-| `Ctrl/Cmd + S` | 立即保存草稿（攔截瀏覽器預設） | 全域 |
+| 快捷鍵                | 作用                           | 位置       |
+| --------------------- | ------------------------------ | ---------- |
+| `Ctrl/Cmd + Enter`    | 送出提問                       | Composer   |
+| `Tab` / `Shift + Tab` | 縮排／反縮排                   | CodeEditor |
+| `Esc`                 | 關閉對話框；退出全螢幕         | 全域       |
+| `Ctrl/Cmd + S`        | 立即保存草稿（攔截瀏覽器預設） | 全域       |
 
 所有快捷鍵 MUST 於介面上有可見說明（憲章原則 V）。核心流程——閱讀題目、作答、提問、
 提交——MUST 可全鍵盤完成。

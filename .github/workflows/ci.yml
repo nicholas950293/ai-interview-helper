@@ -1,0 +1,125 @@
+name: CI
+
+# 憲章 v1.1.0「開發流程與品質關卡」：採單一主幹開發，
+# 品質關卡於每次推送 main 由 CI 強制執行。關卡失敗時 MUST 立即修復或還原。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  # 關卡 0：靜態檢查（非憲章關卡，但阻擋明顯錯誤進入後續關卡）
+  static:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+
+  # 關卡 1：測試套件（憲章原則 III）
+  tests:
+    name: 'Gate 1 — 測試套件'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  # 關卡 2：圍欄越獄測試（憲章原則 I，NON-NEGOTIABLE）
+  guardrails:
+    name: 'Gate 2 — 圍欄越獄測試'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # 以錄製的模型回應驗證後處理層；真實模型測試由排程作業另行執行。
+      - run: npm run test:guardrails
+
+  # 關卡 3：無障礙對比檢核（憲章原則 V）
+  a11y:
+    name: 'Gate 3 — axe-core 檢核'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run db:migrate && npm run db:seed
+      - run: npm run test:a11y
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: a11y-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+  # 編輯器延遲量測（憲章原則 IV 的條件式要求，此處無條件執行）
+  perf:
+    name: '編輯器延遲量測 (p95 < 50ms)'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run db:migrate && npm run db:seed
+      - run: npm run test:perf
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: perf-results
+          path: frontend/perf-results/
+          retention-days: 30
+
+  # 憑證隔離：前端建置產物 MUST NOT 含模型金鑰（憲章「公正性與安全要求」）
+  credential-isolation:
+    name: '憑證隔離 — bundle 不含 GEMINI_API_KEY'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      # 刻意注入假金鑰：若建置產物含有它，代表金鑰有洩漏至前端的路徑。
+      - name: Build frontend with a canary key in the environment
+        env:
+          GEMINI_API_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
+          VITE_GEMINI_API_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
+        run: npm run build --workspace frontend
+      - name: Assert bundle is clean
+        run: |
+          if grep -rlE 'CANARY_a1b2c3d4e5f6|GEMINI_API_KEY' frontend/dist/ 2>/dev/null; then
+            echo "::error::前端建置產物含有模型憑證，違反憲章「憑證隔離」。"
+            exit 1
+          fi
+          echo "✅ 前端建置產物不含模型憑證。"

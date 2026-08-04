@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Environment — 憲章「憑證隔離」：金鑰 MUST NOT 進入版本控管
+.env
+.env.*
+!.env.example
+
+# Database (SQLite 單檔資料庫與其 WAL/SHM 附檔)
+data/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Test artifacts
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.playwright/
+perf-results/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Caches
+.cache/
+.eslintcache
+.vite/

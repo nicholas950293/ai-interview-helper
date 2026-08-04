@@ -19,6 +19,7 @@ Roadmap Phase 2 再換 Monaco）；BFF 以 Node + Hono 實作，SQLite 持久化
 **Language/Version**: TypeScript 5.7；Node.js 22 LTS
 
 **Primary Dependencies**:
+
 - 前端：React 19、Vite 6、Zustand 5（單一 session store）、CodeMirror 6（`@codemirror/*`）、
   Tailwind CSS 4、Radix UI（Dialog / Toast / Tabs，取其鍵盤與 ARIA 行為）
 - 後端：Hono 4（HTTP）、`@google/genai`（Gemini SDK，僅伺服端）、Zod 4（邊界驗證）、
@@ -46,15 +47,15 @@ AI 首個 token 於 2 秒內開始串流
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-| 原則 | 本計畫如何滿足 | 初審 | 設計後複審 |
-| --- | --- | --- | --- |
-| I. AI 護欄不可妥協 | Gemini 呼叫僅在 BFF；System Prompt 圍欄以 `backend/src/ai/guardrails.ts` 版本控管，前端輸入僅作為 user turn，無法覆寫 system；越獄測試套件涵蓋直接索取與偽裝除錯兩類 | ✅ PASS | ✅ PASS |
-| II. Context 單一事實來源 | 單一 Zustand session store 持有 `currentQuestionId`／`language`／`draft`；三面板皆為消費者；聯動動作以 selector 讀取，不複製快照 | ✅ PASS | ✅ PASS |
-| III. 互動邏輯測試先行 | 計時、debounce 保存、強制提交、圍欄、聯動皆先寫失敗測試；計時與 debounce 以 fake timers 驗證邊界 | ✅ PASS | ✅ PASS |
-| IV. 效能預算即需求 | CodeMirror 6 受控更新、狀態訂閱切片化避免全樹重繪；編輯器路徑變更須附延遲量測（Playwright trace） | ✅ PASS | ✅ PASS |
-| V. 淺色系一致性與可及性 | Tailwind 淺色 token 單一來源；版面比例以 CSS grid 鎖在 6:4–7:5；Radix 提供焦點管理；`axe-core` 納入 CI | ✅ PASS | ✅ PASS |
+| 原則                     | 本計畫如何滿足                                                                                                                                                       | 初審    | 設計後複審 |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ---------- |
+| I. AI 護欄不可妥協       | Gemini 呼叫僅在 BFF；System Prompt 圍欄以 `backend/src/ai/guardrails.ts` 版本控管，前端輸入僅作為 user turn，無法覆寫 system；越獄測試套件涵蓋直接索取與偽裝除錯兩類 | ✅ PASS | ✅ PASS    |
+| II. Context 單一事實來源 | 單一 Zustand session store 持有 `currentQuestionId`／`language`／`draft`；三面板皆為消費者；聯動動作以 selector 讀取，不複製快照                                     | ✅ PASS | ✅ PASS    |
+| III. 互動邏輯測試先行    | 計時、debounce 保存、強制提交、圍欄、聯動皆先寫失敗測試；計時與 debounce 以 fake timers 驗證邊界                                                                     | ✅ PASS | ✅ PASS    |
+| IV. 效能預算即需求       | CodeMirror 6 受控更新、狀態訂閱切片化避免全樹重繪；編輯器路徑變更須附延遲量測（Playwright trace）                                                                    | ✅ PASS | ✅ PASS    |
+| V. 淺色系一致性與可及性  | Tailwind 淺色 token 單一來源；版面比例以 CSS grid 鎖在 6:4–7:5；Radix 提供焦點管理；`axe-core` 納入 CI                                                               | ✅ PASS | ✅ PASS    |
 
 **公正性與安全要求**：邀請連結一次性 token 於 BFF 驗證；強制提交取最後一次成功保存的
 草稿；對話完整留存；前端僅持有姓名與職稱；金鑰僅存在於 BFF 環境變數。全數符合。

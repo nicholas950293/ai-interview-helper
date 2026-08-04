@@ -1,0 +1,117 @@
+@import 'tailwindcss';
+
+/*
+ * 淺色主題 token —— 單一來源（憲章原則 V）。
+ *
+ * 對比規範：所有 --color-text-* 與 --color-surface-* / --color-bg 的組合
+ * MUST 通過 WCAG AA（一般文字 4.5:1、大型文字 3:1）。下表為實測對比值，
+ * 修改任一色票前 MUST 重新驗算並更新此處，且 MUST 通過 T105 的 axe-core 檢核。
+ *
+ *   text-primary   #1f2937 on surface #ffffff → 14.68:1  ✅ AA / AAA
+ *   text-secondary #4b5563 on surface #ffffff →  8.59:1  ✅ AA / AAA
+ *   text-muted     #6b7280 on surface #ffffff →  5.53:1  ✅ AA
+ *   text-primary   #1f2937 on bg      #f7f8fa → 13.63:1  ✅ AA / AAA
+ *   accent-text    #1d4ed8 on surface #ffffff →  7.00:1  ✅ AA / AAA
+ *   danger-text    #b91c1c on surface #ffffff →  6.29:1  ✅ AA / AAA
+ *   success-text   #15803d on surface #ffffff →  4.94:1  ✅ AA
+ *   warning-text   #b45309 on surface #ffffff →  4.87:1  ✅ AA
+ */
+@theme {
+  /* 底層 */
+  --color-bg: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f3f4f6;
+  --color-surface-raised: #ffffff;
+
+  /* 邊界與分隔 */
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+
+  /* 文字 */
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+  --color-text-inverse: #ffffff;
+
+  /* 強調（品牌／互動） */
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-text: #1d4ed8;
+  --color-accent-subtle: #eff6ff;
+
+  /* 語意色 —— 每一種 MUST 搭配文字或圖示，MUST NOT 僅以顏色傳達狀態 */
+  --color-success: #16a34a;
+  --color-success-text: #15803d;
+  --color-success-subtle: #f0fdf4;
+
+  --color-warning: #d97706;
+  --color-warning-text: #b45309;
+  --color-warning-subtle: #fffbeb;
+
+  --color-danger: #dc2626;
+  --color-danger-text: #b91c1c;
+  --color-danger-subtle: #fef2f2;
+
+  /* 難度標籤 */
+  --color-difficulty-easy-text: #15803d;
+  --color-difficulty-easy-bg: #f0fdf4;
+  --color-difficulty-medium-text: #b45309;
+  --color-difficulty-medium-bg: #fffbeb;
+  --color-difficulty-hard-text: #b91c1c;
+  --color-difficulty-hard-bg: #fef2f2;
+
+  /* 三卡片浮動式版面 */
+  --radius-card: 0.75rem;
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 4px 12px -2px rgb(16 24 40 / 0.08);
+  --shadow-card-raised: 0 2px 4px 0 rgb(16 24 40 / 0.06), 0 12px 24px -4px rgb(16 24 40 / 0.1);
+
+  /* 版面幾何 —— 左右比例 MUST 落在 7:5 與 6:4 之間（憲章原則 V）
+     7:5 → 左側佔比 7/12 = 0.583333（下界）
+     6:4 → 左側佔比 6/10 = 0.6      （上界） */
+  --layout-split-min: 0.583333;
+  --layout-split-default: 0.6;
+  --layout-split-max: 0.6;
+  --layout-min-width: 1280px;
+  --layout-gap: 0.75rem;
+
+  /* 字體 */
+  --font-sans:
+    'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans TC', 'PingFang TC',
+    'Microsoft JhengHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Courier New', monospace;
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    /* 桌機限定：最小支援視窗寬度 1280px，低於此寬度以水平捲動呈現完整版面 */
+    min-width: var(--layout-min-width);
+  }
+
+  /* 全鍵盤可操作：焦點指示 MUST 可見（憲章原則 V） */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .card {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+  }
+}

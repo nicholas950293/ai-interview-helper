@@ -1,0 +1,15 @@
+node_modules/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+perf-results/
+package-lock.json
+*.min.js
+data/
+
+# 規格產物由 Spec Kit 維護，不套用程式碼格式化規則
+.specify/
+specs/
+docs/

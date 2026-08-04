@@ -15,15 +15,15 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 { "error": { "code": "SESSION_SUBMITTED", "message": "此場次已提交，無法再修改作答。" } }
 ```
 
-| code | HTTP | 情境 |
-| --- | --- | --- |
-| `TOKEN_INVALID` | 404 | 邀請連結不存在 |
-| `TOKEN_EXPIRED` | 410 | 連結逾期 |
-| `SESSION_NOT_STARTED` | 409 | 場次尚未開始 |
-| `SESSION_SUBMITTED` | 409 | 場次已提交（含逾時提交） |
-| `REVISION_STALE` | 409 | 草稿 revision 落後於伺服端 |
-| `CONTENT_TOO_LARGE` | 413 | 草稿超過 256 KB |
-| `AI_UNAVAILABLE` | 503 | 模型服務暫時不可用 |
+| code                  | HTTP | 情境                       |
+| --------------------- | ---- | -------------------------- |
+| `TOKEN_INVALID`       | 404  | 邀請連結不存在             |
+| `TOKEN_EXPIRED`       | 410  | 連結逾期                   |
+| `SESSION_NOT_STARTED` | 409  | 場次尚未開始               |
+| `SESSION_SUBMITTED`   | 409  | 場次已提交（含逾時提交）   |
+| `REVISION_STALE`      | 409  | 草稿 revision 落後於伺服端 |
+| `CONTENT_TOO_LARGE`   | 413  | 草稿超過 256 KB            |
+| `AI_UNAVAILABLE`      | 503  | 模型服務暫時不可用         |
 
 `message` MUST 為可直接呈現給應試者的中文說明（FR-031、FR-014）。
 
@@ -36,6 +36,7 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 **Request**：`{ "token": string }`
 
 **Response 200**：
+
 ```json
 {
   "session": { "id", "candidateName", "positionTitle", "deadlineAt", "status", "guidanceMode" },
@@ -54,6 +55,7 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 回傳當前場次、題目、各題最新草稿與完整對話，供頁面載入或重新整理時還原（FR-003）。
 
 **Response 200**：
+
 ```json
 {
   "session": { "...": "同上" },
@@ -113,6 +115,7 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 送出提問，回傳串流 id。
 
 **Request**：
+
 ```json
 {
   "questionId": string,
@@ -130,15 +133,15 @@ Base path `/api`。除 `POST /api/session/redeem` 外，所有端點以 HttpOnly
 
 ---
 
-## GET /api/chat/stream/:streamId  *(text/event-stream)*
+## GET /api/chat/stream/:streamId _(text/event-stream)_
 
 SSE 串流 AI 回覆。
 
-| event | data | 說明 |
-| --- | --- | --- |
-| `token` | `{ "text": string }` | 增量文字 |
-| `done` | `{ "messageId", "guardrailTriggered": boolean }` | 回覆結束 |
-| `error` | `{ "code", "message" }` | 中止，前端顯示錯誤與重試（FR-014） |
+| event   | data                                             | 說明                               |
+| ------- | ------------------------------------------------ | ---------------------------------- |
+| `token` | `{ "text": string }`                             | 增量文字                           |
+| `done`  | `{ "messageId", "guardrailTriggered": boolean }` | 回覆結束                           |
+| `error` | `{ "code", "message" }`                          | 中止，前端顯示錯誤與重試（FR-014） |
 
 - 圍欄後處理若攔截，串流 MUST 以引導式訊息取代原內容後才送出 `token`
   （不得先送出違規內容再撤回）。
