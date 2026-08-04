@@ -48,12 +48,16 @@ export interface SplitPreferences {
 }
 
 export function useSplitPreferences(): SplitPreferences {
-  const [horizontal, setHorizontalState] = useState(() =>
-    readPreference(STORAGE_KEY_HORIZONTAL, SPLIT_DEFAULT, clampSplit)
-  );
-  const [vertical, setVerticalState] = useState(() =>
-    readPreference(STORAGE_KEY_VERTICAL, VERTICAL_DEFAULT, clampVertical)
-  );
+  const [horizontal, setHorizontalState] = useState(SPLIT_DEFAULT);
+  const [vertical, setVerticalState] = useState(VERTICAL_DEFAULT);
+
+  // 偏好在掛載後才讀取。若放在 useState 初始值裡，伺服端渲染時沒有
+  // localStorage 會退回預設值，與用戶端首次渲染的實際偏好不一致，
+  // React 會判定為 hydration 不符（面板寬度會先閃一下預設值再跳走）。
+  useEffect(() => {
+    setHorizontalState(readPreference(STORAGE_KEY_HORIZONTAL, SPLIT_DEFAULT, clampSplit));
+    setVerticalState(readPreference(STORAGE_KEY_VERTICAL, VERTICAL_DEFAULT, clampVertical));
+  }, []);
 
   const setHorizontal = useCallback((ratio: number) => {
     const clamped = clampSplit(ratio);

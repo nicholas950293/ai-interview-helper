@@ -11,6 +11,11 @@ dist/
 build/
 *.tsbuildinfo
 
+# Next.js
+.next/
+out/
+next-env.d.ts
+
 # Environment — 憲章「憑證隔離」：金鑰 MUST NOT 進入版本控管
 .env
 .env.*

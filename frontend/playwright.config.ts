@@ -1,10 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * 三個 project 對應憲章的三類關卡：
+ * 三個 project 對應憲章的三類關卡（T011）：
  *   e2e  —— User Story 的端到端驗證
- *   a11y —— axe-core 對比與 ARIA 檢核（憲章原則 V）
- *   perf —— 編輯器延遲量測（憲章原則 IV）
+ *   a11y —— axe-core 對比與 ARIA 檢核（憲章原則 VI）
+ *   perf —— 編輯器延遲量測（憲章 v2.0.0 起為回歸偵測，非合併門檻）
  *
  * 桌機限定：viewport 固定為 1440x900，不測行動裝置或窄視窗。
  */
@@ -44,11 +44,12 @@ export default defineConfig({
     ? undefined
     : {
         command: 'npm run dev:backend & npm run dev:frontend',
-        // e2e 以腳本化的假回應驗證串流與圍欄，不需要（也不該需要）真實金鑰。
+        // e2e 一律以腳本化的假回應驗證，不需要（也不該需要）真實金鑰。
         env: { AI_FAKE: 'true', PATH: `${process.env.HOME}/.local/bin:${process.env.PATH}` },
         url: 'http://localhost:5173',
         reuseExistingServer: !process.env.CI,
-        timeout: 120_000,
+        // Next 首次啟動要編譯路由，比 Vite 慢得多
+        timeout: 180_000,
         cwd: '..',
       },
 });

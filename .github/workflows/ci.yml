@@ -163,8 +163,11 @@ jobs:
           VITE_GOOGLE_API_KEY: CANARY_a1b2c3d4e5f6_MUST_NOT_APPEAR_IN_BUNDLE
         run: npm run build --workspace frontend
       - name: Assert bundle is clean
+        # 掃描 `.next/static/`——那正是會送到瀏覽器的那一份。
+        # 不掃整個 `.next/`：`server/` 與快取產物留在伺服器上，把它們一起掃
+        # 只會製造與「前端是否持有憑證」無關的誤報。
         run: |
-          if grep -rlE 'CANARY_a1b2c3d4e5f6|GOOGLE_API_KEY|ANTHROPIC_API_KEY|SUPABASE_SERVICE_ROLE_KEY' frontend/dist/ 2>/dev/null; then
+          if grep -rlE 'CANARY_a1b2c3d4e5f6|GOOGLE_API_KEY|ANTHROPIC_API_KEY|SUPABASE_SERVICE_ROLE_KEY' frontend/.next/static/ 2>/dev/null; then
             echo "::error::前端建置產物含有模型憑證，違反憲章「憑證隔離」。"
             exit 1
           fi

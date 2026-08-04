@@ -41,16 +41,18 @@ description: 'Task list for TechInterview Pro — Candidate Portal (Constitution
 | --- | --- | --- | --- |
 | M1 | Python + FastAPI 重建端點 | Phase 1–2 的後端任務 + 各 Story 的後端任務 | ✅ 全部 |
 | M2 | SQLite → Supabase | T014–T019 | ⏸ 僅 T018–T019（以 SQLite 實作） |
-| M3 | 拆除圍欄，改用 LangChain 雙供應商 | T061–T063、T119 | ✅ T061–T063（T119 延後） |
+| M3 | 拆除圍欄，改用 LangChain 雙供應商 | T061–T063、T119 | ✅ 完成（舊資產已於後續增量拆除） |
 | M4 | 程式碼變更歸屬與套用 | T055–T057、T064–T067、T071–T072 | ✅ 完成（後端與前端套用 UI 皆已上線） |
-| M5 | Vite SPA → Next.js | T007–T011、各 Story 的前端任務 | ⏸ 延後 |
-| M6 | Docker 化 | T120 | ⏸ 延後 |
+| M5 | Vite SPA → Next.js | T007–T011、各 Story 的前端任務 | ✅ 完成 |
+| M6 | Docker 化 | T120 | ⏸ 延後（需本機 Docker） |
 | M7 | CI 改為 PR 制 | T013、T121 | ✅ 完成 |
 
 **與 plan.md 的一處偏離**：plan 的 M1 原本要「以既有 Vite 前端零改動驗證新後端等價」。
-本清單於 T007 就地把 `frontend/` 改為 Next.js，舊 Vite 前端不再存在，該驗證方式不可行。
-**替代作法**：契約測試依 research R-016 一對一移植（`ASGITransport` 對應原本的
-`app.request()`），等價性由測試意圖的逐條對照保證。plan.md 的 M1 判準已同步更新。
+本清單於 T007 就地把 `frontend/` 改為 Next.js，該驗證方式看似不可行。
+**實際執行順序讓兩者都成立**：Increment 1 先只做 M1，Vite 前端僅改端點名稱（T124）
+即跑通全部 e2e，等價性因此有直接證據；M5 才把該前端遷至 Next.js，
+此時 33 個 e2e、7 個 a11y、2 個 perf 測試**一行未改**全數通過——
+遷移沒有動到任何行為，這是比逐條對照更強的證據。
 
 ---
 
@@ -98,12 +100,12 @@ T110–T123（Polish，含 Docker 與舊資產拆除）。
 - [X] T004 [P] 設定 pytest + pytest-asyncio + httpx `ASGITransport` 於 `backend/pyproject.toml` 與 `backend/tests/conftest.py`（見 [research.md](./research.md) R-016）
 - [X] T005 [P] 設定 ruff（lint + format）於 `backend/pyproject.toml`
 - [ ] T006 初始化 Supabase 本地實例於 `supabase/config.toml`，確認 `supabase start` 可運作
-- [ ] T007 於 `frontend/` 就地初始化 Next.js 16（App Router + TypeScript + Tailwind CSS 4），移除 Vite 相關設定
-- [ ] T008 [P] 移植淺色主題 token 至 `frontend/src/styles/theme.css`（Tailwind 4 `@theme`），保留 WCAG AA 實測對比值註記
-- [ ] T009 [P] 設定 `rewrites` 將 `/api/*` 代理至 FastAPI 於 `frontend/next.config.ts`（見 research R-003）
-- [ ] T010 [P] 設定 Vitest（jsdom + React Testing Library）於 `frontend/vitest.config.ts` 與 `frontend/tests/setup.ts`
-- [ ] T011 [P] 設定 Playwright 三個 project（e2e / a11y / perf）於 `frontend/playwright.config.ts`
-- [ ] T012 [P] 設定 ESLint 9 + Prettier 於 `eslint.config.js`，含「前端不得讀取金鑰」規則，涵蓋 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
+- [X] T007 於 `frontend/` 就地初始化 Next.js 16（App Router + TypeScript + Tailwind CSS 4），移除 Vite 相關設定
+- [X] T008 [P] 移植淺色主題 token 至 `frontend/src/styles/theme.css`（Tailwind 4 `@theme`），保留 WCAG AA 實測對比值註記
+- [X] T009 [P] 設定 `rewrites` 將 `/api/*` 代理至 FastAPI 於 `frontend/next.config.ts`（見 research R-003）
+- [X] T010 [P] 設定 Vitest（jsdom + React Testing Library）於 `frontend/vitest.config.ts` 與 `frontend/tests/setup.ts`
+- [X] T011 [P] 設定 Playwright 三個 project（e2e / a11y / perf）於 `frontend/playwright.config.ts`
+- [X] T012 [P] 設定 ESLint 9 + Prettier 於 `eslint.config.js`，含「前端不得讀取金鑰」規則，涵蓋 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
 - [X] T013 建立 CI 工作流骨架於 `.github/workflows/ci.yml`，**觸發條件為 `pull_request`**（憲章：所有變更 MUST 經 PR）
 
 ---
@@ -128,12 +130,12 @@ T110–T123（Polish，含 Docker 與舊資產拆除）。
 - [X] T025 實作 token 驗證與 session cookie 換發於 `backend/src/techinterview/core/auth.py`
 - [X] T026 實作 `POST /api/session/redeem` 與 `GET /api/session` 於 `backend/src/techinterview/api/session.py`（`predefined_tests` 內容不得外洩，僅回傳 `testCount`）
 - [X] T027 實作 seed 腳本（3 題示範，含各語言 starter code 與 quickPrompts）於 `backend/src/techinterview/db/seed.py`，支援 `--duration` 與 `--session-id`
-- [ ] T028 [P] 建立單一 session store 於 `frontend/src/store/session.ts`（欄位見 [data-model.md](./data-model.md#前端狀態切片單一事實來源)）
-- [ ] T029 [P] 建立衍生值 selectors（`currentQuestion`、`currentAnswer`、`remainingSec`、`isReadOnly`）於 `frontend/src/store/selectors.ts`
-- [ ] T030 [P] 建立 API client 與錯誤映射於 `frontend/src/services/api.ts`
-- [ ] T031 建立 App Router 根版面於 `frontend/src/app/layout.tsx`（掛載主題、`noindex` meta）
-- [ ] T032 實作路由 `/s/[token]` 與 `/s` 的場次載入流程於 `frontend/src/app/s/[token]/page.tsx` 與 `frontend/src/app/s/page.tsx`（Client Component，見 research R-003）
-- [ ] T033 實作三面板版面骨架（CSS grid，左右比例夾制 6:4–7:5）於 `frontend/src/app/AppLayout.tsx`，依 [contracts/ui-contracts.md](./contracts/ui-contracts.md#版面契約)
+- [X] T028 [P] 建立單一 session store 於 `frontend/src/store/session.ts`（欄位見 [data-model.md](./data-model.md#前端狀態切片單一事實來源)）
+- [X] T029 [P] 建立衍生值 selectors（`currentQuestion`、`currentAnswer`、`remainingSec`、`isReadOnly`）於 `frontend/src/store/selectors.ts`
+- [X] T030 [P] 建立 API client 與錯誤映射於 `frontend/src/services/api.ts`
+- [X] T031 建立 App Router 根版面於 `frontend/src/app/layout.tsx`（掛載主題、`noindex` meta）
+- [X] T032 實作路由 `/s/[token]` 與 `/s` 的場次載入流程於 `frontend/src/app/s/[token]/page.tsx` 與 `frontend/src/app/s/page.tsx`（Client Component，見 research R-003）
+- [X] T033 實作三面板版面骨架（CSS grid，左右比例夾制 6:4–7:5）於 `frontend/src/app/AppLayout.tsx`，依 [contracts/ui-contracts.md](./contracts/ui-contracts.md#版面契約)
 
 **Checkpoint**: 可用邀請連結進入空白三面板 — User Story 實作可開始
 
@@ -152,27 +154,27 @@ T110–T123（Polish，含 Docker 與舊資產拆除）。
 ### Tests for User Story 1 ⚠️ 先寫，先失敗
 
 - [X] T034 [P] [US1] 撰寫草稿保存的契約測試（revision 遞增、`REVISION_STALE`、`CONTENT_TOO_LARGE`、場次終態拒寫、批次補送）於 `backend/tests/contract/test_answers.py`
-- [ ] T035 [P] [US1] 撰寫 debounce 保存的失敗測試（fake timers：連續輸入 3 秒僅產生 1 次請求）於 `frontend/tests/unit/persistence.test.ts`
-- [ ] T036 [P] [US1] 撰寫離線佇列的失敗測試（離線累積、恢復連線依 revision 排序補送）於 `frontend/tests/unit/offline-queue.test.ts`
-- [ ] T037 [P] [US1] 撰寫保存狀態指示的元件測試（idle/saving/saved/error 四態文字與 aria-live）於 `frontend/tests/component/save-indicator.test.tsx`
-- [ ] T038 [P] [US1] 撰寫題目切換保留內容的元件測試於 `frontend/tests/component/question-tabs.test.tsx`
-- [ ] T039 [P] [US1] 撰寫端到端草稿保全情境於 `frontend/tests/e2e/draft-persistence.spec.ts`（對應 quickstart V1）
+- [X] T035 [P] [US1] 撰寫 debounce 保存的失敗測試（fake timers：連續輸入 3 秒僅產生 1 次請求）於 `frontend/tests/unit/persistence.test.ts`
+- [X] T036 [P] [US1] 撰寫離線佇列的失敗測試（離線累積、恢復連線依 revision 排序補送）於 `frontend/tests/unit/offline-queue.test.ts`
+- [X] T037 [P] [US1] 撰寫保存狀態指示的元件測試（idle/saving/saved/error 四態文字與 aria-live）於 `frontend/tests/component/save-indicator.test.tsx`
+- [X] T038 [P] [US1] 撰寫題目切換保留內容的元件測試於 `frontend/tests/component/question-tabs.test.tsx`
+- [X] T039 [P] [US1] 撰寫端到端草稿保全情境於 `frontend/tests/e2e/draft-persistence.spec.ts`（對應 quickstart V1）
 
 ### Implementation for User Story 1
 
 - [X] T040 [US1] 實作 `PUT /api/answers/{question_id}` 與批次 `PUT /api/answers` 於 `backend/src/techinterview/api/answers.py`
 - [X] T041 [P] [US1] 實作 `POST /api/tests/{question_id}`（回報預定義結果，不執行任何用戶端程式碼）於 `backend/src/techinterview/api/tests.py`
 - [X] T042 [P] [US1] 封裝 CodeMirror 6 編輯器於 `frontend/src/components/workspace/CodeEditor.tsx`，介面為 `value / onChange / language / readOnly`；**外部寫入不得走 `onChange`**，否則 US2 的作者歸屬無從區分（research R-001）。實作以 CodeMirror 的 `Annotation`（`externalWrite`）標記外部交易並於 `updateListener` 略過，未新增 `onApplyExternal` prop——內容本來就由 store 經 `value` 下傳，額外的 imperative handle 只會多一條同樣的路徑；標記法一併修掉切換題目時那次內容相同的多餘保存
-- [ ] T043 [US1] 實作 debounce 1000ms 保存與 IndexedDB 離線佇列於 `frontend/src/store/persistence.ts`
-- [ ] T044 [P] [US1] 實作連線狀態偵測與退避補送於 `frontend/src/services/connectivity.ts`
-- [ ] T045 [P] [US1] 實作語言選單與「是否以新語言 starter code 取代」確認對話框於 `frontend/src/components/workspace/LanguageSelect.tsx`
-- [ ] T046 [P] [US1] 實作保存狀態指示於 `frontend/src/components/workspace/SaveIndicator.tsx`
-- [ ] T047 [P] [US1] 實作程式碼格式化（JS/TS 用 Prettier standalone；Python/Go 用縮排正規化）於 `frontend/src/lib/format-code.ts`
-- [ ] T048 [US1] 組裝作答區於 `frontend/src/components/workspace/AnswerWorkspace.tsx`
-- [ ] T049 [P] [US1] 實作題目頁籤與難度／配分標籤於 `frontend/src/components/question/QuestionTabs.tsx`（Radix Tabs，MUST 同時渲染 `Tabs.Content`，否則 `aria-controls` 會指向不存在的元素）
-- [ ] T050 [P] [US1] 實作題目內容呈現於 `frontend/src/components/question/QuestionContent.tsx`（可捲動區域 MUST 可鍵盤聚焦）
-- [ ] T051 [US1] 實作切換題目時載入該題 starter code 或既有草稿於 `frontend/src/store/session.ts`
-- [ ] T052 [P] [US1] 實作測試結果呈現於 `frontend/src/components/workspace/TestConsole.tsx`
+- [X] T043 [US1] 實作 debounce 1000ms 保存與 IndexedDB 離線佇列於 `frontend/src/store/persistence.ts`
+- [X] T044 [P] [US1] 實作連線狀態偵測與退避補送於 `frontend/src/services/connectivity.ts`
+- [X] T045 [P] [US1] 實作語言選單與「是否以新語言 starter code 取代」確認對話框於 `frontend/src/components/workspace/LanguageSelect.tsx`
+- [X] T046 [P] [US1] 實作保存狀態指示於 `frontend/src/components/workspace/SaveIndicator.tsx`
+- [X] T047 [P] [US1] 實作程式碼格式化（JS/TS 用 Prettier standalone；Python/Go 用縮排正規化）於 `frontend/src/lib/format-code.ts`
+- [X] T048 [US1] 組裝作答區於 `frontend/src/components/workspace/AnswerWorkspace.tsx`
+- [X] T049 [P] [US1] 實作題目頁籤與難度／配分標籤於 `frontend/src/components/question/QuestionTabs.tsx`（Radix Tabs，MUST 同時渲染 `Tabs.Content`，否則 `aria-controls` 會指向不存在的元素）
+- [X] T050 [P] [US1] 實作題目內容呈現於 `frontend/src/components/question/QuestionContent.tsx`（可捲動區域 MUST 可鍵盤聚焦）
+- [X] T051 [US1] 實作切換題目時載入該題 starter code 或既有草稿於 `frontend/src/store/session.ts`
+- [X] T052 [P] [US1] 實作測試結果呈現於 `frontend/src/components/workspace/TestConsole.tsx`
 
 **Checkpoint**: US1 可獨立驗證 — 作答、保存、切題、重整還原全數運作，無需 AI 功能
 
@@ -198,7 +200,7 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [X] T057 [P] [US2] 撰寫資料庫 CHECK 約束的測試（違反 source／欄位對應的寫入 MUST 被資料庫拒絕）於 `backend/tests/collaboration/test_constraints.py`
 - [X] T058 [P] [US2] 撰寫 `POST /api/chat` 與 SSE 串流的契約測試（token / blocks / done / error 事件；**回應內容 MUST 與模型輸出完全相同，無任何攔截**）於 `backend/tests/contract/test_chat.py`
 - [X] T059 [P] [US2] 撰寫對話 Feed 與套用按鈕的元件測試（三角色呈現、每個區塊各有套用按鈕且可存取名稱可區分、串流中不顯示套用按鈕）於 `frontend/tests/component/chat-feed.test.tsx`
-- [ ] T060 [P] [US2] 撰寫端到端 AI 實作情境於 `frontend/tests/e2e/ai-implementation.spec.ts`（對應 quickstart V2）
+- [X] T060 [P] [US2] 撰寫端到端 AI 實作情境於 `frontend/tests/e2e/ai-implementation.spec.ts`（對應 quickstart V2）
 
 ### Implementation for User Story 2
 
@@ -211,14 +213,14 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [X] T067 [US2] 實作 `code_change` 歸屬於 `backend/src/techinterview/domain/attribution.py`：套用時記 `ai`、debounce 保存時記 `candidate`，**且與最近一次 `ai` 變更內容相同時不重複記錄**（research R-014）；並將 candidate 記錄接上 T040 的保存流程
 - [X] T068 [P] [US2] 實作 `PATCH /api/session/collaboration-mode` 於 `backend/src/techinterview/api/session.py`
 - [X] T069 [P] [US2] 實作 SSE 用戶端於 `frontend/src/services/chat-stream.ts`（token 批次套用、處理 `blocks` 事件）
-- [ ] T070 [P] [US2] 實作對話 Feed（candidate／assistant／system 三種呈現）於 `frontend/src/components/copilot/ChatFeed.tsx`
+- [X] T070 [P] [US2] 實作對話 Feed（candidate／assistant／system 三種呈現）於 `frontend/src/components/copilot/ChatFeed.tsx`
 - [X] T071 [P] [US2] 實作程式碼區塊元件與「套用至編輯器」按鈕於 `frontend/src/components/copilot/CodeBlock.tsx`——內容 MUST 完整顯示不摺疊隱藏；可存取名稱 MUST 能區分同一則回覆的不同區塊
 - [X] T072 [US2] 實作套用動作編排於 `frontend/src/store/actions.ts`，依 [ui-contracts A-05](./contracts/ui-contracts.md) 五步：忙碌 → 呼叫 apply → 取消進行中的 debounce 計時器 → 以伺服端回傳內容更新 store（編輯器經 `externalWrite` 標記同步，不觸發 `onChange`）→ 失敗時不動編輯器內容。**取消計時器先於更新 store**：兩者之間若插入計時器回呼，送出的仍是套用前的草稿
-- [ ] T073 [P] [US2] 實作輸入區（多行、Ctrl+Enter 送出、附帶程式碼按鈕、語音輸入佔位）於 `frontend/src/components/copilot/Composer.tsx`
-- [ ] T074 [P] [US2] 實作協作模式切換分段控制項於 `frontend/src/components/copilot/ModeToggle.tsx`（預設 `implement`）
+- [X] T073 [P] [US2] 實作輸入區（多行、Ctrl+Enter 送出、附帶程式碼按鈕、語音輸入佔位）於 `frontend/src/components/copilot/Composer.tsx`
+- [X] T074 [P] [US2] 實作協作模式切換分段控制項於 `frontend/src/components/copilot/ModeToggle.tsx`（預設 `implement`）
 - [X] T075 [P] [US2] 實作 AI 使用規範長駐 Banner 於 `frontend/src/components/copilot/CollaborationBanner.tsx`——MUST 說明「AI 全面開放」與「協作歷程會被記錄並作為評分依據」（憲章原則 I 的知情要求）
-- [ ] T076 [P] [US2] 實作隨當前題目變動的快捷提問 Chips 於 `frontend/src/components/copilot/QuickPromptChips.tsx`
-- [ ] T077 [US2] 組裝 AI 側欄並處理 `AI_UNAVAILABLE` 與連線中斷（轉為 Feed 中的系統訊息，不影響作答內容）於 `frontend/src/components/copilot/CopilotPanel.tsx`
+- [X] T076 [P] [US2] 實作隨當前題目變動的快捷提問 Chips 於 `frontend/src/components/copilot/QuickPromptChips.tsx`
+- [X] T077 [US2] 組裝 AI 側欄並處理 `AI_UNAVAILABLE` 與連線中斷（轉為 Feed 中的系統訊息，不影響作答內容）於 `frontend/src/components/copilot/CopilotPanel.tsx`
 
 **Checkpoint**: US1 與 US2 各自獨立運作 — 可作答、可透過 AI 實作、套用一致性與作者歸屬測試全綠
 
@@ -233,18 +235,18 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 
 ### Tests for User Story 3 ⚠️ 先寫，先失敗
 
-- [ ] T078 [P] [US3] 撰寫 `flushPendingSave()` 的失敗測試（未保存變更先落地才送出；離線時阻擋送出）於 `frontend/tests/unit/flush-pending-save.test.ts`
-- [ ] T079 [P] [US3] 撰寫聯動送出 Context 正確性的元件測試（停留 Q2 時送出的 questionId 為 Q2）於 `frontend/tests/component/cross-panel.test.tsx`
-- [ ] T080 [P] [US3] 撰寫端到端聯動情境於 `frontend/tests/e2e/cross-panel-context.spec.ts`（對應 quickstart V3）
+- [X] T078 [P] [US3] 撰寫 `flushPendingSave()` 的失敗測試（未保存變更先落地才送出；離線時阻擋送出）於 `frontend/tests/unit/flush-pending-save.test.ts`
+- [X] T079 [P] [US3] 撰寫聯動送出 Context 正確性的元件測試（停留 Q2 時送出的 questionId 為 Q2）於 `frontend/tests/component/cross-panel.test.tsx`
+- [X] T080 [P] [US3] 撰寫端到端聯動情境於 `frontend/tests/e2e/cross-panel-context.spec.ts`（對應 quickstart V3）
 
 ### Implementation for User Story 3
 
-- [ ] T081 [US3] 實作 `flushPendingSave()` 於 `frontend/src/store/persistence.ts`
+- [X] T081 [US3] 實作 `flushPendingSave()` 於 `frontend/src/store/persistence.ts`
 - [X] T082 [P] [US3] 實作 `POST /api/chat/system`（題目切換系統訊息）於 `backend/src/techinterview/api/chat.py`
-- [ ] T083 [US3] 實作切換題目動作序列（flush → setCurrentQuestion → 系統訊息 → 面板同步）於 `frontend/src/store/actions.ts`
-- [ ] T084 [P] [US3] 實作「詢問 AI 題目重點」按鈕於 `frontend/src/components/question/AskAiButton.tsx`（不接受 questionId 傳參）
-- [ ] T085 [P] [US3] 實作「傳送至 AI 側邊欄」按鈕於 `frontend/src/components/workspace/SendToAiButton.tsx`（先 flush 再送出；離線時阻擋並提示）
-- [ ] T086 [P] [US3] 實作 In-Context 狀態列（訂閱 `currentQuestion`，不接受傳參）於 `frontend/src/components/copilot/StatusBar.tsx`
+- [X] T083 [US3] 實作切換題目動作序列（flush → setCurrentQuestion → 系統訊息 → 面板同步）於 `frontend/src/store/actions.ts`
+- [X] T084 [P] [US3] 實作「詢問 AI 題目重點」按鈕於 `frontend/src/components/question/AskAiButton.tsx`（不接受 questionId 傳參）
+- [X] T085 [P] [US3] 實作「傳送至 AI 側邊欄」按鈕於 `frontend/src/components/workspace/SendToAiButton.tsx`（先 flush 再送出；離線時阻擋並提示）
+- [X] T086 [P] [US3] 實作 In-Context 狀態列（訂閱 `currentQuestion`，不接受傳參）於 `frontend/src/components/copilot/StatusBar.tsx`
 
 **Checkpoint**: 三面板完全聯動，Context 正確率可驗證
 
@@ -258,23 +260,23 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 
 ### Tests for User Story 4 ⚠️ 先寫，先失敗
 
-- [ ] T087 [P] [US4] 撰寫計時顯示與 5 分警示的失敗測試（fake timers，含 aria-live 宣告一次）於 `frontend/tests/unit/timer.test.ts`
-- [ ] T088 [P] [US4] 撰寫時鐘校時與漂移修正的失敗測試於 `frontend/tests/unit/clock-sync.test.ts`
+- [X] T087 [P] [US4] 撰寫計時顯示與 5 分警示的失敗測試（fake timers，含 aria-live 宣告一次）於 `frontend/tests/unit/timer.test.ts`
+- [X] T088 [P] [US4] 撰寫時鐘校時與漂移修正的失敗測試於 `frontend/tests/unit/clock-sync.test.ts`
 - [X] T089 [P] [US4] 撰寫提交契約測試（冪等、取最後保存草稿、終態拒寫、逾時由 `GET /api/time` 觸發、不覆寫既有終態）於 `backend/tests/contract/test_submission.py`
-- [ ] T090 [P] [US4] 撰寫提交確認對話框（取消不提交）與終態鎖定的元件測試於 `frontend/tests/component/submit-dialog.test.tsx`
-- [ ] T091 [P] [US4] 撰寫端到端計時與強制提交情境於 `frontend/tests/e2e/timer-submission.spec.ts`（對應 quickstart V4）
+- [X] T090 [P] [US4] 撰寫提交確認對話框（取消不提交）與終態鎖定的元件測試於 `frontend/tests/component/submit-dialog.test.tsx`
+- [X] T091 [P] [US4] 撰寫端到端計時與強制提交情境於 `frontend/tests/e2e/timer-submission.spec.ts`（對應 quickstart V4）
 
 ### Implementation for User Story 4
 
 - [X] T092 [US4] 實作 `deadline_at` 計算與 `GET /api/time`（逾期時主動觸發強制提交）於 `backend/src/techinterview/api/time.py`
 - [X] T093 [US4] 實作 `POST /api/submit`（冪等、取每題最新草稿、不接受 body）於 `backend/src/techinterview/api/submit.py` 與 `backend/src/techinterview/domain/submission.py`
-- [ ] T094 [P] [US4] 實作計時 hook（本地每秒遞減 + 每 30 秒校時）於 `frontend/src/lib/use-countdown.ts`
-- [ ] T095 [P] [US4] 實作倒數計時器元件（一般／警示／鎖定三態，警示只宣告一次）於 `frontend/src/components/header/CountdownTimer.tsx`
-- [ ] T096 [P] [US4] 實作提交確認對話框與成功提示於 `frontend/src/components/header/SubmitDialog.tsx`
-- [ ] T097 [US4] 實作 `isReadOnly` 鎖定（作答區、Composer、**套用按鈕**全數轉唯讀）於 `frontend/src/store/selectors.ts` 與相關元件
-- [ ] T098 [US4] 實作歸零強制提交流程（中止進行中的 SSE 串流 → 鎖定 → 提交）於 `frontend/src/store/actions.ts`
-- [ ] T099 [US4] 實作提交失敗的持續退避重試與內容保留於 `frontend/src/store/actions.ts`
-- [ ] T100 [P] [US4] 實作 Header 的品牌標識、職稱與應試者姓名於 `frontend/src/components/header/AppHeader.tsx`
+- [X] T094 [P] [US4] 實作計時 hook（本地每秒遞減 + 每 30 秒校時）於 `frontend/src/lib/use-countdown.ts`
+- [X] T095 [P] [US4] 實作倒數計時器元件（一般／警示／鎖定三態，警示只宣告一次）於 `frontend/src/components/header/CountdownTimer.tsx`
+- [X] T096 [P] [US4] 實作提交確認對話框與成功提示於 `frontend/src/components/header/SubmitDialog.tsx`
+- [X] T097 [US4] 實作 `isReadOnly` 鎖定（作答區、Composer、**套用按鈕**全數轉唯讀）於 `frontend/src/store/selectors.ts` 與相關元件
+- [X] T098 [US4] 實作歸零強制提交流程（中止進行中的 SSE 串流 → 鎖定 → 提交）於 `frontend/src/store/actions.ts`
+- [X] T099 [US4] 實作提交失敗的持續退避重試與內容保留於 `frontend/src/store/actions.ts`
+- [X] T100 [P] [US4] 實作 Header 的品牌標識、職稱與應試者姓名於 `frontend/src/components/header/AppHeader.tsx`
 
 **Checkpoint**: 場次生命週期完整 — 進入、作答、AI 協作、提交、逾時皆正確
 
@@ -288,18 +290,18 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 
 ### Tests for User Story 5 ⚠️ 先寫，先失敗
 
-- [ ] T101 [P] [US5] 撰寫 `fullscreenchange` 狀態同步的失敗測試（含 Esc 退出、瀏覽器拒絕時不做樂觀更新）於 `frontend/tests/unit/fullscreen.test.ts`
-- [ ] T102 [P] [US5] 撰寫環境事件門檻的失敗測試（< 1000ms 不記錄；非全螢幕狀態不記錄）於 `frontend/tests/unit/environment-events.test.ts`
+- [X] T101 [P] [US5] 撰寫 `fullscreenchange` 狀態同步的失敗測試（含 Esc 退出、瀏覽器拒絕時不做樂觀更新）於 `frontend/tests/unit/fullscreen.test.ts`
+- [X] T102 [P] [US5] 撰寫環境事件門檻的失敗測試（< 1000ms 不記錄；非全螢幕狀態不記錄）於 `frontend/tests/unit/environment-events.test.ts`
 - [X] T103 [P] [US5] 撰寫 `POST /api/events` 的契約測試（批次、伺服端二次過濾、**schema 不含任何判定性欄位**）於 `backend/tests/contract/test_events.py`
-- [ ] T104 [P] [US5] 撰寫端到端監測情境於 `frontend/tests/e2e/environment-monitoring.spec.ts`（對應 quickstart V5）
+- [X] T104 [P] [US5] 撰寫端到端監測情境於 `frontend/tests/e2e/environment-monitoring.spec.ts`（對應 quickstart V5）
 
 ### Implementation for User Story 5
 
 - [X] T105 [P] [US5] 實作 `POST /api/events`（僅記錄客觀事實，無判定欄位）於 `backend/src/techinterview/api/events.py`
-- [ ] T106 [P] [US5] 實作全螢幕 hook（由 `fullscreenchange` 驅動，不做樂觀更新）於 `frontend/src/lib/use-fullscreen.ts`
-- [ ] T107 [P] [US5] 實作 blur／visibilitychange 偵測與 1000ms 門檻於 `frontend/src/services/environment-monitor.ts`；監聽 MUST 僅於全螢幕狀態啟用（憲章「平台外工具監測」）
-- [ ] T108 [US5] 實作全螢幕按鈕與返回提醒 Toast（事實描述，不呈現作弊判定）於 `frontend/src/components/header/FullscreenToggle.tsx`
-- [ ] T109 [US5] 將環境事件併入離線佇列補送機制於 `frontend/src/store/persistence.ts`
+- [X] T106 [P] [US5] 實作全螢幕 hook（由 `fullscreenchange` 驅動，不做樂觀更新）於 `frontend/src/lib/use-fullscreen.ts`
+- [X] T107 [P] [US5] 實作 blur／visibilitychange 偵測與 1000ms 門檻於 `frontend/src/services/environment-monitor.ts`；監聽 MUST 僅於全螢幕狀態啟用（憲章「平台外工具監測」）
+- [X] T108 [US5] 實作全螢幕按鈕與返回提醒 Toast（事實描述，不呈現作弊判定）於 `frontend/src/components/header/FullscreenToggle.tsx`
+- [X] T109 [US5] 將環境事件併入離線佇列補送機制於 `frontend/src/store/persistence.ts`
 
 **Checkpoint**: 全部 User Story 獨立可用
 
@@ -309,16 +311,16 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 
 **Purpose**: 邊界情境、品質關卡、舊資產拆除與部署
 
-- [ ] T110 [P] 撰寫個資最小化的契約測試（`GET /api/session` 與 store 快照皆僅含 `candidateName`、`positionTitle`；回應不含 `code_change` 歷史）於 `backend/tests/contract/test_pii_minimization.py`
-- [ ] T111 [P] 實作左右／上下比例拖曳與本機偏好保存於 `frontend/src/components/layout/ResizableSplit.tsx`；左右範圍與偏好還原 MUST 夾制於 6:4–7:5，並附邊界測試
-- [ ] T112 [P] 實作全域鍵盤快捷鍵（Ctrl+S 立即保存、Ctrl+/ 說明、Esc）與可見說明面板於 `frontend/src/components/KeyboardHelp.tsx`
-- [ ] T113 [P] 實作離開前未保存變更提示（`beforeunload`）於 `frontend/src/app/AppLayout.tsx`
-- [ ] T114 [P] 實作多分頁同場次偵測（BroadcastChannel）於 `frontend/src/services/tab-guard.ts`
-- [ ] T115 [P] 實作超長貼上內容處理（256 KB 上限提示，編輯器維持可用）於 `frontend/src/components/workspace/CodeEditor.tsx`
-- [ ] T116 [P] 實作題目載入失敗、連結失效與多分頁的狀態畫面於 `frontend/src/app/ErrorStates.tsx`
+- [X] T110 [P] 撰寫個資最小化的契約測試（`GET /api/session` 與 store 快照皆僅含 `candidateName`、`positionTitle`；回應不含 `code_change` 歷史）於 `backend/tests/contract/test_pii_minimization.py`
+- [X] T111 [P] 實作左右／上下比例拖曳與本機偏好保存於 `frontend/src/components/layout/ResizableSplit.tsx`；左右範圍與偏好還原 MUST 夾制於 6:4–7:5，並附邊界測試
+- [X] T112 [P] 實作全域鍵盤快捷鍵（Ctrl+S 立即保存、Ctrl+/ 說明、Esc）與可見說明面板於 `frontend/src/components/KeyboardHelp.tsx`
+- [X] T113 [P] 實作離開前未保存變更提示（`beforeunload`）於 `frontend/src/app/AppLayout.tsx`
+- [X] T114 [P] 實作多分頁同場次偵測（BroadcastChannel）於 `frontend/src/services/tab-guard.ts`
+- [X] T115 [P] 實作超長貼上內容處理（256 KB 上限提示，編輯器維持可用）於 `frontend/src/components/workspace/CodeEditor.tsx`
+- [X] T116 [P] 實作題目載入失敗、連結失效與多分頁的狀態畫面於 `frontend/src/app/ErrorStates.tsx`
 - [X] T117 [P] 建立 axe-core 對比與 ARIA 全頁檢核於 `frontend/tests/e2e/a11y.spec.ts`（含程式碼區塊與套用按鈕的可存取名稱）
-- [ ] T118 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99）與進場耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`（**產品目標，非憲章關卡**——原則 IV 已於 v3.0.0 移除）
-- [ ] T119 拆除舊技術棧資產：`backend/` 的 TypeScript 實作、`backend/src/ai/guardrails.ts`、`postprocess.ts`、`backend/tests/guardrails/`（25 組越獄語料、11 則錄製回應、59 個測試）、`frontend/` 的 Vite 設定。**PR 描述 MUST 載明這是憲章 v3.0.0 反轉原則 I 的結果，不是品質問題**
+- [X] T118 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99）與進場耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`（**產品目標，非憲章關卡**——原則 IV 已於 v3.0.0 移除）
+- [X] T119 拆除舊技術棧資產：`backend/` 的 TypeScript 實作、`backend/src/ai/guardrails.ts`、`postprocess.ts`、`backend/tests/guardrails/`（25 組越獄語料、11 則錄製回應、59 個測試）、`frontend/` 的 Vite 設定。**PR 描述 MUST 載明這是憲章 v3.0.0 反轉原則 I 的結果，不是品質問題**
 - [ ] T120 [P] 建立 `docker/Dockerfile.frontend`（Next.js standalone）、`docker/Dockerfile.backend`（Python 3.12-slim + `uv sync --frozen`）與 `docker/compose.yaml`，執行環境對齊 Ubuntu 24.04
 - [X] T121 完成 CI 於 `.github/workflows/ci.yml`：`pull_request` 觸發，關卡為測試套件、**協作歷程記錄測試**、axe-core 檢核；憑證隔離檢查擴及 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
 - [ ] T122 [P] 改寫 `README.md`（uv / Supabase CLI / Docker 先決條件、雙供應商設定、新的品質關卡、憲章六原則）

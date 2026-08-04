@@ -12,6 +12,10 @@ export default tseslint.config(
       '**/__pycache__/**',
       '**/dist/**',
       '**/build/**',
+      // Next 的建置產物與自動產生的型別宣告
+      '**/.next/**',
+      '**/out/**',
+      '**/next-env.d.ts',
       '**/coverage/**',
       '**/playwright-report/**',
       '**/test-results/**',
@@ -66,8 +70,10 @@ export default tseslint.config(
       'no-restricted-syntax': [
         'error',
         {
-          selector: 'Identifier[name=/^(GEMINI_API_KEY|GOOGLE_API_KEY)$/]',
-          message: '模型憑證 MUST NOT 出現於前端程式碼（憲章「憑證隔離」）。',
+          // 憲章原則 V 的三組憑證：雙供應商金鑰與 Supabase service role key
+          selector:
+            'Identifier[name=/^(GEMINI_API_KEY|GOOGLE_API_KEY|ANTHROPIC_API_KEY|SUPABASE_SERVICE_ROLE_KEY)$/]',
+          message: '模型與資料庫憑證 MUST NOT 出現於前端程式碼（憲章「憑證隔離」）。',
         },
       ],
     },

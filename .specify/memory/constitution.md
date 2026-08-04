@@ -1,10 +1,11 @@
 <!--
-Sync Impact Report (v3.0.1)
-- Version change: 3.0.0 → 3.0.1
+Sync Impact Report (v3.0.2)
+- Version change: 3.0.1 → 3.0.2
 - Bump rationale: PATCH —— 僅更新「待遷移落差」表的狀態欄，無任何原則文字變動。
-  Increment 1 關閉五列（後端語言／框架、AI 編排、AI 能力定位、協作歷程歸屬、
-  CI/CD 流程），依本章節「每完成一項遷移 MUST 更新狀態欄」之要求登錄。
-  剩餘三列：Supabase、Next.js、Docker。
+  v3.0.1 關閉五列（後端語言／框架、AI 編排、AI 能力定位、協作歷程歸屬、
+  CI/CD 流程）；v3.0.2 再關閉「前端框架」（Vite → Next.js 16 App Router）。
+  依本章節「每完成一項遷移 MUST 更新狀態欄」之要求登錄。
+  剩餘兩列：Supabase、Docker——皆待本機環境備妥。
 
 --- 以下為 v3.0.0 的修訂報告，保留供追溯 ---
 - Version change: 2.1.0 → 3.0.0
@@ -229,13 +230,13 @@ AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而
 
 | 項目 | 憲章要求 | 現況 | 狀態 |
 | --- | --- | --- | --- |
-| 後端語言／框架 | Python + FastAPI，uv + venv | Python + FastAPI（142 測試通過）；舊 TypeScript 實作仍在檔案樹中但無人載入 | ✅ 已關閉（殘檔待 T119 拆除） |
+| 後端語言／框架 | Python + FastAPI，uv + venv | Python + FastAPI（142 測試通過）；舊 TypeScript 實作與圍欄語料已全數拆除 | ✅ 已關閉 |
 | AI 編排 | LangChain 統一編排 Gemini 與 Claude | 一律經 `init_chat_model`，雙供應商與退回皆已實作；AST 掃描於 CI 阻擋裸接 SDK | ✅ 已關閉（Anthropic 金鑰未配置，屬設定非程式碼） |
 | AI 能力定位 | AI 全開，可產出完整實作並套用 | 圍欄與輸出後處理已不存在，AI 輸出原樣送達 | ✅ 已關閉 |
 | 協作歷程歸屬 | 每次程式碼變更記錄作者（應試者／AI） | `code_change.source` 加 CHECK 約束於資料庫層強制；套用端點與「套用至編輯器」按鈕皆已上線，端到端驗證含資料層斷言 | ✅ 已關閉 |
 | CI/CD 流程 | PR 制，CI 通過才可合併 | `pull_request` 觸發，關卡涵蓋 pytest／vitest／協作可評估性／axe-core／憑證隔離 | ✅ 已關閉 |
 | 資料庫 | Supabase | SQLite + 自寫遷移；`queries` 層介面已設計為可抽換 | 待遷移 |
-| 前端框架 | Next.js | Vite + React SPA（自寫路由解析） | 待遷移 |
+| 前端框架 | Next.js | Next.js 16 App Router + TypeScript + Tailwind 4；遷移後 42 個 Playwright 測試一行未改全數通過 | ✅ 已關閉 |
 | 容器化 | Docker，目標 Ubuntu 24.04 | 尚未建立 Dockerfile | 待補齊 |
 
 已符合，無須變更：TypeScript（前端）、Tailwind CSS、GitHub Actions、SDD 流程。
@@ -244,7 +245,10 @@ AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而
 兩列（Increment 1，見 `specs/001-candidate-portal/plan.md`）。實作過程中「AI 編排」、
 「協作歷程歸屬」與「CI/CD 流程」三列一併關閉——前兩者是後端重寫的必然結果，
 第三列則是因為既有 CI 全部停留在 TypeScript 時代、不修就會整排失敗。
-剩餘三列（Supabase、Next.js、Docker）**維持落差狀態**，MUST 於後續增量逐一關閉；
+其後「前端框架」一列亦已關閉（不需額外環境即可執行）。
+
+剩餘兩列（Supabase、Docker）**維持落差狀態**，MUST 於後續增量關閉；
+兩者皆需先備妥本機環境（Supabase CLI 與專案金鑰、Docker），非程式碼本身的阻礙。
 本次未處理不代表默許（見本章節開頭第二條）。
 
 ### 尚未實作的功能（非落差）
@@ -298,4 +302,4 @@ AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而
 - **執行指引**：日常開發指引見 `docs/PRD.md` 與各 feature 的 `specs/` 目錄；
   兩者 MUST NOT 與本憲章牴觸。
 
-**Version**: 3.0.1 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04
+**Version**: 3.0.2 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04

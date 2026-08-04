@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { useSessionStore } from '../store/session';
 import { ApiError, fetchSession, redeemToken } from '../services/api';
@@ -15,15 +17,12 @@ import { CopilotPanel } from '../components/copilot/CopilotPanel';
 import { AppHeader } from '../components/header/AppHeader';
 
 /**
- * 路由 `/s/:token`。
+ * 場次載入的唯一入口（T032）。
  *
- * 只有一條路徑，不引入 router 套件——多一個相依換不到任何東西。
+ * `/s/[token]` 與 `/s` 兩條路徑共用本元件，差別只在有沒有 token 要兌換。
+ * 整個作答畫面都是 client component：編輯器、計時、串流與離線佇列全部依賴
+ * 瀏覽器狀態，沒有任何一部分適合在伺服端渲染。
  */
-function parseToken(pathname: string): string | null {
-  const match = /^\/s\/([^/]+)\/?$/.exec(pathname);
-  return match?.[1] ? decodeURIComponent(match[1]) : null;
-}
-
 function toLoadError(err: unknown): { code: string; message: string } {
   return err instanceof ApiError
     ? { code: err.code, message: err.message }
@@ -48,6 +47,8 @@ async function loadSession(token: string | null): Promise<void> {
     const payload = await fetchSession();
     useSessionStore.getState().loadSession(payload);
     if (token !== null) {
+      // Next 自 14.1 起會同步 history API 的呼叫至 router 狀態，
+      // 因此不需要 router.replace()——後者會重新掛載頁面並多打一次 fetchSession。
       window.history.replaceState({}, '', '/s');
     }
   } catch (err) {
@@ -55,11 +56,10 @@ async function loadSession(token: string | null): Promise<void> {
   }
 }
 
-export function AppRoutes() {
+export function SessionGate({ token }: { token: string | null }) {
   const phase = useSessionStore((s) => s.phase);
   const loadError = useSessionStore((s) => s.loadError);
   const sessionId = useSessionStore((s) => s.session?.id ?? null);
-  const [token] = useState(() => parseToken(window.location.pathname));
   const [duplicateTab, setDuplicateTab] = useState(false);
 
   useEffect(() => {
