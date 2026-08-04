@@ -25,6 +25,15 @@ const envSchema = z.object({
   GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
 
   AI_STREAM_TIMEOUT_MS: z.coerce.number().int().positive().default(20_000),
+
+  /**
+   * 以腳本化的假回應取代真實模型，供 e2e 端到端驗證串流與圍欄。
+   * 在 production 一律無效（見 `isAiFake`）——這個開關不得成為關掉模型的後門。
+   */
+  AI_FAKE: z
+    .string()
+    .default('false')
+    .transform((v) => v === 'true' || v === '1'),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -83,7 +92,13 @@ export function resetEnvCache(): void {
   cached = null;
 }
 
+/** 是否使用腳本化的假回應。production 一律關閉，不接受任何環境變數覆寫。 */
+export function isAiFake(): boolean {
+  const env = getEnv();
+  return env.NODE_ENV !== 'production' && env.AI_FAKE;
+}
+
 /** AI 功能是否可用；未設定金鑰時路由層回 `AI_UNAVAILABLE` 而非崩潰。 */
 export function isAiConfigured(): boolean {
-  return getEnv().GEMINI_API_KEY.length > 0;
+  return isAiFake() || getEnv().GEMINI_API_KEY.length > 0;
 }

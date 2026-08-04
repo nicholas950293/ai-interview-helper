@@ -7,6 +7,7 @@ import { Toaster } from '../components/ui/toast';
 import { QuestionTabs } from '../components/question/QuestionTabs';
 import { QuestionContent } from '../components/question/QuestionContent';
 import { AnswerWorkspace } from '../components/workspace/AnswerWorkspace';
+import { CopilotPanel } from '../components/copilot/CopilotPanel';
 import { useSession } from '../store/selectors';
 
 /**
@@ -99,7 +100,7 @@ function PortalScreen() {
           </div>
         }
         answerPanel={<AnswerWorkspace />}
-        copilotPanel={<CopilotPlaceholder />}
+        copilotPanel={<CopilotPanel />}
       />
       <Toaster />
     </>
@@ -115,15 +116,6 @@ function AppHeader() {
       <span className="font-semibold text-text-primary">TechInterview Pro</span>
       <span className="text-text-secondary">{session?.positionTitle}</span>
       <span className="ml-auto text-text-secondary">{session?.candidateName}</span>
-    </div>
-  );
-}
-
-/** AI 側欄由 US2 接上。 */
-function CopilotPlaceholder() {
-  return (
-    <div className="flex h-full items-center justify-center p-6 text-center text-sm text-text-muted">
-      AI 助教即將在此提供引導。
     </div>
   );
 }

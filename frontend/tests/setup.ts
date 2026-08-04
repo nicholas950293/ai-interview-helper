@@ -21,6 +21,11 @@ if (!globalThis.matchMedia) {
   })) as unknown as typeof globalThis.matchMedia;
 }
 
+// jsdom 未實作捲動 API；Feed 自動捲到底的行為由 e2e 驗證。
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = vi.fn();
+}
+
 if (!globalThis.ResizeObserver) {
   globalThis.ResizeObserver = class {
     observe() {}

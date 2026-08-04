@@ -293,7 +293,9 @@ function toPublicChatMessage(row: ChatMessageRow): PublicChatMessage {
 
 export function listChatMessages(sessionId: string, db: Db = getDb()): PublicChatMessage[] {
   const rows = db
-    .prepare('SELECT * FROM chat_message WHERE session_id = ? ORDER BY created_at ASC, id ASC')
+    // rowid 是插入順序的單調遞增值；用 id 當 tiebreaker 會失敗——
+    // 同一毫秒插入的提問與回覆 created_at 相同，隨機 UUID 的排序等於擲骰子。
+    .prepare('SELECT * FROM chat_message WHERE session_id = ? ORDER BY rowid ASC')
     .all(sessionId) as ChatMessageRow[];
   return rows.map(toPublicChatMessage);
 }

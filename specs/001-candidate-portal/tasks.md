@@ -112,28 +112,28 @@ Web app 雙套件配置：`frontend/src/`、`backend/src/`（見 plan.md 的 Str
 
 ### Tests for User Story 2 ⚠️ 先寫，先失敗
 
-- [ ] T045 [P] [US2] 建立越獄語料（≥20 組：直接索取、偽裝除錯、角色扮演、分段索取、翻譯繞道）於 `backend/tests/guardrails/fixtures/jailbreak-prompts.json`
-- [ ] T046 [P] [US2] 撰寫圍欄後處理的失敗測試（完整函式／類別偵測、長度門檻、攔截後改寫）於 `backend/tests/guardrails/postprocess.test.ts`
-- [ ] T047 [P] [US2] 撰寫兩種引導模式皆受圍欄約束的測試於 `backend/tests/guardrails/modes.test.ts`
-- [ ] T048 [P] [US2] 撰寫 `POST /api/chat` 與 SSE 串流的契約測試（token/done/error 事件）於 `backend/tests/contract/chat.test.ts`
-- [ ] T049 [P] [US2] 撰寫對話 Feed 串流呈現與送出按鈕忙碌態的元件測試於 `frontend/tests/component/chat-feed.test.tsx`
-- [ ] T050 [P] [US2] 撰寫端到端 AI 引導情境於 `frontend/tests/e2e/ai-guidance.spec.ts`（對應 quickstart V2）
+- [X] T045 [P] [US2] 建立越獄語料（≥20 組：直接索取、偽裝除錯、角色扮演、分段索取、翻譯繞道）於 `backend/tests/guardrails/fixtures/jailbreak-prompts.json`
+- [X] T046 [P] [US2] 撰寫圍欄後處理的失敗測試（完整函式／類別偵測、長度門檻、攔截後改寫）於 `backend/tests/guardrails/postprocess.test.ts`
+- [X] T047 [P] [US2] 撰寫兩種引導模式皆受圍欄約束的測試於 `backend/tests/guardrails/modes.test.ts`
+- [X] T048 [P] [US2] 撰寫 `POST /api/chat` 與 SSE 串流的契約測試（token/done/error 事件）於 `backend/tests/contract/chat.test.ts`
+- [X] T049 [P] [US2] 撰寫對話 Feed 串流呈現與送出按鈕忙碌態的元件測試於 `frontend/tests/component/chat-feed.test.tsx`
+- [X] T050 [P] [US2] 撰寫端到端 AI 引導情境於 `frontend/tests/e2e/ai-guidance.spec.ts`（對應 quickstart V2）
 
 ### Implementation for User Story 2
 
-- [ ] T051 [US2] 撰寫 System Prompt 圍欄常數（固定圍欄段落 + 可變 verbosity 段落）於 `backend/src/ai/guardrails.ts`
-- [ ] T052 [US2] 實作 Gemini 呼叫與串流於 `backend/src/ai/gemini.ts`（金鑰僅由 `env.ts` 取得，前端輸入一律作為 user turn）
-- [ ] T053 [US2] 實作輸出後處理攔截層（命中則以引導式訊息取代並記錄 `guardrailTriggered`）於 `backend/src/ai/postprocess.ts`
-- [ ] T054 [US2] 實作 `POST /api/chat` 與 `GET /api/chat/stream/:streamId` 於 `backend/src/routes/chat.ts`
-- [ ] T055 [P] [US2] 實作 `PATCH /api/session/guidance-mode` 於 `backend/src/routes/session.ts`
-- [ ] T056 [US2] 實作 ChatMessage 持久化（含 `attachedCode`、`guidanceMode`、`guardrailTriggered`）於 `backend/src/db/queries.ts`
-- [ ] T057 [P] [US2] 實作 SSE 用戶端與批次套用 token（避免每 token 全域更新）於 `frontend/src/services/chat-stream.ts`
-- [ ] T058 [P] [US2] 實作對話 Feed（candidate／assistant／system 三種呈現）於 `frontend/src/components/copilot/ChatFeed.tsx`
-- [ ] T059 [P] [US2] 實作輸入區（多行、Ctrl+Enter 送出、附帶程式碼按鈕、語音輸入佔位圖示）於 `frontend/src/components/copilot/Composer.tsx`
-- [ ] T060 [P] [US2] 實作引導模式切換分段控制項於 `frontend/src/components/copilot/ModeToggle.tsx`
-- [ ] T061 [P] [US2] 實作 AI 使用規範長駐 Banner 於 `frontend/src/components/copilot/GuardrailBanner.tsx`
-- [ ] T073 [P] [US2] 實作隨當前題目變動的快捷提問 Chips 於 `frontend/src/components/copilot/QuickPromptChips.tsx`（US2 驗收情境 5 / FR-013 所需，故置於本階段；ID 沿用不重編）
-- [ ] T062 [US2] 組裝 AI 側欄並處理 `AI_UNAVAILABLE` 錯誤與重試（不影響作答內容）於 `frontend/src/components/copilot/CopilotPanel.tsx`
+- [X] T051 [US2] 撰寫 System Prompt 圍欄常數（固定圍欄段落 + 可變 verbosity 段落）於 `backend/src/ai/guardrails.ts`
+- [X] T052 [US2] 實作 Gemini 呼叫與串流於 `backend/src/ai/gemini.ts`（金鑰僅由 `env.ts` 取得，前端輸入一律作為 user turn）
+- [X] T053 [US2] 實作輸出後處理攔截層（命中則以引導式訊息取代並記錄 `guardrailTriggered`）於 `backend/src/ai/postprocess.ts`
+- [X] T054 [US2] 實作 `POST /api/chat` 與 `GET /api/chat/stream/:streamId` 於 `backend/src/routes/chat.ts`
+- [X] T055 [P] [US2] 實作 `PATCH /api/session/guidance-mode` 於 `backend/src/routes/session.ts`
+- [X] T056 [US2] 實作 ChatMessage 持久化（含 `attachedCode`、`guidanceMode`、`guardrailTriggered`）於 `backend/src/db/queries.ts`
+- [X] T057 [P] [US2] 實作 SSE 用戶端與批次套用 token（避免每 token 全域更新）於 `frontend/src/services/chat-stream.ts`
+- [X] T058 [P] [US2] 實作對話 Feed（candidate／assistant／system 三種呈現）於 `frontend/src/components/copilot/ChatFeed.tsx`
+- [X] T059 [P] [US2] 實作輸入區（多行、Ctrl+Enter 送出、附帶程式碼按鈕、語音輸入佔位圖示）於 `frontend/src/components/copilot/Composer.tsx`
+- [X] T060 [P] [US2] 實作引導模式切換分段控制項於 `frontend/src/components/copilot/ModeToggle.tsx`
+- [X] T061 [P] [US2] 實作 AI 使用規範長駐 Banner 於 `frontend/src/components/copilot/GuardrailBanner.tsx`
+- [X] T073 [P] [US2] 實作隨當前題目變動的快捷提問 Chips 於 `frontend/src/components/copilot/QuickPromptChips.tsx`（US2 驗收情境 5 / FR-013 所需，故置於本階段；ID 沿用不重編）
+- [X] T062 [US2] 組裝 AI 側欄並處理 `AI_UNAVAILABLE` 錯誤與重試（不影響作答內容）於 `frontend/src/components/copilot/CopilotPanel.tsx`
 
 **Checkpoint**: US1 與 US2 各自獨立運作 — 可作答、可對話、圍欄測試全綠
 
