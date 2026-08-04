@@ -52,7 +52,7 @@ PORT=8787
 GOOGLE_API_KEY=
 ANTHROPIC_API_KEY=
 AI_PROVIDER=google_genai            # 或 anthropic
-AI_MODEL=gemini-2.5-flash
+AI_MODEL=gemini-3.6-flash
 ```
 
 > 下列憑證 MUST NOT 出現在 `frontend/` 的任何檔案或環境變數中（憲章「憑證隔離」）：
@@ -231,7 +231,8 @@ npm run perf:editor
 | 現象 | 可能原因 | 處理 |
 | --- | --- | --- |
 | 開啟連結顯示「連結已失效」 | seed 的 token 已被提交過 | 重跑 `npm run seed` 取得新連結 |
-| AI 側欄一直顯示錯誤 | 兩個供應商的金鑰皆未設或額度用罄 | 檢查 `backend/.env` 與後端日誌；LangChain 的 fallback 已先試過次要供應商 |
+| AI 側欄一直顯示錯誤 | 金鑰未設、額度用罄，或**模型名稱已失效** | 看後端日誌的 `AI 串流失敗` 例外——供應商的 404／401／429 在畫面上都是同一句「稍後再試」，只有日誌分得出來。Google 的模型會下架，`gemini-2.5-flash` 已對新金鑰回 404 |
+| 想確認金鑰能用哪些模型 | — | `uv run python -c "from google import genai; from techinterview.core.config import get_settings; [print(m.name) for m in genai.Client(api_key=get_settings().google_api_key).models.list()]"` |
 | 「套用至編輯器」沒有反應 | 場次已進入終態，或該訊息不屬於本場次 | 檢查回應的錯誤碼；終態下按鈕應為停用 |
 | 套用後內容與畫面上的不一致 | 編輯器的外部寫入沒有帶上 `externalWrite` 標記，因而觸發了 `onChange` | 這會讓套用被當成應試者自行輸入、記為 `candidate`，同時破壞 SC-004 與作者歸屬，屬憲章原則 I 違規，須修正 |
 | `npm run seed -- --duration 6m` 沒有效果 | 該 script 被改成巢狀的 `npm run` | 根目錄的 script MUST 為直接指令，否則 `--` 之後的參數會被外層 npm 吃掉 |

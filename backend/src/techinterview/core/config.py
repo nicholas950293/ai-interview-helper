@@ -42,7 +42,7 @@ class Settings(BaseSettings):
     google_api_key: str = ""
     anthropic_api_key: str = ""
     ai_provider: Provider = "google_genai"
-    ai_model: str = "gemini-2.5-flash"
+    ai_model: str = "gemini-3.6-flash"
     # 主要供應商不可用時的退回對象；留空表示不退回。
     ai_fallback_provider: Provider | None = None
     ai_fallback_model: str = ""
@@ -93,7 +93,7 @@ def make_test_settings(**overrides: object) -> Settings:
         "database_path": ":memory:",
         "session_secret": secrets.token_hex(32),
         "ai_provider": "google_genai",
-        "ai_model": "gemini-2.5-flash",
+        "ai_model": "gemini-3.6-flash",
     }
     defaults.update(overrides)
     return Settings(**defaults)  # type: ignore[arg-type]

@@ -67,7 +67,7 @@ npm run seed -- --duration 6m
 | `GOOGLE_API_KEY`                            | Gemini 金鑰。**MUST NOT 出現在 `frontend/` 的任何檔案或環境變數中**         |
 | `ANTHROPIC_API_KEY`                         | Claude 金鑰，同上                                                           |
 | `AI_PROVIDER`                               | 主要供應商：`google_genai` 或 `anthropic`                                   |
-| `AI_MODEL`                                  | 預設 `gemini-2.5-flash`                                                     |
+| `AI_MODEL`                                  | 預設 `gemini-3.6-flash`                                                     |
 | `AI_FALLBACK_PROVIDER`／`AI_FALLBACK_MODEL` | 主要供應商不可用時的退回對象，兩者皆填才生效                                |
 | `AI_FAKE`                                   | 以腳本化假回應取代真實模型；**production 一律無效**，不得成為關掉模型的後門 |
 

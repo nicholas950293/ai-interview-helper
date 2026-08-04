@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 
@@ -17,6 +18,8 @@ from techinterview.core.errors import AppError, ErrorCode
 from techinterview.core.schemas import CollaborationMode, SessionStatus
 from techinterview.db import queries
 from techinterview.domain.session_state import is_terminal
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -122,9 +125,28 @@ async def stream_response(pending: PendingStream) -> AsyncIterator[str]:
         )
 
     except AppError as exc:
+        logger.warning(
+            "AI 串流中止：%s（session=%s message=%s provider=%s model=%s）",
+            exc.code.value,
+            pending.session_id,
+            pending.message_id,
+            settings_choice.provider,
+            settings_choice.model,
+        )
         queries.update_chat_message_content(pending.message_id, "".join(buffer))
         yield sse("error", {"code": exc.code.value, "message": exc.message})
-    except Exception:  # noqa: BLE001
+    except Exception:
+        # 應試者只會看到一句「稍後再試」，維運端必須拿得到真正的原因。
+        # 這裡若不記錄，供應商回的 404／額度用罄／金鑰失效在日誌上完全等價，
+        # 只能靠人工重現才能分辨——實測踩過一次（模型名稱過期）。
+        logger.exception(
+            "AI 串流失敗（session=%s message=%s provider=%s model=%s 已送出 %d 個 token）",
+            pending.session_id,
+            pending.message_id,
+            settings_choice.provider,
+            settings_choice.model,
+            len(buffer),
+        )
         queries.update_chat_message_content(pending.message_id, "".join(buffer))
         yield sse(
             "error",

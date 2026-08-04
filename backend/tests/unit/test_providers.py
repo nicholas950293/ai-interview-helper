@@ -28,10 +28,10 @@ def _patch_settings(monkeypatch, **overrides):
 
 class TestConfigDrivenSwitching:
     def test_default_provider_from_settings(self, monkeypatch):
-        _patch_settings(monkeypatch, ai_provider="google_genai", ai_model="gemini-2.5-flash")
+        _patch_settings(monkeypatch, ai_provider="google_genai", ai_model="gemini-3.6-flash")
         choice = providers.resolve_model_choice()
         assert choice.provider == "google_genai"
-        assert choice.model == "gemini-2.5-flash"
+        assert choice.model == "gemini-3.6-flash"
 
     def test_switching_provider_needs_no_code_change(self, monkeypatch):
         """只改設定就換供應商——業務邏輯完全不動。"""
