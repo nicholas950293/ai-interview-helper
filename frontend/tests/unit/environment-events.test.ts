@@ -8,7 +8,7 @@ import {
 import { useSessionStore } from '../../src/store/session';
 import { clearEnvironmentQueue, readEnvironmentQueue } from '../../src/store/persistence';
 import { loadTestSession } from '../helpers/store';
-import * as api from '../../src/services/api';
+import type * as api from '../../src/services/api';
 
 vi.mock('../../src/services/api', async () => {
   const actual = await vi.importActual<typeof api>('../../src/services/api');
