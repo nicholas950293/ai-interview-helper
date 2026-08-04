@@ -23,7 +23,7 @@
     "test:perf": "npm run test:perf --workspace frontend",
     "seed": "npm run db:seed",
     "perf:editor": "npm run test:perf --workspace frontend",
-    "dev:backend": "cd backend && uv run uvicorn techinterview.main:app --reload --port 8787",
+    "dev:backend": "cd backend && uv run uvicorn techinterview.main:app --reload --reload-dir src --port 8787",
     "dev:frontend": "npm run dev --workspace frontend",
     "test:backend": "cd backend && uv run pytest",
     "test:frontend": "npm run test --workspace frontend",

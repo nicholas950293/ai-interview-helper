@@ -16,23 +16,17 @@ export function seedSession(options: { durationSec?: number } = {}): {
   url: string;
 } {
   const sessionId = `sess-e2e-${randomBytes(4).toString('hex')}`;
-  // 直接指定 workspace：走根目錄的 db:seed 別名時，`--` 之後的參數會被外層 npm
-  // 當成自己的旗標吃掉，seed 就會退回預設 sessionId 並互相覆寫。
-  const args = [
-    'run',
-    'db:seed',
-    '--workspace',
-    'backend',
-    '--silent',
-    '--',
-    '--session-id',
-    sessionId,
-  ];
+  // 後端已改為 Python + uv（Increment 1）；seed 由 uv 執行，不再是 npm workspace。
+  const args = ['run', 'python', '-m', 'techinterview.db.seed', '--session-id', sessionId];
   if (options.durationSec !== undefined) {
     args.push('--duration', `${options.durationSec}s`);
   }
 
-  const output = execFileSync('npm', args, { cwd: REPO_ROOT, encoding: 'utf8' });
+  const output = execFileSync('uv', args, {
+    cwd: resolve(REPO_ROOT, 'backend'),
+    encoding: 'utf8',
+    env: { ...process.env, PATH: `${process.env.HOME}/.local/bin:${process.env.PATH}` },
+  });
   const match = /邀請連結\s*:\s*(\S+)/.exec(output);
   if (!match?.[1]) {
     throw new Error(`seed 未輸出邀請連結：\n${output}`);

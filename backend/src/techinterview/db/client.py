@@ -8,13 +8,20 @@ Increment 1 以 SQLite 實作。憲章原則 V 要求 Supabase，屬已記錄的
 from __future__ import annotations
 
 import sqlite3
+import threading
 from pathlib import Path
 
 from techinterview.core.config import BACKEND_ROOT, get_settings
 
 MIGRATIONS_DIR = Path(__file__).resolve().parent / "migrations"
 
-_connection: sqlite3.Connection | None = None
+# FastAPI 的同步端點跑在 threadpool，多個執行緒會同時進來。
+# 共用單一 sqlite3 連線會讓 commit 互相競態（實測會出現
+# "cannot commit - no transaction is active"），因此檔案型資料庫改為
+# 每個執行緒各自持有連線；WAL + busy_timeout 負責跨連線的協調。
+# `set_db()` 注入的連線（測試用的 :memory:）仍為共用——測試是單執行緒。
+_injected: sqlite3.Connection | None = None
+_local = threading.local()
 
 
 def _open(path: str) -> sqlite3.Connection:
@@ -35,23 +42,30 @@ def _open(path: str) -> sqlite3.Connection:
 
 
 def get_db() -> sqlite3.Connection:
-    global _connection
-    if _connection is None:
-        _connection = _open(get_settings().database_path)
-    return _connection
+    if _injected is not None:
+        return _injected
+    conn = getattr(_local, "conn", None)
+    if conn is None:
+        conn = _open(get_settings().database_path)
+        _local.conn = conn
+    return conn
 
 
 def set_db(conn: sqlite3.Connection) -> None:
     """測試用：以獨立的記憶體資料庫取代預設連線。"""
-    global _connection
-    _connection = conn
+    global _injected
+    _injected = conn
 
 
 def close_db() -> None:
-    global _connection
-    if _connection is not None:
-        _connection.close()
-        _connection = None
+    global _injected
+    if _injected is not None:
+        _injected.close()
+        _injected = None
+    conn = getattr(_local, "conn", None)
+    if conn is not None:
+        conn.close()
+        _local.conn = None
 
 
 def _ensure_migrations_table(conn: sqlite3.Connection) -> None:

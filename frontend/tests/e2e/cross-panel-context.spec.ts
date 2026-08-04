@@ -70,7 +70,7 @@ test.describe('cross-panel context', () => {
 
     await page.getByLabel('向 AI 助教提問').fill('第一題的問題');
     await page.getByRole('button', { name: '送出' }).click();
-    await expect(page.getByText(/需要記住的到底是/)).toBeVisible();
+    await expect(page.getByText(/function solve/).first()).toBeVisible();
 
     await page.getByRole('tab').nth(1).click();
 
@@ -88,11 +88,11 @@ test.describe('cross-panel context', () => {
     const { url } = seedSession();
     await enterSession(page, url);
 
-    await expect(page.getByRole('button', { name: '這個資料結構選得好嗎？' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '分析時間複雜度' })).toBeVisible();
 
     await page.getByRole('tab').nth(1).click();
 
     await expect(page.getByRole('button', { name: '如何達成 O(1)？' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '這個資料結構選得好嗎？' })).toBeHidden();
+    await expect(page.getByRole('button', { name: '分析時間複雜度' })).toBeHidden();
   });
 });

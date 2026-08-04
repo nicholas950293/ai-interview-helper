@@ -43,9 +43,9 @@ export default defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: 'npm run dev --workspace backend & npm run dev --workspace frontend',
+        command: 'npm run dev:backend & npm run dev:frontend',
         // e2e 以腳本化的假回應驗證串流與圍欄，不需要（也不該需要）真實金鑰。
-        env: { AI_FAKE: '1' },
+        env: { AI_FAKE: 'true', PATH: `${process.env.HOME}/.local/bin:${process.env.PATH}` },
         url: 'http://localhost:5173',
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,
