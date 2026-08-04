@@ -79,7 +79,7 @@ export function AppLayout({ header, questionPanel, answerPanel, copilotPanel }: 
         </div>
 
         {/* 右欄：AI 側欄 */}
-        <aside aria-label="AI 助教" className="card min-h-0 overflow-hidden">
+        <aside aria-label="AI 協作" className="card min-h-0 overflow-hidden">
           {copilotPanel}
         </aside>
       </main>

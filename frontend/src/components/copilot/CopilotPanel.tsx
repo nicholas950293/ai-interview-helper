@@ -19,7 +19,7 @@ export function CopilotPanel() {
       <StatusBar />
 
       <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
-        <span className="text-sm font-medium text-text-primary">AI 助教</span>
+        <span className="text-sm font-medium text-text-primary">AI 協作</span>
         <ModeToggle />
       </div>
 
