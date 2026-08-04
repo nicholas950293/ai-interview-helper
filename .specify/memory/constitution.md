@@ -1,5 +1,32 @@
 <!--
 Sync Impact Report
+- Version change: 2.1.0 → 3.0.0
+- Bump rationale: MAJOR —— 原則 I（標註 NON-NEGOTIABLE）被不相容地重新定義。
+  產品定位由「評估徒手實作能力」改為「評估透過 AI 實作的能力」，
+  舊原則的每一條約束（禁止完整解答、prompt 圍欄、越獄測試）皆反轉或失效。
+
+- Redefined principles:
+  - I. AI 護欄不可妥協 → I. AI 協作可評估性不可妥協
+    · AI MUST 能輸出完整實作並可套用；MUST NOT 再以圍欄限制輸出
+    · 不可妥協之處移轉為「可評估性」：對話留存 + 程式碼變更的作者歸屬
+    · 新增 MUST：每次程式碼變更記錄來源（應試者自行輸入／套用 AI 產出）
+
+- Modified sections:
+  - 公正性與安全要求 —— 「防作弊監測」更名為「平台外工具監測」並改寫其意義
+    （平台內 AI 全開後，監測的是無法被記錄的平台外協作）；
+    「對話留存」擴充為「協作歷程留存」，納入作者歸屬並明訂為主要評分材料。
+  - 開發流程與品質關卡 —— CI 關卡由「圍欄越獄測試」改為「協作歷程記錄測試」。
+  - 生效範圍與遷移狀態 —— 落差表新增兩列：AI 能力定位（待拆除圍欄）、
+    協作歷程歸屬（待新增作者欄位）。
+
+- Downstream impact: specs/001-candidate-portal/ 的 US2、FR-010 ~ FR-015、SC-004
+  全數與新原則 I 牴觸，MUST 於後續的 spec 修訂中同步改寫。
+  既有的 backend/src/ai/guardrails.ts、postprocess.ts、tests/guardrails/ 待拆除。
+
+- Deferred TODOs: 評分依據的細部功能（需求拆解品質、AI 錯誤指認、追問切中度、
+  本人理解驗證）由產品負責人後續追加，本次不納入。
+
+Prior report (2.1.0):
 - Version change: 2.0.0 → 2.1.0
 - Bump rationale: MINOR —— 新增「生效範圍與遷移狀態」章節，記錄產品負責人對
   v2.0.0 六項技術選型衝突的裁決。原則本身無移除、無不相容重新定義。
@@ -53,22 +80,25 @@ Prior versions:
 
 ## Core Principles
 
-### I. AI 護欄不可妥協 (AI Guardrails, NON-NEGOTIABLE)
+### I. AI 協作可評估性不可妥協 (Assessable AI Collaboration, NON-NEGOTIABLE)
 
-AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
+本平台評估的是「應試者能否透過 AI 完成實作」，不是「能否徒手寫出程式碼」。
+AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而在於協作過程可被評估。
 
-- AI 回應 MUST NOT 包含可直接複製貼上、即可通過該題單元測試的完整解答實作。
-- 每一條送往模型的請求 MUST 附帶系統層級圍欄 (System Prompt Guardrails)；圍欄
-  內容 MUST 存在於版本控制中，MUST NOT 由前端可竄改的輸入組出。
-- 圍欄 MUST 有自動化測試覆蓋：至少涵蓋「直接索取完整程式碼」「偽裝成除錯請求
-  索取完整程式碼」兩類越獄輸入，斷言回應不含完整解法。
-- 「輕度引導」與「深入討論」兩種模式 MAY 調整回覆詳細度，但兩者 MUST 同樣受上述
-  圍欄約束；模式切換 MUST NOT 成為繞過圍欄的途徑。
-- 圍欄 MUST 對所有 GenAI 供應商一致生效（見原則 V）；切換或並用不同模型
-  MUST NOT 成為繞過圍欄的途徑。
+- AI MUST 能輸出完整、可執行的實作，並 MUST 提供將其套用至作答內容的途徑。
+  MUST NOT 以 prompt 圍欄、輸出後處理或任何其他方式限制 AI 產出完整解答。
+- 完整對話歷程 MUST 留存，且每一則訊息 MUST 可追溯到當時的題目與程式碼狀態。
+- 每一次程式碼變更 MUST 記錄其來源：應試者自行輸入、或套用 AI 產出。
+  兩者 MUST NOT 混為一談——評分需要能區分「誰寫的」。
+- 應試者 MUST 能看見 AI 的完整輸出，MUST NOT 有任何隱藏、裁切或改寫。
+- 上述記錄 MUST 有自動化測試覆蓋：至少涵蓋「AI 產出被完整套用」與
+  「作者歸屬正確」兩類斷言。
+- 本原則 MUST 對所有 GenAI 供應商一致生效（見原則 V）。
 
-**理由**：平台的評估效力完全建立在「AI 幫助思考、而非代寫」之上。一旦圍欄失效，
-面試分數即失去意義，產品的核心價值歸零。
+**理由**：既然評估對象是「透過 AI 實作的能力」，限制 AI 就等於讓題目失真。
+取而代之的不可妥協之處是可評估性——若對話與程式碼演進沒有被完整記錄且可歸屬，
+面試分數同樣失去意義。這是「AI 幫助思考、而非代寫」的舊前提被替換後，
+唯一還能撐住評估效力的東西。
 
 ### II. Context 單一事實來源 (Single Source of Truth for Context)
 
@@ -84,10 +114,10 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 
 ### III. 互動邏輯測試先行 (Test-First for Interaction Logic)
 
-計時、自動儲存、提交、圍欄、跨組件聯動屬於關鍵路徑。
+計時、自動儲存、提交、AI 產出的套用與作者歸屬、跨組件聯動屬於關鍵路徑。
 
 - 上述關鍵路徑的每一項行為 MUST 先有失敗的測試，才寫實作 (Red-Green-Refactor)。
-- 計時歸零強制提交、Debounce 儲存、防作弊事件記錄 MUST 有測試以假時鐘驗證邊界，
+- 計時歸零強制提交、Debounce 儲存、平台外工具事件記錄 MUST 有測試以假時鐘驗證邊界，
   MUST NOT 僅以手動點擊驗收。
 - 純視覺樣式調整 MAY 免除單元測試，但仍 MUST 通過既有回歸測試。
 
@@ -143,7 +173,8 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 - 所有模型呼叫與編排 MUST 透過 LangChain 進行；MUST NOT 於應用程式碼中
   直接裸接個別供應商的 SDK。
 - 供應商的切換或組合 MUST 可透過設定完成，MUST NOT 需要改動業務邏輯。
-- 原則 I 的圍欄 MUST 實作於 LangChain 的共用層，使其對所有供應商一致生效。
+- 原則 I 的協作歷程記錄 MUST 實作於 LangChain 的共用層，
+  使對話留存與作者歸屬對所有供應商一致生效。
 
 **認證**
 
@@ -197,6 +228,8 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 | 前端框架 | Next.js | Vite + React SPA（自寫路由解析） | 待遷移 |
 | 容器化 | Docker，目標 Ubuntu 24.04 | 尚未建立 Dockerfile | 待補齊 |
 | CI/CD 流程 | PR 制，CI 通過才可合併 | GitHub Actions 已就位，但僅於 `push: main` 觸發 | 待調整 |
+| AI 能力定位 | AI 全開，可產出完整實作並套用 | 三層圍欄阻擋完整解答；25 組越獄語料、59 個圍欄測試 | 待拆除（原則 I 於 v3.0.0 反轉） |
+| 協作歷程歸屬 | 每次程式碼變更記錄作者（應試者／AI） | 僅記錄對話，程式碼變更無作者欄位 | 待新增 |
 
 已符合，無須變更：TypeScript（前端）、Tailwind CSS、GitHub Actions、SDD 流程。
 
@@ -211,12 +244,15 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 
 ## 公正性與安全要求 (Fairness & Security Requirements)
 
-- **防作弊監測**：全螢幕模式下 MUST 監聽 `blur` 與 `visibilitychange`；每次異常切換
+- **平台外工具監測**：全螢幕模式下 MUST 監聽 `blur` 與 `visibilitychange`；每次異常切換
   MUST 記錄時間戳與持續時間並提示應試者。記錄 MUST 為事實描述，MUST NOT 由前端自行
-  判定作弊結論。
+  判定作弊結論。平台內的 AI 全面開放後，此監測的意義是掌握「是否改用平台外的工具」——
+  那部分的協作過程無法被記錄，也就無法被評估。
 - **提交不可逆**：計時歸零 MUST 鎖定所有輸入並強制提交。強制提交 MUST 使用最後一次
   成功儲存的草稿，MUST NOT 因網路失敗而丟棄作答內容。
-- **對話留存**：面試者與 AI 的完整對話 MUST 留存，供 Phase 4 評分後台檢視。
+- **協作歷程留存**：應試者與 AI 的完整對話、以及每一次程式碼變更的作者歸屬
+  MUST 留存，供 Phase 4 評分後台檢視。這是本平台的主要評分材料，
+  MUST NOT 因任何理由被裁切或匿名化（見原則 I）。
 - **資料最小化**：前端 MUST 僅顯示必要的個人資訊（姓名與職稱）；其他個資 MUST NOT
   進入前端狀態或送入模型 Context。
 - **憑證隔離**：下列憑證 MUST NOT 出現在前端程式碼或建置產物中——
@@ -226,8 +262,8 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 ## 開發流程與品質關卡 (Development Workflow & Quality Gates)
 
 - 所有變更 MUST 經 Pull Request；MUST NOT 直接推送至 `main`。
-- PR MUST 通過 GitHub Actions 的 CI 檢查才能合併：測試套件、圍欄越獄測試、
-  無障礙對比檢查。任一關卡失敗 MUST NOT 合併。
+- PR MUST 通過 GitHub Actions 的 CI 檢查才能合併：測試套件、協作歷程記錄測試
+  （原則 I 的可評估性斷言）、無障礙對比檢查。任一關卡失敗 MUST NOT 合併。
 - PR 描述 MUST 聲明其涉及的原則並確認未違反。
 - Roadmap 分期 MUST 被尊重：Phase 1 為前端體驗與模擬互動；真實沙盒執行 (Phase 3)
   與評分後台 (Phase 4) MUST NOT 提前混入 Phase 1 範圍，除非修訂本憲章。
@@ -248,4 +284,4 @@ AI Co-Pilot 的定位是蘇格拉底式引導者，不是解題器。
 - **執行指引**：日常開發指引見 `docs/PRD.md` 與各 feature 的 `specs/` 目錄；
   兩者 MUST NOT 與本憲章牴觸。
 
-**Version**: 2.1.0 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04
+**Version**: 3.0.0 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04
