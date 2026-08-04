@@ -61,6 +61,15 @@ jobs:
   a11y:
     name: 'Gate 3 — axe-core 檢核'
     runs-on: ubuntu-latest
+    # backend/.env 不進版控（憲章「憑證隔離」），啟動 BFF 的 job 需自備環境變數。
+    # SESSION_SECRET 是 CI 專用假值：資料庫每次全新、不對外提供服務。
+    # 刻意不設 NODE_ENV=test —— 那會讓 env.ts 改用 :memory: 資料庫，
+    # seed 出來的場次就不在 dev server 讀取的那一個裡。
+    env:
+      SESSION_SECRET: ci-only-session-secret-not-used-in-any-real-environment
+      DATABASE_PATH: ./data/portal.db
+      # e2e／a11y／perf 一律以腳本化假回應驗證，CI MUST NOT 需要真實模型金鑰。
+      AI_FAKE: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -82,6 +91,15 @@ jobs:
   perf:
     name: '編輯器延遲量測 (p95 < 50ms)'
     runs-on: ubuntu-latest
+    # backend/.env 不進版控（憲章「憑證隔離」），啟動 BFF 的 job 需自備環境變數。
+    # SESSION_SECRET 是 CI 專用假值：資料庫每次全新、不對外提供服務。
+    # 刻意不設 NODE_ENV=test —— 那會讓 env.ts 改用 :memory: 資料庫，
+    # seed 出來的場次就不在 dev server 讀取的那一個裡。
+    env:
+      SESSION_SECRET: ci-only-session-secret-not-used-in-any-real-environment
+      DATABASE_PATH: ./data/portal.db
+      # e2e／a11y／perf 一律以腳本化假回應驗證，CI MUST NOT 需要真實模型金鑰。
+      AI_FAKE: '1'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
