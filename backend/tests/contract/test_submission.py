@@ -19,7 +19,7 @@ def anyio_backend():
 
 def _expire(conn, session_id: str) -> None:
     past = (datetime.now(UTC) - timedelta(seconds=1)).isoformat().replace("+00:00", "Z")
-    conn.execute("UPDATE interview_session SET deadline_at = ? WHERE id = ?", (past, session_id))
+    conn.execute("UPDATE interview_session SET deadline_at = %s WHERE id = %s", (past, session_id))
     conn.commit()
 
 
@@ -100,7 +100,7 @@ class TestTime:
         assert body["status"] == "expired_submitted"
 
         row = test_db.execute(
-            "SELECT status, submitted_at FROM interview_session WHERE id = ?",
+            "SELECT status, submitted_at FROM interview_session WHERE id = %s",
             (fixture.session_id,),
         ).fetchone()
         assert row["status"] == "expired_submitted"

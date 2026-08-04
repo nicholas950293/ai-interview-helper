@@ -16,7 +16,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "cd frontend && npx tsc --noEmit",
-    "db:migrate": "cd backend && uv run python -m techinterview.db.client",
+    "db:migrate": "npx --yes supabase@latest db reset",
     "db:seed": "cd backend && uv run python -m techinterview.db.seed",
     "seed": "cd backend && uv run python -m techinterview.db.seed",
     "dev:backend": "cd backend && uv run uvicorn techinterview.main:app --reload --reload-dir src --port 8787",
@@ -27,7 +27,9 @@
     "test:e2e": "cd frontend && npx playwright test --project=e2e",
     "test:a11y": "cd frontend && npx playwright test --project=a11y",
     "test:perf": "cd frontend && npx playwright test --project=perf",
-    "perf:editor": "cd frontend && npx playwright test --project=perf"
+    "perf:editor": "cd frontend && npx playwright test --project=perf",
+    "db:start": "npx --yes supabase@latest start -x studio,imgproxy,storage-api,edge-runtime,logflare,vector,realtime,pg-meta,mailpit,supavisor",
+    "db:stop": "npx --yes supabase@latest stop"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

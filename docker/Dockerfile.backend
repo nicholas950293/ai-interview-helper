@@ -1,0 +1,57 @@
+# TechInterview Pro — 後端（Python 3.12 + FastAPI）
+#
+# 憲章原則 V：目標平台 Ubuntu 24.04；套件管理一律 uv。
+# 兩階段建置：builder 解相依並產生 venv，runtime 只帶 venv 與原始碼——
+# uv 本身、建置工具與快取都不進最終映像。
+
+# --- builder ----------------------------------------------------------------
+FROM ubuntu:24.04 AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3.12 python3.12-venv ca-certificates curl \
+ && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:0.9.9 /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# 先只複製相依定義：原始碼變動時這一層仍可命中快取
+COPY backend/pyproject.toml backend/uv.lock backend/.python-version ./
+RUN uv sync --frozen --no-install-project --no-dev
+
+COPY backend/src ./src
+RUN uv sync --frozen --no-dev
+
+# --- runtime ----------------------------------------------------------------
+FROM ubuntu:24.04 AS runtime
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH"
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3.12 ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && useradd --create-home --uid 10001 app
+
+WORKDIR /app
+COPY --from=builder --chown=app:app /app/.venv ./.venv
+COPY --from=builder --chown=app:app /app/src ./src
+
+# 不以 root 執行：容器內若被打穿，攻擊者拿到的權限愈小愈好
+USER app
+
+EXPOSE 8787
+
+# 憲章「憑證隔離」：金鑰一律由執行時的環境變數注入，
+# MUST NOT 以 ARG／ENV 烘進映像——映像會被推到 registry，層是可以被讀出來的。
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD python3 -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8787/api/health', timeout=2).status==200 else 1)"
+
+CMD ["uvicorn", "techinterview.main:app", "--host", "0.0.0.0", "--port", "8787"]

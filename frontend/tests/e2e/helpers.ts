@@ -72,15 +72,21 @@ export interface CodeChangeRow {
  * 不停在 UI。
  */
 export function readCodeChanges(sessionId: string, questionId: string): CodeChangeRow[] {
+  // 直連 Postgres 而非經由後端 API：歸屬紀錄刻意沒有對外端點
+  // （個資最小化，見 test_session.py 的 test_code_change_history_not_exposed），
+  // 所以只能從資料庫這一側驗證。
   const script = `
-import json, sqlite3, sys
-conn = sqlite3.connect("data/portal.db")
-conn.row_factory = sqlite3.Row
-rows = conn.execute(
-    "SELECT seq, source, content, revision, chat_message_id, block_index"
-    " FROM code_change WHERE session_id = ? AND question_id = ? ORDER BY seq",
-    (sys.argv[1], sys.argv[2]),
-).fetchall()
+import json, os, sys
+import psycopg
+from psycopg.rows import dict_row
+
+dsn = os.environ.get("DATABASE_URL", "postgresql://postgres:postgres@127.0.0.1:54322/postgres")
+with psycopg.connect(dsn, row_factory=dict_row) as conn:
+    rows = conn.execute(
+        "SELECT seq, source, content, revision, chat_message_id, block_index"
+        " FROM code_change WHERE session_id = %s AND question_id = %s ORDER BY seq",
+        (sys.argv[1], sys.argv[2]),
+    ).fetchall()
 print(json.dumps([
     {
         "seq": r["seq"], "source": r["source"], "content": r["content"],

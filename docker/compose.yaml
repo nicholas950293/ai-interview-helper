@@ -1,0 +1,40 @@
+# TechInterview Pro —— 本機容器化執行（T120）
+#
+# 憲章「憑證隔離」：金鑰一律由執行環境注入，MUST NOT 寫在本檔或映像裡。
+# 執行前先備妥 backend/.env（見 backend/.env.example）：
+#
+#   docker compose -f docker/compose.yaml up --build
+#
+# 資料庫指向本機的 Supabase（`supabase start`）。容器要連到宿主機的
+# Postgres，位址得用 host.docker.internal 而非 127.0.0.1——後者在容器內
+# 指的是容器自己。
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    env_file:
+      - ../backend/.env
+    environment:
+      # 覆寫 .env 裡的本機位址：容器內的 127.0.0.1 不是宿主機
+      DATABASE_URL: postgresql://postgres:postgres@host.docker.internal:54322/postgres
+      ENVIRONMENT: production
+      COOKIE_SECURE: 'false'
+    ports:
+      - '8787:8787'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+      args:
+        # 建置時決定：Next 的 rewrites 在 build 階段就寫進 routes-manifest
+        BACKEND_ORIGIN: http://backend:8787
+    ports:
+      - '5173:5173'
+    depends_on:
+      backend:
+        condition: service_healthy

@@ -1,5 +1,10 @@
 <!--
-Sync Impact Report (v3.0.2)
+Sync Impact Report (v3.0.3)
+- Version change: 3.0.2 → 3.0.3
+- Bump rationale: PATCH —— 僅更新「待遷移落差」表狀態欄，無原則文字變動。
+  最後兩列（資料庫 → Supabase、容器化 → Docker）關閉，全表清空。
+
+--- 以下為 v3.0.2 的修訂報告 ---
 - Version change: 3.0.1 → 3.0.2
 - Bump rationale: PATCH —— 僅更新「待遷移落差」表的狀態欄，無任何原則文字變動。
   v3.0.1 關閉五列（後端語言／框架、AI 編排、AI 能力定位、協作歷程歸屬、
@@ -235,9 +240,9 @@ AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而
 | AI 能力定位 | AI 全開，可產出完整實作並套用 | 圍欄與輸出後處理已不存在，AI 輸出原樣送達 | ✅ 已關閉 |
 | 協作歷程歸屬 | 每次程式碼變更記錄作者（應試者／AI） | `code_change.source` 加 CHECK 約束於資料庫層強制；套用端點與「套用至編輯器」按鈕皆已上線，端到端驗證含資料層斷言 | ✅ 已關閉 |
 | CI/CD 流程 | PR 制，CI 通過才可合併 | `pull_request` 觸發，關卡涵蓋 pytest／vitest／協作可評估性／axe-core／憑證隔離 | ✅ 已關閉 |
-| 資料庫 | Supabase | SQLite + 自寫遷移；`queries` 層介面已設計為可抽換 | 待遷移 |
+| 資料庫 | Supabase | Supabase Postgres（psycopg 直連）；schema 由 `supabase/migrations/` 管理，Data API 全面 deny-all | ✅ 已關閉 |
 | 前端框架 | Next.js | Next.js 16 App Router + TypeScript + Tailwind 4；遷移後 42 個 Playwright 測試一行未改全數通過 | ✅ 已關閉 |
-| 容器化 | Docker，目標 Ubuntu 24.04 | 尚未建立 Dockerfile | 待補齊 |
+| 容器化 | Docker，目標 Ubuntu 24.04 | `docker/` 下前後端映像皆以 ubuntu:24.04 為基底，compose 端到端驗證通過 | ✅ 已關閉 |
 
 已符合，無須變更：TypeScript（前端）、Tailwind CSS、GitHub Actions、SDD 流程。
 
@@ -246,10 +251,11 @@ AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而
 「協作歷程歸屬」與「CI/CD 流程」三列一併關閉——前兩者是後端重寫的必然結果，
 第三列則是因為既有 CI 全部停留在 TypeScript 時代、不修就會整排失敗。
 其後「前端框架」一列亦已關閉（不需額外環境即可執行）。
+產品負責人 2026-08-05 備妥 Supabase 專案與 Docker 後，最後兩列一併關閉。
 
-剩餘兩列（Supabase、Docker）**維持落差狀態**，MUST 於後續增量關閉；
-兩者皆需先備妥本機環境（Supabase CLI 與專案金鑰、Docker），非程式碼本身的阻礙。
-本次未處理不代表默許（見本章節開頭第二條）。
+**本表已清空**——技術棧自此與原則 V 完全一致。依本章節開頭的要求，
+落差章節於下次憲章修訂時 MUST 移除；保留至今是為了讓遷移過程可追溯，
+而非因為還有未竟事項。
 
 ### 尚未實作的功能（非落差）
 
@@ -302,4 +308,4 @@ AI MUST 具備完整的實作能力；不可妥協之處不在於限制 AI，而
 - **執行指引**：日常開發指引見 `docs/PRD.md` 與各 feature 的 `specs/` 目錄；
   兩者 MUST NOT 與本憲章牴觸。
 
-**Version**: 3.0.2 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-04
+**Version**: 3.0.3 | **Ratified**: 2026-08-04 | **Last Amended**: 2026-08-05

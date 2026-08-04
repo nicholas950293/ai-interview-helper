@@ -1,0 +1,30 @@
+# 建置上下文最小化：這些進了映像只會變大、變慢，或洩漏東西
+node_modules/
+**/node_modules/
+.venv/
+**/.venv/
+__pycache__/
+**/__pycache__/
+.next/
+**/.next/
+dist/
+build/
+.git/
+.github/
+coverage/
+playwright-report/
+test-results/
+perf-results/
+supabase/.branches/
+supabase/.temp/
+docs/
+specs/
+.specify/
+.claude/
+
+# 憲章「憑證隔離」：金鑰 MUST NOT 進入建置上下文，
+# 否則有機會被烘進映像層——層是可以被讀出來的
+.env
+**/.env
+**/*.db
+**/data/

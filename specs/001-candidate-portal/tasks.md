@@ -40,11 +40,11 @@ description: 'Task list for TechInterview Pro — Candidate Portal (Constitution
 | plan | 內容 | 對應任務 | Increment 1 |
 | --- | --- | --- | --- |
 | M1 | Python + FastAPI 重建端點 | Phase 1–2 的後端任務 + 各 Story 的後端任務 | ✅ 全部 |
-| M2 | SQLite → Supabase | T014–T019 | ⏸ 僅 T018–T019（以 SQLite 實作） |
+| M2 | SQLite → Supabase | T014–T019 | ✅ 完成 |
 | M3 | 拆除圍欄，改用 LangChain 雙供應商 | T061–T063、T119 | ✅ 完成（舊資產已於後續增量拆除） |
 | M4 | 程式碼變更歸屬與套用 | T055–T057、T064–T067、T071–T072 | ✅ 完成（後端與前端套用 UI 皆已上線） |
 | M5 | Vite SPA → Next.js | T007–T011、各 Story 的前端任務 | ✅ 完成 |
-| M6 | Docker 化 | T120 | ⏸ 延後（需本機 Docker） |
+| M6 | Docker 化 | T120 | ✅ 完成 |
 | M7 | CI 改為 PR 制 | T013、T121 | ✅ 完成 |
 
 **與 plan.md 的一處偏離**：plan 的 M1 原本要「以既有 Vite 前端零改動驗證新後端等價」。
@@ -99,7 +99,7 @@ T110–T123（Polish，含 Docker 與舊資產拆除）。
 - [X] T003 [P] 以 pydantic-settings 定義環境設定於 `backend/src/techinterview/core/config.py`，並建立 `backend/.env.example`（Supabase URL / service role key、SESSION_SECRET、GOOGLE_API_KEY、ANTHROPIC_API_KEY、AI_PROVIDER、AI_MODEL）
 - [X] T004 [P] 設定 pytest + pytest-asyncio + httpx `ASGITransport` 於 `backend/pyproject.toml` 與 `backend/tests/conftest.py`（見 [research.md](./research.md) R-016）
 - [X] T005 [P] 設定 ruff（lint + format）於 `backend/pyproject.toml`
-- [ ] T006 初始化 Supabase 本地實例於 `supabase/config.toml`，確認 `supabase start` 可運作
+- [X] T006 初始化 Supabase 本地實例於 `supabase/config.toml`，確認 `supabase start` 可運作
 - [X] T007 於 `frontend/` 就地初始化 Next.js 16（App Router + TypeScript + Tailwind CSS 4），移除 Vite 相關設定
 - [X] T008 [P] 移植淺色主題 token 至 `frontend/src/styles/theme.css`（Tailwind 4 `@theme`），保留 WCAG AA 實測對比值註記
 - [X] T009 [P] 設定 `rewrites` 將 `/api/*` 代理至 FastAPI 於 `frontend/next.config.ts`（見 research R-003）
@@ -116,10 +116,10 @@ T110–T123（Polish，含 Docker 與舊資產拆除）。
 
 **⚠️ CRITICAL**: 本階段完成前，任何 User Story 不得開工
 
-- [ ] T014 Supabase 遷移：`invite_token`、`interview_session`、`question`、`session_question`、`answer` 於 `supabase/migrations/0001_core.sql`，依 [data-model.md](./data-model.md)
-- [ ] T015 Supabase 遷移：`chat_message`、`chat_code_block`、`code_change` 於 `supabase/migrations/0002_collaboration.sql`，**含 CHECK 約束強制 `source='ai'` 時必有 `chat_message_id` + `block_index`、`'candidate'` 時必為 null**（憲章原則 I）
-- [ ] T016 [P] Supabase 遷移：`environment_event`、`test_run` 於 `supabase/migrations/0003_events.sql`
-- [ ] T017 [P] RLS deny-all 政策（僅 service role 可存取）於 `supabase/migrations/0004_rls.sql`，依 research R-004
+- [X] T014 Supabase 遷移：`invite_token`、`interview_session`、`question`、`session_question`、`answer` 於 `supabase/migrations/0001_core.sql`，依 [data-model.md](./data-model.md)
+- [X] T015 Supabase 遷移：`chat_message`、`chat_code_block`、`code_change` 於 `supabase/migrations/0002_collaboration.sql`，**含 CHECK 約束強制 `source='ai'` 時必有 `chat_message_id` + `block_index`、`'candidate'` 時必為 null**（憲章原則 I）
+- [X] T016 [P] Supabase 遷移：`environment_event`、`test_run` 於 `supabase/migrations/0003_events.sql`
+- [X] T017 [P] RLS deny-all 政策（僅 service role 可存取）於 `supabase/migrations/0004_rls.sql`，依 research R-004
 - [X] T018 Supabase client 與交易輔助於 `backend/src/techinterview/db/client.py`
 - [X] T019 [P] 資料存取層於 `backend/src/techinterview/db/queries.py`
 - [X] T020 [P] Pydantic schema（`camelCase` alias、Language / SessionStatus / CollaborationMode 等列舉）於 `backend/src/techinterview/core/schemas.py`
@@ -321,7 +321,7 @@ prompt 圍欄、輸出後處理、區塊過濾皆屬違規。模式差異僅以�
 - [X] T117 [P] 建立 axe-core 對比與 ARIA 全頁檢核於 `frontend/tests/e2e/a11y.spec.ts`（含程式碼區塊與套用按鈕的可存取名稱）
 - [X] T118 [P] 建立編輯器延遲量測腳本（500 次輸入 p50/p95/p99）與進場耗時量測（SC-001，預算 30 秒）於 `frontend/tests/perf/editor-latency.spec.ts`（**產品目標，非憲章關卡**——原則 IV 已於 v3.0.0 移除）
 - [X] T119 拆除舊技術棧資產：`backend/` 的 TypeScript 實作、`backend/src/ai/guardrails.ts`、`postprocess.ts`、`backend/tests/guardrails/`（25 組越獄語料、11 則錄製回應、59 個測試）、`frontend/` 的 Vite 設定。**PR 描述 MUST 載明這是憲章 v3.0.0 反轉原則 I 的結果，不是品質問題**
-- [ ] T120 [P] 建立 `docker/Dockerfile.frontend`（Next.js standalone）、`docker/Dockerfile.backend`（Python 3.12-slim + `uv sync --frozen`）與 `docker/compose.yaml`，執行環境對齊 Ubuntu 24.04
+- [X] T120 [P] 建立 `docker/Dockerfile.frontend`（Next.js standalone）、`docker/Dockerfile.backend`（Python 3.12-slim + `uv sync --frozen`）與 `docker/compose.yaml`，執行環境對齊 Ubuntu 24.04
 - [X] T121 完成 CI 於 `.github/workflows/ci.yml`：`pull_request` 觸發，關卡為測試套件、**協作歷程記錄測試**、axe-core 檢核；憑證隔離檢查擴及 `GOOGLE_API_KEY`、`ANTHROPIC_API_KEY`、`SUPABASE_SERVICE_ROLE_KEY`
 - [X] T122 [P] 改寫 `README.md`（uv / Supabase CLI / Docker 先決條件、雙供應商設定、新的品質關卡、憲章六原則）
 - [X] T123 依 [quickstart.md](./quickstart.md) 完整走過 V1–V5 五個驗證情境並記錄結果

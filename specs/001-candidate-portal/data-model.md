@@ -59,7 +59,7 @@ invite_token ──1:1── interview_session
 
 | 欄位 | 型別 | 說明 |
 | --- | --- | --- |
-| `id` | uuid (PK) | |
+| `id` | text (PK) | 刻意用可讀 id（`sess-demo`、`q-rate-limiter`）而非 uuid——出錯時看日誌就知道是哪一題 |
 | `candidate_name` | text | 顯示於 Header，如「Alex Chen」 |
 | `position_title` | text | 如「資深全端工程師模擬面試」 |
 | `duration_sec` | int | 總時長 |

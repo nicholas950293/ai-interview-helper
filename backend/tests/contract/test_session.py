@@ -32,7 +32,7 @@ class TestRedeem:
 
         # deadlineAt = startedAt + durationSec（伺服端計算，不接受用戶端傳入）
         row = test_db.execute(
-            "SELECT started_at, deadline_at FROM interview_session WHERE id = ?",
+            "SELECT started_at, deadline_at FROM interview_session WHERE id = %s",
             (fixture.session_id,),
         ).fetchone()
         started = datetime.fromisoformat(row["started_at"].replace("Z", "+00:00"))
@@ -103,7 +103,6 @@ class TestGetSession:
         client.cookies.set("session", "forged.value")
         res = await client.get("/api/session")
         assert res.status_code == 401
-
 
 
 class TestPiiMinimization:

@@ -8,14 +8,15 @@ from __future__ import annotations
 
 import argparse
 import base64
-import json
 import re
 import secrets
-import sqlite3
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-from techinterview.db.client import get_db, run_migrations
+import psycopg
+from psycopg.types.json import Jsonb
+
+from techinterview.db.client import get_db
 
 STARTER = {
     "rate-limiter": {
@@ -260,61 +261,60 @@ def parse_duration(text: str) -> int:
 
 
 def seed(
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
     *,
     duration_sec: int = 90 * 60,
     session_id: str = "sess-demo",
 ) -> dict[str, str]:
     conn = conn or get_db()
-    run_migrations(conn)
 
     # 128-bit 隨機值，URL 安全編碼（research R-009）
     token = base64.urlsafe_b64encode(secrets.token_bytes(16)).decode().rstrip("=")
     expires = (datetime.now(UTC) + timedelta(days=7)).isoformat().replace("+00:00", "Z")
 
-    conn.execute("DELETE FROM invite_token WHERE session_id = ?", (session_id,))
-    conn.execute("DELETE FROM interview_session WHERE id = ?", (session_id,))
+    conn.execute("DELETE FROM invite_token WHERE session_id = %s", (session_id,))
+    conn.execute("DELETE FROM interview_session WHERE id = %s", (session_id,))
     conn.execute(
         """INSERT INTO interview_session
              (id, candidate_name, position_title, duration_sec, status)
-           VALUES (?, ?, ?, ?, 'not_started')""",
+           VALUES (%s, %s, %s, %s, 'not_started')""",
         (session_id, "Alex Chen", "資深全端工程師模擬面試", duration_sec),
     )
     conn.execute(
         """INSERT INTO invite_token (token, session_id, status, expires_at)
-           VALUES (?, ?, 'pending', ?)""",
+           VALUES (%s, %s, 'pending', %s)""",
         (token, session_id, expires),
     )
 
     for index, q in enumerate(QUESTIONS, start=1):
         conn.execute(
             """INSERT INTO question
-                 (id, title, difficulty, points, description, examples_json,
-                  complexity_requirement, grading_focus_json, starter_code_json,
-                  predefined_tests_json, quick_prompts_json)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 (id, title, difficulty, points, description, examples,
+                  complexity_requirement, grading_focus, starter_code,
+                  predefined_tests, quick_prompts)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                ON CONFLICT (id) DO UPDATE SET
                  title = excluded.title,
                  description = excluded.description,
-                 starter_code_json = excluded.starter_code_json,
-                 predefined_tests_json = excluded.predefined_tests_json,
-                 quick_prompts_json = excluded.quick_prompts_json""",
+                 starter_code = excluded.starter_code,
+                 predefined_tests = excluded.predefined_tests,
+                 quick_prompts = excluded.quick_prompts""",
             (
                 q["id"],
                 q["title"],
                 q["difficulty"],
                 q["points"],
                 q["description"],
-                json.dumps(q["examples"], ensure_ascii=False),
+                Jsonb(q["examples"]),
                 q["complexity_requirement"],
-                json.dumps(q["grading_focus"], ensure_ascii=False),
-                json.dumps(q["starter"], ensure_ascii=False),
-                json.dumps(q["tests"], ensure_ascii=False),
-                json.dumps(q["quick_prompts"], ensure_ascii=False),
+                Jsonb(q["grading_focus"]),
+                Jsonb(q["starter"]),
+                Jsonb(q["tests"]),
+                Jsonb(q["quick_prompts"]),
             ),
         )
         conn.execute(
-            """INSERT INTO session_question (session_id, question_id, "order") VALUES (?, ?, ?)
+            """INSERT INTO session_question (session_id, question_id, "order") VALUES (%s, %s, %s)
                ON CONFLICT (session_id, question_id) DO UPDATE SET "order" = excluded."order" """,
             (session_id, q["id"], index),
         )

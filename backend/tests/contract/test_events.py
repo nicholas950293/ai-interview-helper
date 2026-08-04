@@ -15,7 +15,7 @@ def anyio_backend():
 
 def _count(conn, session_id: str) -> int:
     return conn.execute(
-        "SELECT COUNT(*) AS n FROM environment_event WHERE session_id = ?", (session_id,)
+        "SELECT COUNT(*) AS n FROM environment_event WHERE session_id = %s", (session_id,)
     ).fetchone()["n"]
 
 
@@ -84,7 +84,14 @@ async def test_verdict_fields_cannot_be_written(session_client, fixture, test_db
         ],
     )
 
-    cols = {r["name"] for r in test_db.execute("PRAGMA table_info(environment_event)")}
+    cols = {
+        r["name"]
+        for r in test_db.execute(
+            """select column_name as name
+                   from information_schema.columns
+                  where table_schema = 'public' and table_name = 'environment_event'"""
+        )
+    }
     assert "cheating" not in cols
     assert "verdict" not in cols
 

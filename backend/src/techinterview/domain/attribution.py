@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-import sqlite3
+import psycopg
 
 from techinterview.core.schemas import ChangeSource
 from techinterview.db import queries
@@ -23,7 +23,7 @@ def record_ai_change(
     revision: int,
     chat_message_id: str,
     block_index: int,
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> str:
     """套用 AI 產出時記錄。來源訊息與區塊 MUST 一併留存，供評分時追溯。"""
     return queries.insert_code_change(
@@ -44,7 +44,7 @@ def record_candidate_change(
     question_id: str,
     content: str,
     revision: int,
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> str | None:
     """應試者自行輸入時記錄；重複於套用結果者不記錄。
 

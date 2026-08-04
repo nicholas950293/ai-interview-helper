@@ -29,10 +29,16 @@ class Settings(BaseSettings):
     port: int = 8787
     environment: Literal["development", "test", "production"] = "development"
 
-    # --- 持久化 -------------------------------------------------------------
-    # Increment 1 暫以 SQLite 實作；憲章原則 V 的 Supabase 為待遷移落差，
-    # queries 層的介面設計為可抽換，替換時不動呼叫端。
-    database_path: str = "./data/portal.db"
+    # --- 持久化（憲章原則 V：Supabase）--------------------------------------
+    # 後端以 psycopg 直連 Postgres，不走 PostgREST——理由見 db/client.py。
+    # 預設值為 `supabase start` 的本地實例；正式環境由 Supabase 專案的
+    # connection string 覆寫（Dashboard → Project Settings → Database）。
+    database_url: str = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+
+    # 供 PostgREST／Storage 等 Data API 使用。本後端目前沒有消費者，
+    # 保留是為了讓遷移工具與日後的功能有一致的來源（憲章「憑證隔離」）。
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
 
     # --- Session Cookie -----------------------------------------------------
     session_secret: str = Field(min_length=32)

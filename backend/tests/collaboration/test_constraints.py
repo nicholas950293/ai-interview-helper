@@ -6,8 +6,7 @@
 
 from __future__ import annotations
 
-import sqlite3
-
+import psycopg
 import pytest
 
 from techinterview.db import queries
@@ -18,7 +17,7 @@ def _insert_raw(conn, **kwargs):
         """INSERT INTO code_change
              (id, seq, session_id, question_id, source, content, revision,
               created_at, chat_message_id, block_index)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         (
             queries.new_id(),
             kwargs.get("seq", 1),
@@ -37,7 +36,7 @@ def _insert_raw(conn, **kwargs):
 
 class TestCodeChangeConstraints:
     def test_ai_without_message_id_is_rejected(self, test_db, fixture):
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg.errors.IntegrityError):
             _insert_raw(
                 test_db,
                 session_id=fixture.session_id,
@@ -49,7 +48,7 @@ class TestCodeChangeConstraints:
 
     def test_ai_without_block_index_is_rejected(self, test_db, fixture, assistant_message):
         message_id, _ = assistant_message
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg.errors.IntegrityError):
             _insert_raw(
                 test_db,
                 session_id=fixture.session_id,
@@ -62,7 +61,7 @@ class TestCodeChangeConstraints:
     def test_candidate_with_message_id_is_rejected(self, test_db, fixture, assistant_message):
         """應試者自行輸入的變更不得偽裝成有 AI 來源。"""
         message_id, _ = assistant_message
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg.errors.IntegrityError):
             _insert_raw(
                 test_db,
                 session_id=fixture.session_id,
@@ -73,7 +72,7 @@ class TestCodeChangeConstraints:
             )
 
     def test_unknown_source_is_rejected(self, test_db, fixture):
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg.errors.IntegrityError):
             _insert_raw(
                 test_db,
                 session_id=fixture.session_id,
@@ -105,27 +104,34 @@ class TestCodeChangeConstraints:
 class TestEnvironmentEventConstraints:
     def test_short_event_is_rejected_at_db_level(self, test_db, fixture):
         """< 1000ms 的事件連寫都寫不進去（FR-025 的門檻）。"""
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg.errors.IntegrityError):
             test_db.execute(
                 """INSERT INTO environment_event (id, session_id, type, started_at, duration_ms)
-                   VALUES (?, ?, 'tab_hidden', ?, 999)""",
+                   VALUES (%s, %s, 'tab_hidden', %s, 999)""",
                 (queries.new_id(), fixture.session_id, queries.now_iso()),
             )
             test_db.commit()
 
     def test_no_verdict_columns_exist(self, test_db):
         """MUST NOT 含任何判定欄位（FR-026）——欄位不存在就寫不進去。"""
-        cols = {r["name"] for r in test_db.execute("PRAGMA table_info(environment_event)")}
+        cols = {
+            r["name"]
+            for r in test_db.execute(
+                """select column_name as name
+                   from information_schema.columns
+                  where table_schema = 'public' and table_name = 'environment_event'"""
+            )
+        }
         assert cols == {"id", "session_id", "type", "started_at", "duration_ms"}
 
 
 class TestCodeBlockConstraints:
     def test_duplicate_block_index_is_rejected(self, test_db, fixture, assistant_message):
         message_id, _ = assistant_message
-        with pytest.raises(sqlite3.IntegrityError):
+        with pytest.raises(psycopg.errors.IntegrityError):
             test_db.execute(
                 """INSERT INTO chat_code_block (id, message_id, block_index, language, content)
-                   VALUES (?, ?, 0, 'javascript', 'x')""",
+                   VALUES (%s, %s, 0, 'javascript', 'x')""",
                 (queries.new_id(), message_id),
             )
             test_db.commit()

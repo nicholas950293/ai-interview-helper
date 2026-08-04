@@ -1,16 +1,17 @@
 """資料存取層（T019）。
 
-介面刻意只用純 Python 型別，不外洩 sqlite3 的細節——
-後續替換為 Supabase client 時，只有本檔需要改寫。
+介面刻意只用純 Python 型別，不外洩 psycopg 的細節。
+時間欄位由 db/client.py 的型別載入器統一轉為 ISO-8601 字串，
+因此本檔與呼叫端看到的一律是字串，不是 datetime。
 """
 
 from __future__ import annotations
 
-import json
-import sqlite3
 import uuid
 from datetime import UTC, datetime
 from typing import Any
+
+import psycopg
 
 from techinterview.core.schemas import (
     ChangeSource,
@@ -36,16 +37,9 @@ def new_id() -> str:
     return str(uuid.uuid4())
 
 
-def _json(raw: str, fallback: Any) -> Any:
-    try:
-        return json.loads(raw)
-    except (json.JSONDecodeError, TypeError):
-        return fallback
-
-
-def _next_seq(conn: sqlite3.Connection, table: str, session_id: str) -> int:
+def _next_seq(conn: psycopg.Connection, table: str, session_id: str) -> int:
     row = conn.execute(
-        f"SELECT COALESCE(MAX(seq), 0) AS s FROM {table} WHERE session_id = ?",  # noqa: S608
+        f"SELECT COALESCE(MAX(seq), 0) AS s FROM {table} WHERE session_id = %s",  # noqa: S608
         (session_id,),
     ).fetchone()
     return int(row["s"]) + 1
@@ -54,12 +48,12 @@ def _next_seq(conn: sqlite3.Connection, table: str, session_id: str) -> int:
 # --- 場次 -------------------------------------------------------------------
 
 
-def find_session(session_id: str, conn: sqlite3.Connection | None = None) -> sqlite3.Row | None:
+def find_session(session_id: str, conn: psycopg.Connection | None = None) -> dict[str, Any] | None:
     conn = conn or get_db()
-    return conn.execute("SELECT * FROM interview_session WHERE id = ?", (session_id,)).fetchone()
+    return conn.execute("SELECT * FROM interview_session WHERE id = %s", (session_id,)).fetchone()
 
 
-def to_public_session(row: sqlite3.Row) -> PublicSession:
+def to_public_session(row: dict[str, Any]) -> PublicSession:
     """唯一允許將場次資料送往前端的轉換點。
 
     僅含姓名與職稱兩項個資（FR-032）；擴充欄位前 MUST 重新檢視個資最小化。
@@ -74,13 +68,13 @@ def to_public_session(row: sqlite3.Row) -> PublicSession:
 
 
 def start_session(
-    session_id: str, started_at: str, deadline_at: str, conn: sqlite3.Connection | None = None
+    session_id: str, started_at: str, deadline_at: str, conn: psycopg.Connection | None = None
 ) -> None:
     conn = conn or get_db()
     conn.execute(
         """UPDATE interview_session
-              SET started_at = ?, deadline_at = ?, status = 'in_progress'
-            WHERE id = ?""",
+              SET started_at = %s, deadline_at = %s, status = 'in_progress'
+            WHERE id = %s""",
         (started_at, deadline_at, session_id),
     )
     conn.commit()
@@ -90,11 +84,11 @@ def update_session_status(
     session_id: str,
     status: SessionStatus,
     submitted_at: str | None,
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> None:
     conn = conn or get_db()
     conn.execute(
-        "UPDATE interview_session SET status = ?, submitted_at = ? WHERE id = ?",
+        "UPDATE interview_session SET status = %s, submitted_at = %s WHERE id = %s",
         (status.value, submitted_at, session_id),
     )
     conn.commit()
@@ -103,44 +97,44 @@ def update_session_status(
 # --- 邀請連結 ---------------------------------------------------------------
 
 
-def find_invite_token(token: str, conn: sqlite3.Connection | None = None) -> sqlite3.Row | None:
+def find_invite_token(token: str, conn: psycopg.Connection | None = None) -> dict[str, Any] | None:
     conn = conn or get_db()
-    return conn.execute("SELECT * FROM invite_token WHERE token = ?", (token,)).fetchone()
+    return conn.execute("SELECT * FROM invite_token WHERE token = %s", (token,)).fetchone()
 
 
-def mark_token_used(token: str, first_used_at: str, conn: sqlite3.Connection | None = None) -> None:
+def mark_token_used(token: str, first_used_at: str, conn: psycopg.Connection | None = None) -> None:
     conn = conn or get_db()
     conn.execute(
         """UPDATE invite_token
-              SET status = 'active', first_used_at = COALESCE(first_used_at, ?)
-            WHERE token = ?""",
+              SET status = 'active', first_used_at = COALESCE(first_used_at, %s)
+            WHERE token = %s""",
         (first_used_at, token),
     )
     conn.commit()
 
 
-def mark_token_consumed(session_id: str, conn: sqlite3.Connection | None = None) -> None:
+def mark_token_consumed(session_id: str, conn: psycopg.Connection | None = None) -> None:
     conn = conn or get_db()
-    conn.execute("UPDATE invite_token SET status = 'consumed' WHERE session_id = ?", (session_id,))
+    conn.execute("UPDATE invite_token SET status = 'consumed' WHERE session_id = %s", (session_id,))
     conn.commit()
 
 
 # --- 題目 -------------------------------------------------------------------
 
 
-def _to_public_question(row: sqlite3.Row) -> PublicQuestion:
-    predefined = _json(row["predefined_tests_json"], [])
+def _to_public_question(row: dict[str, Any]) -> PublicQuestion:
+    predefined = row["predefined_tests"] or []
     return PublicQuestion(
         id=row["id"],
         title=row["title"],
         difficulty=row["difficulty"],
         points=row["points"],
         description=row["description"],
-        examples=[Example(**e) for e in _json(row["examples_json"], [])],
+        examples=[Example(**e) for e in (row["examples"] or [])],
         complexity_requirement=row["complexity_requirement"],
-        grading_focus=_json(row["grading_focus_json"], []),
-        starter_code=_json(row["starter_code_json"], {}),
-        quick_prompts=_json(row["quick_prompts_json"], []),
+        grading_focus=row["grading_focus"] or [],
+        starter_code=row["starter_code"] or {},
+        quick_prompts=row["quick_prompts"] or [],
         order=row["order"],
         # 只回傳數量，不回傳個別測試案例（FR-030）
         test_count=len(predefined),
@@ -148,14 +142,14 @@ def _to_public_question(row: sqlite3.Row) -> PublicQuestion:
 
 
 def list_session_questions(
-    session_id: str, conn: sqlite3.Connection | None = None
+    session_id: str, conn: psycopg.Connection | None = None
 ) -> list[PublicQuestion]:
     conn = conn or get_db()
     rows = conn.execute(
         """SELECT q.*, sq."order" AS "order"
              FROM session_question sq
              JOIN question q ON q.id = sq.question_id
-            WHERE sq.session_id = ?
+            WHERE sq.session_id = %s
             ORDER BY sq."order" ASC""",
         (session_id,),
     ).fetchall()
@@ -163,31 +157,31 @@ def list_session_questions(
 
 
 def is_question_in_session(
-    session_id: str, question_id: str, conn: sqlite3.Connection | None = None
+    session_id: str, question_id: str, conn: psycopg.Connection | None = None
 ) -> bool:
     conn = conn or get_db()
     row = conn.execute(
-        "SELECT 1 FROM session_question WHERE session_id = ? AND question_id = ?",
+        "SELECT 1 FROM session_question WHERE session_id = %s AND question_id = %s",
         (session_id, question_id),
     ).fetchone()
     return row is not None
 
 
 def get_predefined_tests(
-    question_id: str, conn: sqlite3.Connection | None = None
+    question_id: str, conn: psycopg.Connection | None = None
 ) -> list[dict[str, Any]]:
     """僅供伺服端計算通過數，MUST NOT 出現在任何回應中。"""
     conn = conn or get_db()
     row = conn.execute(
-        "SELECT predefined_tests_json FROM question WHERE id = ?", (question_id,)
+        "SELECT predefined_tests FROM question WHERE id = %s", (question_id,)
     ).fetchone()
-    return _json(row["predefined_tests_json"], []) if row else []
+    return (row["predefined_tests"] or []) if row else []
 
 
 # --- 作答 -------------------------------------------------------------------
 
 
-def _to_public_answer(row: sqlite3.Row) -> PublicAnswer:
+def _to_public_answer(row: dict[str, Any]) -> PublicAnswer:
     return PublicAnswer(
         question_id=row["question_id"],
         language=Language(row["language"]),
@@ -197,18 +191,18 @@ def _to_public_answer(row: sqlite3.Row) -> PublicAnswer:
     )
 
 
-def list_answers(session_id: str, conn: sqlite3.Connection | None = None) -> list[PublicAnswer]:
+def list_answers(session_id: str, conn: psycopg.Connection | None = None) -> list[PublicAnswer]:
     conn = conn or get_db()
-    rows = conn.execute("SELECT * FROM answer WHERE session_id = ?", (session_id,)).fetchall()
+    rows = conn.execute("SELECT * FROM answer WHERE session_id = %s", (session_id,)).fetchall()
     return [_to_public_answer(r) for r in rows]
 
 
 def find_answer(
-    session_id: str, question_id: str, conn: sqlite3.Connection | None = None
+    session_id: str, question_id: str, conn: psycopg.Connection | None = None
 ) -> PublicAnswer | None:
     conn = conn or get_db()
     row = conn.execute(
-        "SELECT * FROM answer WHERE session_id = ? AND question_id = ?",
+        "SELECT * FROM answer WHERE session_id = %s AND question_id = %s",
         (session_id, question_id),
     ).fetchone()
     return _to_public_answer(row) if row else None
@@ -221,13 +215,13 @@ def upsert_answer(
     language: Language,
     content: str,
     revision: int,
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> tuple[str, int]:
     conn = conn or get_db()
     saved_at = now_iso()
     conn.execute(
         """INSERT INTO answer (session_id, question_id, language, content, saved_at, revision)
-           VALUES (?, ?, ?, ?, ?, ?)
+           VALUES (%s, %s, %s, %s, %s, %s)
            ON CONFLICT (session_id, question_id) DO UPDATE SET
              language = excluded.language,
              content  = excluded.content,
@@ -243,19 +237,19 @@ def upsert_answer(
 
 
 def list_chat_messages(
-    session_id: str, conn: sqlite3.Connection | None = None
+    session_id: str, conn: psycopg.Connection | None = None
 ) -> list[PublicChatMessage]:
     conn = conn or get_db()
     # 排序 MUST 以 seq；created_at 在同毫秒插入時分不出先後。
     rows = conn.execute(
-        "SELECT * FROM chat_message WHERE session_id = ? ORDER BY seq ASC", (session_id,)
+        "SELECT * FROM chat_message WHERE session_id = %s ORDER BY seq ASC", (session_id,)
     ).fetchall()
 
     messages: list[PublicChatMessage] = []
     for row in rows:
         blocks = conn.execute(
             """SELECT block_index, language, content
-                 FROM chat_code_block WHERE message_id = ? ORDER BY block_index ASC""",
+                 FROM chat_code_block WHERE message_id = %s ORDER BY block_index ASC""",
             (row["id"],),
         ).fetchall()
         messages.append(
@@ -287,7 +281,7 @@ def insert_chat_message(
     provider: str | None = None,
     model: str | None = None,
     source: ChatSource | None = None,
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> PublicChatMessage:
     """所有訊息 MUST 留存（FR-015）；本模組不提供刪除介面。"""
     conn = conn or get_db()
@@ -299,7 +293,7 @@ def insert_chat_message(
         """INSERT INTO chat_message
              (id, seq, session_id, question_id, role, content, created_at,
               attached_code, provider, model, source)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         (
             message_id,
             seq,
@@ -333,12 +327,12 @@ def update_chat_message_content(
     *,
     provider: str | None = None,
     model: str | None = None,
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> None:
     """寫入 AI 的完整輸出。MUST NOT 在此做任何裁切或改寫（憲章原則 I）。"""
     conn = conn or get_db()
     conn.execute(
-        "UPDATE chat_message SET content = ?, provider = ?, model = ? WHERE id = ?",
+        "UPDATE chat_message SET content = %s, provider = %s, model = %s WHERE id = %s",
         (content, provider, model, message_id),
     )
     conn.commit()
@@ -350,31 +344,32 @@ def update_chat_message_content(
 def replace_code_blocks(
     message_id: str,
     blocks: list[tuple[int, str | None, str]],
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> None:
     conn = conn or get_db()
-    conn.execute("DELETE FROM chat_code_block WHERE message_id = ?", (message_id,))
-    conn.executemany(
-        """INSERT INTO chat_code_block (id, message_id, block_index, language, content)
-           VALUES (?, ?, ?, ?, ?)""",
-        [(new_id(), message_id, idx, lang, content) for idx, lang, content in blocks],
-    )
+    conn.execute("DELETE FROM chat_code_block WHERE message_id = %s", (message_id,))
+    with conn.cursor() as cur:
+        cur.executemany(
+            """INSERT INTO chat_code_block (id, message_id, block_index, language, content)
+               VALUES (%s, %s, %s, %s, %s)""",
+            [(new_id(), message_id, idx, lang, content) for idx, lang, content in blocks],
+        )
     conn.commit()
 
 
 def find_code_block(
-    message_id: str, block_index: int, conn: sqlite3.Connection | None = None
-) -> sqlite3.Row | None:
+    message_id: str, block_index: int, conn: psycopg.Connection | None = None
+) -> dict[str, Any] | None:
     conn = conn or get_db()
     return conn.execute(
-        "SELECT * FROM chat_code_block WHERE message_id = ? AND block_index = ?",
+        "SELECT * FROM chat_code_block WHERE message_id = %s AND block_index = %s",
         (message_id, block_index),
     ).fetchone()
 
 
-def find_message(message_id: str, conn: sqlite3.Connection | None = None) -> sqlite3.Row | None:
+def find_message(message_id: str, conn: psycopg.Connection | None = None) -> dict[str, Any] | None:
     conn = conn or get_db()
-    return conn.execute("SELECT * FROM chat_message WHERE id = ?", (message_id,)).fetchone()
+    return conn.execute("SELECT * FROM chat_message WHERE id = %s", (message_id,)).fetchone()
 
 
 # --- 程式碼變更（憲章原則 I 的核心資料）------------------------------------
@@ -389,7 +384,7 @@ def insert_code_change(
     revision: int,
     chat_message_id: str | None = None,
     block_index: int | None = None,
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> str:
     """記錄一次作答內容變更的來源。
 
@@ -402,7 +397,7 @@ def insert_code_change(
         """INSERT INTO code_change
              (id, seq, session_id, question_id, source, content, revision,
               created_at, chat_message_id, block_index)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
         (
             change_id,
             _next_seq(conn, "code_change", session_id),
@@ -421,21 +416,23 @@ def insert_code_change(
 
 
 def latest_code_change(
-    session_id: str, question_id: str, conn: sqlite3.Connection | None = None
-) -> sqlite3.Row | None:
+    session_id: str, question_id: str, conn: psycopg.Connection | None = None
+) -> dict[str, Any] | None:
     conn = conn or get_db()
     return conn.execute(
         """SELECT * FROM code_change
-            WHERE session_id = ? AND question_id = ?
+            WHERE session_id = %s AND question_id = %s
             ORDER BY seq DESC LIMIT 1""",
         (session_id, question_id),
     ).fetchone()
 
 
-def list_code_changes(session_id: str, conn: sqlite3.Connection | None = None) -> list[sqlite3.Row]:
+def list_code_changes(
+    session_id: str, conn: psycopg.Connection | None = None
+) -> list[dict[str, Any]]:
     conn = conn or get_db()
     return conn.execute(
-        "SELECT * FROM code_change WHERE session_id = ? ORDER BY seq ASC", (session_id,)
+        "SELECT * FROM code_change WHERE session_id = %s ORDER BY seq ASC", (session_id,)
     ).fetchall()
 
 
@@ -445,14 +442,15 @@ def list_code_changes(session_id: str, conn: sqlite3.Connection | None = None) -
 def insert_environment_events(
     session_id: str,
     events: list[tuple[str, str, int]],
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> int:
     conn = conn or get_db()
-    conn.executemany(
-        """INSERT INTO environment_event (id, session_id, type, started_at, duration_ms)
-           VALUES (?, ?, ?, ?, ?)""",
-        [(new_id(), session_id, t, started, dur) for t, started, dur in events],
-    )
+    with conn.cursor() as cur:
+        cur.executemany(
+            """INSERT INTO environment_event (id, session_id, type, started_at, duration_ms)
+               VALUES (%s, %s, %s, %s, %s)""",
+            [(new_id(), session_id, t, started, dur) for t, started, dur in events],
+        )
     conn.commit()
     return len(events)
 
@@ -466,13 +464,13 @@ def insert_test_run(
     question_id: str,
     passed: int,
     total: int,
-    conn: sqlite3.Connection | None = None,
+    conn: psycopg.Connection | None = None,
 ) -> str:
     conn = conn or get_db()
     ran_at = now_iso()
     conn.execute(
         """INSERT INTO test_run (id, session_id, question_id, passed, total, ran_at)
-           VALUES (?, ?, ?, ?, ?, ?)""",
+           VALUES (%s, %s, %s, %s, %s, %s)""",
         (new_id(), session_id, question_id, passed, total, ran_at),
     )
     conn.commit()

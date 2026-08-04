@@ -1,0 +1,79 @@
+# TechInterview Pro — 前端（Next.js 16 standalone）
+#
+# 憲章原則 V：目標平台 Ubuntu 24.04。
+# 依賴 next.config.ts 的 `output: 'standalone'`——Next 會產出一份自帶最小
+# node_modules 的伺服器，最終映像因此不需要完整的相依樹。
+#
+# Node 由官方二進位檔安裝而非 apt：Ubuntu 24.04 的 nodejs 套件是 18.19.1，
+# Next.js 要求 >= 20.9（package.json 的 engines 要求 >= 22）。版本寫死在此，
+# 符合憲章「相依版本 MUST 鎖定」——apt 的版本會隨基底映像更新而漂移。
+
+ARG NODE_VERSION=22.23.2
+
+# --- node base --------------------------------------------------------------
+FROM ubuntu:24.04 AS node-base
+ARG NODE_VERSION
+ARG TARGETARCH
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl ca-certificates xz-utils \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; \
+    case "${TARGETARCH}" in \
+      amd64) NODE_ARCH=x64 ;; \
+      arm64) NODE_ARCH=arm64 ;; \
+      *) echo "unsupported arch: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac; \
+    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-${NODE_ARCH}.tar.xz" \
+      | tar -xJ -C /usr/local --strip-components=1 --no-same-owner; \
+    node --version
+
+# --- deps -------------------------------------------------------------------
+FROM node-base AS deps
+
+WORKDIR /app
+COPY package.json package-lock.json ./
+COPY frontend/package.json ./frontend/
+RUN npm ci
+
+# --- builder ----------------------------------------------------------------
+FROM deps AS builder
+
+# next.config.ts 的 rewrites() 是**建置時**求值、寫進 routes-manifest.json 的，
+# standalone 伺服器不會在執行時重新讀取——因此後端位址必須在此決定。
+# 實測踩過：只在 runtime 設 BACKEND_ORIGIN，容器仍會去打 localhost:8787。
+#
+# 代價是映像與後端位址綁定。要做到「一份映像跑各環境」得改用 middleware
+# 或在前面擺一層 gateway 統一路由 /api——本階段用不到，不預先加複雜度。
+ARG BACKEND_ORIGIN=http://backend:8787
+ENV BACKEND_ORIGIN=${BACKEND_ORIGIN}
+
+COPY frontend ./frontend
+COPY tsconfig.base.json ./
+
+# 憲章「憑證隔離」：建置期 MUST NOT 注入任何模型或資料庫金鑰。
+# 前端不需要它們，注入只會讓金鑰有機會被烘進 bundle。
+RUN npm run build --workspace frontend
+
+# --- runtime ----------------------------------------------------------------
+FROM node-base AS runtime
+
+ENV NODE_ENV=production \
+    PORT=5173 \
+    HOSTNAME=0.0.0.0
+
+RUN useradd --create-home --uid 10001 app
+
+WORKDIR /app
+
+# standalone 產物已含所需的 node_modules；public 與 static 需另行複製
+COPY --from=builder --chown=app:app /app/frontend/.next/standalone ./
+COPY --from=builder --chown=app:app /app/frontend/.next/static ./frontend/.next/static
+
+USER app
+
+EXPOSE 5173
+
+CMD ["node", "frontend/server.js"]

@@ -57,10 +57,11 @@ def main() -> None:
     import uvicorn
 
     from techinterview.core.config import get_settings
-    from techinterview.db.client import run_migrations
 
+    # 不在此執行遷移：schema 由 Supabase CLI（`supabase db push` / `db reset`）
+    # 管理。應用程式啟動時自行改 schema 會讓「誰改了資料庫」變得無從追溯，
+    # 也會在多實例部署時互相競爭。
     settings = get_settings()
-    run_migrations()
     uvicorn.run(
         "techinterview.main:app",
         host="127.0.0.1",

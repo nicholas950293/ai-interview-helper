@@ -4,7 +4,11 @@ import type { NextConfig } from 'next';
  * Next.js 設定（T009）。
  *
  * BFF 代理：前端永不直接呼叫模型服務，也永不持有模型憑證（憲章「憑證隔離」）。
- * 開發期由 rewrites 轉發至 FastAPI；正式部署時 `BACKEND_ORIGIN` 指向容器內的後端。
+ * 開發期由 rewrites 轉發至 FastAPI。
+ *
+ * 注意：`rewrites()` 在 **build 時**求值並寫進 routes-manifest.json，
+ * standalone 伺服器不會於執行時重新讀取。容器化時 `BACKEND_ORIGIN`
+ * 必須在 `docker build` 階段給定（見 docker/Dockerfile.frontend）。
  */
 const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN ?? 'http://localhost:8787';
 

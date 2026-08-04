@@ -15,6 +15,7 @@ AI 面試作答平台的應試者端。三面板版面（題目區、作答區�
 
 - Node.js 22 LTS 以上、npm 10+
 - Python 3.12 與 [uv](https://docs.astral.sh/uv/)
+- Docker（本地 Supabase 需要）
 - 桌機瀏覽器，最小視窗寬度 1280px
 - **選用**：Gemini 或 Anthropic API 金鑰。未設定時自動改用腳本化假回應，
   串流、區塊解析、套用與作者歸屬的路徑完全相同，開發與驗證都不需要金鑰。
@@ -23,6 +24,8 @@ AI 面試作答平台的應試者端。三面板版面（題目區、作答區�
 curl -LsSf https://astral.sh/uv/install.sh | sh   # 若尚未安裝 uv
 ```
 
+Supabase CLI 以 `npx` 執行，不需全域安裝。
+
 ## 安裝與啟動
 
 ```bash
@@ -30,9 +33,19 @@ npm install
 cd backend && uv sync --frozen && cd ..
 cp backend/.env.example backend/.env      # 至少填入 SESSION_SECRET
 
-npm run db:migrate                        # 建立 SQLite schema
+npm run db:start                          # 啟動本地 Supabase（Docker）
+npm run db:migrate                        # 套用 supabase/migrations/
 npm run seed                              # 載入示範場次（3 題）並輸出邀請連結
 npm run dev                               # backend:8787 + frontend:5173（並行）
+```
+
+`npm run db:start` 刻意只起 db / auth / rest / kong——studio、realtime、
+storage、analytics 這個專案用不到，而它們的健康檢查逾時會讓整組被收掉。
+
+容器化執行（前後端皆為 Ubuntu 24.04 映像）：
+
+```bash
+docker compose -f docker/compose.yaml up --build
 ```
 
 `npm run seed` 會輸出可直接開啟的邀請連結：
@@ -61,7 +74,8 @@ npm run seed -- --duration 6m
 | ------------------------------------------- | --------------------------------------------------------------------------- |
 | `PORT`                                      | 後端埠號，預設 8787                                                         |
 | `ENVIRONMENT`                               | `development` / `test` / `production`                                       |
-| `DATABASE_PATH`                             | SQLite 檔案路徑，預設 `./data/portal.db`                                    |
+| `DATABASE_URL`                              | Postgres 連線字串。預設指向 `supabase start` 的本地實例                     |
+| `SUPABASE_URL`／`SUPABASE_SERVICE_ROLE_KEY` | Data API 用；本後端直連 Postgres，目前無消費者                              |
 | `SESSION_SECRET`                            | 至少 32 字元的隨機值，用於簽章 session cookie                               |
 | `COOKIE_SECURE`                             | 正式環境 MUST 設為 `true`                                                   |
 | `GOOGLE_API_KEY`                            | Gemini 金鑰。**MUST NOT 出現在 `frontend/` 的任何檔案或環境變數中**         |
@@ -91,9 +105,12 @@ frontend/src/
 backend/src/techinterview/
 ├── api/            session / answers / tests / chat / time / submit / events
 ├── ai/             LangChain 編排、串流、程式碼區塊解析
-├── db/             client、queries、migrations、seed
+├── db/             client（psycopg 直連）、queries、migrate、seed
 ├── domain/         場次狀態機、提交規則、作者歸屬
 └── core/           config、auth、schemas、errors
+
+supabase/migrations/  schema（0001 core、0002 collaboration、0003 events、0004 RLS）
+docker/               Dockerfile.backend、Dockerfile.frontend、compose.yaml
 ```
 
 前端 `/api/*` 由 `next.config.ts` 的 rewrites 代理至後端。前端永不直接呼叫模型服務，
@@ -151,12 +168,9 @@ service role key。
 
 ## 目前狀態
 
-憲章「待遷移落差」表尚有兩列未關閉，皆待本機環境備妥，非程式碼本身的阻礙：
-
-| 落差   | 憲章要求              | 現況                                         |
-| ------ | --------------------- | -------------------------------------------- |
-| 資料庫 | Supabase              | SQLite；`db/queries.py` 的介面已設計為可抽換 |
-| 容器化 | Docker + Ubuntu 24.04 | 尚未建立 Dockerfile                          |
+憲章「待遷移落差」表**已清空**——技術棧與原則 V 完全一致：
+Next.js 16 + TypeScript + Tailwind 4／Python 3.12 + FastAPI + uv／Supabase Postgres／
+LangChain 編排 Gemini 與 Claude／Docker + Ubuntu 24.04／GitHub Actions PR 制。
 
 **尚未實作的功能**（非落差，屬後續 feature）：Google OAuth 登入、
 Monaco Editor、真實沙盒執行、評分後台。「執行單元測試」回報的是預先定義的結果，

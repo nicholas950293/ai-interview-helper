@@ -81,29 +81,28 @@ FastAPI，避免瀏覽器跨來源；正式部署以反向代理讓兩者同源�
 
 ---
 
-## R-004 Supabase 的使用方式（憲章原則 V 決定，此處決定用法）
+## R-004 Supabase 存取模型與 RLS（2026-08-05 修訂）
 
-**Decision**：後端以 `supabase-py` 的 service role client 存取；
-schema 以 `supabase/migrations/` 的編號 SQL 檔管理；本機與 CI 以 Supabase CLI
-啟動本地實例（Docker）。**前端不直接存取 Supabase**。
+**決策**：後端以 **psycopg 直連 Postgres**（`postgres` 角色），不經 PostgREST；
+所有資料表啟用 RLS 且**不建立任何 policy**，並自 `anon`、`authenticated` 收回全部
+資料表權限。Data API 表面因此完全關閉。
 
-**Rationale**：
+**原決策與修訂理由**：原本寫的是「RLS deny-all，僅 service role 可存取」，
+預設後端會透過 PostgREST。實作時兩點使它不成立：
 
-- 憲章「憑證隔離」明定 service role key MUST NOT 出現在前端。前端若直連 Supabase，
-  就得改用 anon key + RLS，而本產品的授權模型是「一次性邀請 token 換發 session cookie」，
-  與 Supabase Auth 的使用者模型不相容（FR-027 明文不要求註冊帳號）。
-- 全部存取集中於後端，也讓「提交時取最後保存草稿」維持單一交易。
-- 憲章要求「RLS SHOULD 啟用；凡以匿名金鑰可觸及的資料表 MUST 啟用」。本期沒有任何
-  資料表以匿名金鑰觸及，因此 RLS 以 deny-all 起始（僅 service role 可存取），
-  待 Google OAuth 實作後再依使用者模型開放。
+1. 查詢層是大量原生 SQL——`code_change` 的 CHECK 約束、`seq` 計算、交易邊界。
+   改寫成 PostgREST 呼叫等於把資料完整性的判斷從資料庫搬回應用層，
+   正是憲章原則 I 不允許的方向。
+2. 較新版本的 Supabase 預設就不把新資料表曝露給任何 Data API 角色
+   （`config.toml` 的 `auto_expose_new_tables`，2026-10-30 後成為唯一行為）。
+   service_role 因此同樣讀不到——實測確認 anon 與 service_role 皆回 42501。
 
-**Alternatives considered**：
+**結果比原設計更嚴格**：不是只擋住 anon，而是整個 Data API 都是關的。
+anon key 依設計會出現在瀏覽器裡，這條路徑關掉就沒有外洩管道。
 
-- **前端直連 Supabase + RLS**：需要 Supabase Auth 的使用者身分，與 FR-027 衝突。
-- **繞過 Supabase client 直接用 asyncpg**：放棄了遷移工具與本地開發流程，
-  且與憲章「使用 Supabase 作為持久化層」的意旨不符。
+**MUST NOT**：不使用 `force row level security`——那會連資料表擁有者（postgres）
+都擋下，而遷移與後端直連正是以該身分執行。
 
----
 
 ## R-005 AI 串流傳輸
 
