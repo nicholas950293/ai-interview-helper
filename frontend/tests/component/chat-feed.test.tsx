@@ -59,7 +59,7 @@ describe('對話 Feed（contracts/ui-contracts.md「對話 Feed」）', () => {
 
     render(<ChatFeed />);
 
-    expect(screen.getByText('AI 助教正在思考…')).toBeInTheDocument();
+    expect(screen.getByText('AI 正在思考…')).toBeInTheDocument();
     expect(screen.getByRole('listitem').firstChild).toHaveAttribute('aria-busy', 'true');
   });
 
@@ -109,7 +109,7 @@ describe('輸入區（FR-009）', () => {
     const user = userEvent.setup();
     render(<Composer />);
 
-    await user.type(screen.getByLabelText('向 AI 助教提問'), '邊界條件有哪些？');
+    await user.type(screen.getByLabelText('向 AI 提問'), '邊界條件有哪些？');
     await user.keyboard('{Control>}{Enter}{/Control}');
 
     expect(sendChat).toHaveBeenCalledWith({
@@ -123,7 +123,7 @@ describe('輸入區（FR-009）', () => {
     const user = userEvent.setup();
     render(<Composer />);
 
-    await user.type(screen.getByLabelText('向 AI 助教提問'), '提示？');
+    await user.type(screen.getByLabelText('向 AI 提問'), '提示？');
     await user.click(screen.getByRole('button', { name: '送出' }));
 
     expect(sendChat).toHaveBeenCalledTimes(1);
@@ -133,7 +133,7 @@ describe('輸入區（FR-009）', () => {
     const user = userEvent.setup();
     render(<Composer />);
 
-    await user.type(screen.getByLabelText('向 AI 助教提問'), '提示？');
+    await user.type(screen.getByLabelText('向 AI 提問'), '提示？');
     useSessionStore.getState().setStreaming({ active: true, messageId: 'm1' });
 
     const button = await screen.findByRole('button', { name: '回覆中…' });
@@ -148,7 +148,7 @@ describe('輸入區（FR-009）', () => {
     const user = userEvent.setup();
     render(<Composer />);
 
-    await user.type(screen.getByLabelText('向 AI 助教提問'), '   ');
+    await user.type(screen.getByLabelText('向 AI 提問'), '   ');
     await user.keyboard('{Control>}{Enter}{/Control}');
 
     expect(sendChat).not.toHaveBeenCalled();
@@ -158,14 +158,14 @@ describe('輸入區（FR-009）', () => {
     useSessionStore.getState().setSessionStatus('submitted');
     render(<Composer />);
 
-    expect(screen.getByLabelText('向 AI 助教提問')).toBeDisabled();
+    expect(screen.getByLabelText('向 AI 提問')).toBeDisabled();
   });
 
   it('「附帶目前程式碼」以 attachCode 送出', async () => {
     const user = userEvent.setup();
     render(<Composer />);
 
-    await user.type(screen.getByLabelText('向 AI 助教提問'), '檢查一下');
+    await user.type(screen.getByLabelText('向 AI 提問'), '檢查一下');
     await user.click(screen.getByRole('button', { name: /附帶目前程式碼/ }));
 
     expect(sendChat).toHaveBeenCalledWith({

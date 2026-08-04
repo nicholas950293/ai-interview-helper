@@ -87,7 +87,7 @@ export function openChatStream(streamId: string, handlers: StreamHandlers): Stre
     // 連線層級的錯誤（沒有 data）——EventSource 會自行重連，這裡直接收掉並回報。
     handlers.onError({
       code: 'AI_UNAVAILABLE',
-      message: 'AI 助教的連線中斷了，你的作答內容不受影響，稍後可再試一次。',
+      message: 'AI 的連線中斷了，你的作答內容不受影響，稍後可再試一次。',
     });
   });
 

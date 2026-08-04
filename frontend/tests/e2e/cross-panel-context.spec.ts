@@ -60,7 +60,7 @@ test.describe('cross-panel context', () => {
 
     await expect(page.getByTestId('in-context-status')).toContainText('Q3・訊息佇列');
     await expect(
-      page.getByRole('list', { name: '與 AI 助教的對話' }).getByText(/已切換至 Q3/)
+      page.getByRole('list', { name: '與 AI 的對話' }).getByText(/已切換至 Q3/)
     ).toBeVisible();
   });
 
@@ -68,7 +68,7 @@ test.describe('cross-panel context', () => {
     const { url } = seedSession();
     await enterSession(page, url);
 
-    await page.getByLabel('向 AI 助教提問').fill('第一題的問題');
+    await page.getByLabel('向 AI 提問').fill('第一題的問題');
     await page.getByRole('button', { name: '送出' }).click();
     await expect(page.getByText(/function solve/).first()).toBeVisible();
 
@@ -77,7 +77,7 @@ test.describe('cross-panel context', () => {
     const request = page.waitForRequest(
       (req) => req.url().endsWith('/api/chat') && req.method() === 'POST'
     );
-    await page.getByLabel('向 AI 助教提問').fill('第二題的問題');
+    await page.getByLabel('向 AI 提問').fill('第二題的問題');
     await page.getByRole('button', { name: '送出' }).click();
 
     const payload = JSON.parse((await request).postData() ?? '{}');

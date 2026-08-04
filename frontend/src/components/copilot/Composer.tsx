@@ -32,7 +32,7 @@ export function Composer() {
   return (
     <div className="border-t border-border p-3">
       <label htmlFor="composer-input" className="sr-only">
-        向 AI 助教提問
+        向 AI 提問
       </label>
       <textarea
         id="composer-input"

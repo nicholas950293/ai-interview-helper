@@ -133,8 +133,8 @@ describe('終態鎖定所有輸入（FR-022 / 憲章「提交不可逆」）', (
     useSessionStore.getState().setSessionStatus('expired_submitted');
     render(<Composer />);
 
-    expect(screen.getByLabelText('向 AI 助教提問')).toBeDisabled();
-    expect(screen.getByLabelText('向 AI 助教提問')).toHaveAttribute(
+    expect(screen.getByLabelText('向 AI 提問')).toBeDisabled();
+    expect(screen.getByLabelText('向 AI 提問')).toHaveAttribute(
       'placeholder',
       expect.stringContaining('場次已結束')
     );

@@ -74,7 +74,7 @@ function AssistantMessage({ message }: { message: ChatMessage }) {
         )}
 
         {streaming && message.content.length === 0 && (
-          <p className="text-sm text-text-muted">AI 助教正在思考…</p>
+          <p className="text-sm text-text-muted">AI 正在思考…</p>
         )}
         {streaming && message.content.length > 0 && (
           <span className="sr-only" aria-live="polite">
@@ -119,10 +119,10 @@ export function ChatFeed() {
     <div
       tabIndex={0}
       role="region"
-      aria-label="與 AI 助教的對話"
+      aria-label="與 AI 的對話"
       className="h-full overflow-auto px-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent-text"
     >
-      <ul aria-label="與 AI 助教的對話" className="flex flex-col gap-3">
+      <ul aria-label="與 AI 的對話" className="flex flex-col gap-3">
         {chat.map((message) => {
           if (message.role === 'candidate') {
             return <CandidateMessage key={message.id} message={message} />;

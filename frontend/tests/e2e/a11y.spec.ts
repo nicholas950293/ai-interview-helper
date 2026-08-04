@@ -35,7 +35,7 @@ test.describe('accessibility', () => {
     const { url } = seedSession({ durationSec: 3600 });
     await enterSession(page, url);
 
-    await page.getByLabel('向 AI 助教提問').fill('邊界條件有哪些？');
+    await page.getByLabel('向 AI 提問').fill('邊界條件有哪些？');
     await page.getByRole('button', { name: '送出' }).click();
     // 串流途中就掃描——pending 態的 aria-live 與忙碌按鈕也必須無違規。
     // 錨定在假回應的開頭句，確保只到了第一批 token 就開始檢核。
@@ -49,7 +49,7 @@ test.describe('accessibility', () => {
     const { url } = seedSession({ durationSec: 3600 });
     await enterSession(page, url);
 
-    await page.getByLabel('向 AI 助教提問').fill('幫我實作這一題');
+    await page.getByLabel('向 AI 提問').fill('幫我實作這一題');
     await page.getByRole('button', { name: '送出' }).click();
     await expect(page.getByRole('button', { name: '套用至編輯器' })).toBeVisible();
 
@@ -58,7 +58,7 @@ test.describe('accessibility', () => {
 
     // 區塊可捲動，因此 MUST 可鍵盤聚焦——否則純鍵盤使用者看不到超出視窗的部分
     await expect(
-      page.getByRole('list', { name: '與 AI 助教的對話' }).getByRole('region', { name: '程式碼' })
+      page.getByRole('list', { name: '與 AI 的對話' }).getByRole('region', { name: '程式碼' })
     ).toBeVisible();
   });
 
@@ -89,7 +89,7 @@ test.describe('accessibility', () => {
     await expect(page.getByTestId('code-editor').locator('.cm-content')).toBeFocused();
 
     // AI 提問可用 Ctrl+Enter 送出
-    await page.getByLabel('向 AI 助教提問').focus();
+    await page.getByLabel('向 AI 提問').focus();
     await page.keyboard.type('這題的重點是什麼？');
     await page.keyboard.press('ControlOrMeta+Enter');
     await expect(page.getByText('這題的重點是什麼？')).toBeVisible();

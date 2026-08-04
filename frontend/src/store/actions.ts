@@ -260,7 +260,7 @@ export async function sendChat({
       content:
         err instanceof ApiError
           ? err.message
-          : 'AI 助教目前無法回應，你的作答內容不受影響，稍後可再試一次。',
+          : 'AI 目前無法回應，你的作答內容不受影響，稍後可再試一次。',
       createdAt: new Date().toISOString(),
       attachedCode: null,
     });

@@ -152,7 +152,7 @@ async def stream_response(pending: PendingStream) -> AsyncIterator[str]:
             "error",
             {
                 "code": ErrorCode.AI_UNAVAILABLE.value,
-                "message": "AI 助手目前無法回應，你的作答內容不受影響，稍後可再試一次。",
+                "message": "AI 目前無法回應，你的作答內容不受影響，稍後可再試一次。",
             },
         )
 

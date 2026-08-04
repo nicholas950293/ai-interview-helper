@@ -53,7 +53,7 @@ test.describe('timer and submission', () => {
     await expect(page.getByText('已成功提交全卷').first()).toBeVisible();
     await expect(page.getByLabel('程式語言')).toBeDisabled();
     await expect(page.getByRole('button', { name: '程式碼格式化' })).toBeDisabled();
-    await expect(page.getByLabel('向 AI 助教提問')).toBeDisabled();
+    await expect(page.getByLabel('向 AI 提問')).toBeDisabled();
     await expect(page.getByRole('button', { name: '提交全卷' })).toBeDisabled();
   });
 
@@ -90,7 +90,7 @@ test.describe('timer and submission', () => {
     // 計時器的 sr-only 宣告與 Toast 都含這段文字
     await expect(page.getByText('時間已到').first()).toBeVisible();
     await expect(page.getByLabel('程式語言')).toBeDisabled();
-    await expect(page.getByLabel('向 AI 助教提問')).toBeDisabled();
+    await expect(page.getByLabel('向 AI 提問')).toBeDisabled();
 
     await page.reload();
     await page.getByTestId('code-editor').waitFor();
